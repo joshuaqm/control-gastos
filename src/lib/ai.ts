@@ -2,7 +2,7 @@ import { GoogleGenerativeAI, SchemaType } from '@google/generative-ai'
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '')
 
-const MODEL = 'gemini-2.0-flash'
+const MODEL = 'gemini-2.0-flash-lite'
 
 const movimientoItem = {
   type: SchemaType.OBJECT,
@@ -29,7 +29,22 @@ const movimientoItem = {
   required: ['tipo', 'monto', 'categoria'],
 }
 
-const SYSTEM_PROMPT = `Eres un asistente financiero experto en interpretar lenguaje natural y convertirlo en transacciones financieras estructuradas.
+async function generateWithFallback(modelName: string, systemInstruction: string, prompt: string, generationConfig?: any) {
+  try {
+    const model = genAI.getGenerativeModel({ model: modelName, systemInstruction, generationConfig })
+    const result = await model.generateContent(prompt)
+    return result.response.text()
+  } catch (err: any) {
+    if (err?.status === 429 || err?.message?.includes('429')) {
+      throw new Error('La IA está temporalmente sin disponibilidad. Intenta de nuevo en unos segundos.')
+    }
+    throw err
+  }
+}
+
+export async function parseVoiceInput(text: string) {
+  const text_response = await generateWithFallback(MODEL,
+    `Eres un asistente financiero experto en interpretar lenguaje natural y convertirlo en transacciones financieras estructuradas.
 
 Reglas:
 1. Interpreta frases como "gasté X en Y" como gasto, "me pagaron X" como ingreso, "le presté X a Y" como préstamo otorgado, "me prestó X" como préstamo recibido.
@@ -41,30 +56,20 @@ Reglas:
 7. Si hay personas involucradas, identifícalas en persona_relacionada.
 8. Fecha: usa la fecha actual si no se especifica otra.
 9. Confianza: 0.0 a 1.0 basado en qué tan clara es la información.
-10. Cuenta por defecto: "Efectivo" si no se especifica.`
-
-export async function parseVoiceInput(text: string) {
-  const model = genAI.getGenerativeModel({
-    model: MODEL,
-    systemInstruction: SYSTEM_PROMPT,
-    generationConfig: {
+10. Cuenta por defecto: "Efectivo" si no se especifica.`,
+    `Interpreta esta frase y extrae todos los movimientos financieros: "${text}"`,
+    {
       temperature: 0.1,
       responseMimeType: 'application/json',
       responseSchema: {
         type: SchemaType.OBJECT,
         properties: {
-          movimientos: {
-            type: SchemaType.ARRAY,
-            items: movimientoItem,
-          },
+          movimientos: { type: SchemaType.ARRAY, items: movimientoItem },
         },
         required: ['movimientos'],
-      } as any,
-    },
-  })
-
-  const result = await model.generateContent(`Interpreta esta frase y extrae todos los movimientos financieros: "${text}"`)
-  const text_response = result.response.text()
+      },
+    }
+  )
 
   try {
     return JSON.parse(text_response) as { movimientos: any[] }
@@ -73,13 +78,9 @@ export async function parseVoiceInput(text: string) {
   }
 }
 
-export async function chatQuery(
-  question: string,
-  context: { resumen: string; ultimosMovimientos: string }
-) {
-  const model = genAI.getGenerativeModel({
-    model: MODEL,
-    systemInstruction: `Eres un asistente financiero personal. Responde preguntas sobre finanzas personales basándote en los datos del usuario.
+export async function chatQuery(question: string, context: { resumen: string; ultimosMovimientos: string }) {
+  return generateWithFallback(MODEL,
+    `Eres un asistente financiero personal. Responde preguntas sobre finanzas personales basándote en los datos del usuario.
 
 Contexto actual:
 ${context.resumen}
@@ -88,13 +89,9 @@ ${context.resumen}
 ${context.ultimosMovimientos}
 
 Sé conciso, preciso y amigable. Usa números reales. Si no tienes datos suficientes, dilo claramente.`,
-    generationConfig: {
-      temperature: 0.3,
-    },
-  })
-
-  const result = await model.generateContent(question)
-  return result.response.text()
+    question,
+    { temperature: 0.3 }
+  )
 }
 
 export async function generateInsights(summary: {
@@ -106,41 +103,34 @@ export async function generateInsights(summary: {
   suscripciones: { descripcion: string; monto: number }[]
   promediosDiarios: { dia: string; promedio: number }[]
 }) {
-  const model = genAI.getGenerativeModel({
-    model: MODEL,
-    generationConfig: {
-      temperature: 0.3,
-      responseMimeType: 'application/json',
-      responseSchema: {
-        type: SchemaType.OBJECT,
-        properties: {
-          insights: {
-            type: SchemaType.ARRAY,
-            items: {
-              type: SchemaType.OBJECT,
-              properties: {
-                tipo: { type: SchemaType.STRING, description: 'alerta, oportunidad, tendencia, recordatorio' },
-                mensaje: { type: SchemaType.STRING },
-                severidad: { type: SchemaType.STRING, description: 'baja, media, alta' },
+  try {
+    const text = await generateWithFallback(MODEL,
+      `Eres un analista financiero. Genera insights personalizados basados en datos reales del usuario. Cada insight debe ser específico, accionable y basado en los datos proporcionados. No des consejos genéricos. Usa números y comparaciones reales.`,
+      `Datos:\n${JSON.stringify(summary, null, 2)}`,
+      {
+        temperature: 0.3,
+        responseMimeType: 'application/json',
+        responseSchema: {
+          type: SchemaType.OBJECT,
+          properties: {
+            insights: {
+              type: SchemaType.ARRAY,
+              items: {
+                type: SchemaType.OBJECT,
+                properties: {
+                  tipo: { type: SchemaType.STRING, description: 'alerta, oportunidad, tendencia, recordatorio' },
+                  mensaje: { type: SchemaType.STRING },
+                  severidad: { type: SchemaType.STRING, description: 'baja, media, alta' },
+                },
+                required: ['tipo', 'mensaje', 'severidad'],
               },
-              required: ['tipo', 'mensaje', 'severidad'],
             },
           },
+          required: ['insights'],
         },
-        required: ['insights'],
-      },
-    },
-  })
-
-  const result = await model.generateContent(
-    `Eres un analista financiero. Genera insights personalizados basados en datos reales del usuario. Cada insight debe ser específico, accionable y basado en los datos proporcionados. No des consejos genéricos. Usa números y comparaciones reales.
-
-Datos:
-${JSON.stringify(summary, null, 2)}`
-  )
-
-  try {
-    return JSON.parse(result.response.text()) as { insights: { tipo: string; mensaje: string; severidad: string }[] }
+      }
+    )
+    return JSON.parse(text) as { insights: { tipo: string; mensaje: string; severidad: string }[] }
   } catch {
     return { insights: [] }
   }
