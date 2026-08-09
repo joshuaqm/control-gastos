@@ -167,6 +167,12 @@ export default function AccountsScreen({ showToast }: { showToast: ShowToast }) 
                   {a.interest_rate != null && (
                     <span>Tasa: {a.interest_rate}%</span>
                   )}
+                  {isCredit && a.cutoff_day != null && (
+                    <span>Corte: día {a.cutoff_day}</span>
+                  )}
+                  {isCredit && a.payment_due_day != null && (
+                    <span>Pago: día {a.payment_due_day}</span>
+                  )}
                 </div>
 
                 <div className="flex gap-2 mt-4">

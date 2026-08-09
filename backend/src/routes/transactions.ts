@@ -60,4 +60,51 @@ router.get('/:id', async (req, res, next) => {
   }
 });
 
+// Update transaction by ID
+router.put('/:id', async (req, res, next) => {
+  try {
+    const transactionRepo = AppDataSource.getRepository(Transaction);
+    const id = parseInt(req.params.id);
+    const transaction = await transactionRepo.findOne({
+      where: { id, userId: req.user!.id }
+    });
+
+    if (!transaction) {
+      return next(new AppError('Transaction not found', 404));
+    }
+
+    Object.assign(transaction, req.body as DeepPartial<Transaction>, {
+      userId: req.user!.id,
+    });
+    await transactionRepo.save(transaction);
+
+    logger.info(`Transaction updated: ${transaction.id} (user ${req.user!.id})`);
+    res.json(transaction);
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Delete transaction by ID
+router.delete('/:id', async (req, res, next) => {
+  try {
+    const transactionRepo = AppDataSource.getRepository(Transaction);
+    const id = parseInt(req.params.id);
+    const transaction = await transactionRepo.findOne({
+      where: { id, userId: req.user!.id }
+    });
+
+    if (!transaction) {
+      return next(new AppError('Transaction not found', 404));
+    }
+
+    await transactionRepo.remove(transaction);
+
+    logger.info(`Transaction deleted: ${id} (user ${req.user!.id})`);
+    res.status(204).send();
+  } catch (error) {
+    next(error);
+  }
+});
+
 export { router as transactionsRouter };

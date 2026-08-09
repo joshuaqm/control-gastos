@@ -4,6 +4,7 @@ import { Transaction } from '../models/Transaction';
 import { User } from '../models/User';
 import { Debt } from '../models/Debt';
 import { Receivable } from '../models/Receivable';
+import { CreditInstallment } from '../models/CreditInstallment';
 import { Budget } from '../models/Budget';
 import { Goal } from '../models/Goal';
 import { Investment } from '../models/Investment';
@@ -24,6 +25,7 @@ export const AppDataSource = new DataSource({
     User,
     Debt,
     Receivable,
+    CreditInstallment,
     Budget,
     Goal,
     Investment,

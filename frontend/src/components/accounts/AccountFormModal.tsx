@@ -28,6 +28,8 @@ export default function AccountFormModal({
   const [initialBalance, setInitialBalance] = useState(account?.initial_balance?.toString() ?? '0')
   const [creditLimit, setCreditLimit] = useState(account?.credit_limit?.toString() ?? '')
   const [interestRate, setInterestRate] = useState(account?.interest_rate?.toString() ?? '')
+  const [cutoffDay, setCutoffDay] = useState(account?.cutoff_day?.toString() ?? '')
+  const [paymentDueDay, setPaymentDueDay] = useState(account?.payment_due_day?.toString() ?? '')
   const [isActive, setIsActive] = useState(account?.is_active ?? true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
@@ -45,6 +47,16 @@ export default function AccountFormModal({
       setError('El límite de crédito debe ser mayor a 0')
       return
     }
+    const parseDay = (value: string): number | null => {
+      const day = Number(value)
+      return value && Number.isInteger(day) && day >= 1 && day <= 31 ? day : null
+    }
+    const cutoff = isCredit && cutoffDay ? parseDay(cutoffDay) : null
+    const due = isCredit && paymentDueDay ? parseDay(paymentDueDay) : null
+    if (isCredit && (cutoffDay || paymentDueDay) && (cutoff === null || due === null)) {
+      setError('La fecha de corte y límite de pago deben ser días entre 1 y 31')
+      return
+    }
 
     setSaving(true)
     setError('')
@@ -55,6 +67,8 @@ export default function AccountFormModal({
         initial_balance: Number(initialBalance) || 0,
         credit_limit: isCredit && creditLimit ? Number(creditLimit) : null,
         interest_rate: interestRate ? Number(interestRate) : null,
+        cutoff_day: cutoff,
+        payment_due_day: due,
         is_active: isActive,
       })
     } catch (err) {
@@ -121,6 +135,37 @@ export default function AccountFormModal({
                 className="w-full px-4 py-3 rounded-xl text-sm font-mono"
                 style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff' }}
               />
+            </div>
+          )}
+
+          {isCredit && (
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-medium mb-1" style={{ color: '#A0A0B8' }}>Fecha de corte (día)</label>
+                <input
+                  value={cutoffDay}
+                  onChange={e => setCutoffDay(e.target.value)}
+                  type="number"
+                  min="1"
+                  max="31"
+                  placeholder="Ej. 20"
+                  className="w-full px-4 py-3 rounded-xl text-sm font-mono"
+                  style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff' }}
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium mb-1" style={{ color: '#A0A0B8' }}>Límite de pago (día)</label>
+                <input
+                  value={paymentDueDay}
+                  onChange={e => setPaymentDueDay(e.target.value)}
+                  type="number"
+                  min="1"
+                  max="31"
+                  placeholder="Ej. 25"
+                  className="w-full px-4 py-3 rounded-xl text-sm font-mono"
+                  style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff' }}
+                />
+              </div>
             </div>
           )}
 

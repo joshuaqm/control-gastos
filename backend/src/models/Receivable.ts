@@ -22,6 +22,9 @@ export class Receivable {
   @Column({ type: 'decimal', precision: 12, scale: 2 })
   original_amount!: number;
 
+  @Column({ type: 'decimal', precision: 12, scale: 2, default: 0 })
+  collected_amount!: number;
+
   @Column({ type: 'date', nullable: true })
   due_date!: Date;
 

@@ -7,6 +7,8 @@ export interface ApiAccount {
   initial_balance: number
   credit_limit: number | null
   interest_rate: number | null
+  cutoff_day: number | null
+  payment_due_day: number | null
   is_active: boolean
   created_at: string
   updated_at: string

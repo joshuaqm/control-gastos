@@ -41,6 +41,12 @@ async function seedDatabase() {
     }
     const userId = testUser.id;
 
+    if (testUser.monthly_income === null || testUser.monthly_income === undefined) {
+      testUser.monthly_income = 15000;
+      await userRepo.save(testUser);
+      logger.info('✅ User monthly income set to 15000');
+    }
+
     // Adoptar registros huérfanos (sin user_id) al usuario de prueba
     const orphanRepos = [
       accountRepo, transactionRepo, budgetRepo, debtRepo,
@@ -246,7 +252,10 @@ async function seedDatabase() {
 
     for (const budgetDataItem of budgetData) {
       const existing = await budgetRepo.findOne({
-        where: { month: budgetDataItem.month, budget_type: budgetDataItem.budget_type },
+        where: {
+          month: budgetDataItem.month,
+          budget_type: budgetDataItem.budget_type,
+        },
       });
 
       if (!existing) {

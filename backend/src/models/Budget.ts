@@ -16,8 +16,11 @@ export class Budget {
   @Column({ type: 'date' })
   month!: Date;
 
-  @Column({ type: 'varchar', length: 10 })
-  budget_type!: string;
+  @Column({ type: 'varchar', length: 10, nullable: true })
+  budget_type!: string | null;
+
+  @Column({ type: 'varchar', length: 50, nullable: true })
+  category!: string | null;
 
   @Column({ type: 'decimal', precision: 5, scale: 2 })
   percentage!: number;

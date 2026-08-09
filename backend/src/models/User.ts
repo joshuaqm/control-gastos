@@ -17,6 +17,9 @@ export class User {
   @Column({ default: true })
   is_active!: boolean;
 
+  @Column({ type: 'decimal', precision: 12, scale: 2, nullable: true })
+  monthly_income!: number | null;
+
   @CreateDateColumn()
   created_at!: Date;
 

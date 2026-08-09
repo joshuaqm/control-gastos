@@ -30,6 +30,12 @@ export class Account {
   @Column({ type: 'decimal', precision: 5, scale: 2, nullable: true })
   interest_rate!: number | null;
 
+  @Column({ type: 'int', nullable: true })
+  cutoff_day!: number | null;
+
+  @Column({ type: 'int', nullable: true })
+  payment_due_day!: number | null;
+
   @Column({ default: true })
   is_active!: boolean;
 

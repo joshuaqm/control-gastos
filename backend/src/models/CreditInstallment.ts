@@ -1,8 +1,9 @@
 import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
 import { User } from './User';
+import { Account } from './Account';
 
-@Entity('debts')
-export class Debt {
+@Entity('credit_installments')
+export class CreditInstallment {
   @PrimaryGeneratedColumn()
   id!: number;
 
@@ -13,32 +14,24 @@ export class Debt {
   @JoinColumn({ name: 'user_id' })
   user!: User;
 
-  @Column({ length: 100 })
-  name!: string;
-
-  @Column({ length: 100 })
-  creditor!: string;
-
-  @Column({ type: 'varchar', length: 20 })
-  type!: string;
-
-  @Column({ type: 'decimal', precision: 12, scale: 2 })
-  original_amount!: number;
-
-  @Column({ type: 'decimal', precision: 12, scale: 2, default: 0 })
-  paid_amount!: number;
-
-  @Column({ type: 'decimal', precision: 5, scale: 2, nullable: true })
-  interest_rate!: number;
-
   @Column({ type: 'int', nullable: true })
   account_id!: number | null;
 
-  @Column({ type: 'date' })
-  start_date!: Date;
+  @ManyToOne(() => Account)
+  @JoinColumn({ name: 'account_id' })
+  account!: Account;
 
-  @Column({ type: 'date', nullable: true })
-  due_date!: Date;
+  @Column({ length: 200 })
+  description!: string;
+
+  @Column({ type: 'decimal', precision: 12, scale: 2 })
+  monthly_amount!: number;
+
+  @Column({ type: 'int' })
+  months_total!: number;
+
+  @Column({ type: 'int', default: 0 })
+  months_paid!: number;
 
   @Column({ type: 'varchar', length: 20, default: 'active' })
   status!: string;

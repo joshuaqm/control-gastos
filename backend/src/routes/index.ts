@@ -3,6 +3,10 @@ import { healthRouter } from './health';
 import { transactionsRouter } from './transactions';
 import { accountsRouter } from './accounts';
 import { authRouter } from './auth';
+import { budgetsRouter } from './budgets';
+import { debtsRouter } from './debts';
+import { receivablesRouter } from './receivables';
+import { installmentsRouter } from './installments';
 
 const router = Router();
 
@@ -13,11 +17,9 @@ router.use('/health', healthRouter);
 router.use('/transactions', transactionsRouter);
 router.use('/accounts', accountsRouter);
 router.use('/auth', authRouter);
-
-// TODO: Add more routes as needed
-// router.use('/debts', debtsRouter);
-// router.use('/budgets', budgetsRouter);
-// router.use('/investments', investmentsRouter);
-// router.use('/auth', authRouter);
+router.use('/budgets', budgetsRouter);
+router.use('/debts', debtsRouter);
+router.use('/receivables', receivablesRouter);
+router.use('/installments', installmentsRouter);
 
 export default router;
