@@ -1,3 +1,0 @@
--- Schema completo: ejecuta en orden
--- 1. database/migrations/001_initial_schema.sql
--- 2. database/migrations/002_rpc_functions.sql
