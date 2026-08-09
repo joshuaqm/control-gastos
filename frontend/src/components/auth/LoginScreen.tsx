@@ -47,8 +47,8 @@ export default function LoginScreen({
           <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-3 animate-pulse-glow" style={{ background: 'linear-gradient(135deg, #7C3AED, #5B21B6)' }}>
             <TrendingUp size={28} color="white" />
           </div>
-          <h1 className="text-2xl font-bold tracking-tight">FinanceAI</h1>
-          <p className="text-sm mt-1" style={{ color: '#A0A0B8' }}>Tu asistente financiero inteligente</p>
+          <h1 className="text-2xl font-bold tracking-tight">XOXO Finanzas</h1>
+          <p className="text-sm mt-1" style={{ color: '#A0A0B8' }}>Finanzas inteligentes</p>
         </div>
 
         <div className="flex rounded-xl p-1 mb-6" style={{ background: 'rgba(255,255,255,0.05)' }}>
