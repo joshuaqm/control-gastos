@@ -131,13 +131,10 @@ export default function AIChat({ initialMsg = '', visible = true }: {
 
   return (
     <div
-      className="glass rounded-2xl flex-col overflow-hidden"
+      className="glass rounded-2xl flex-col overflow-hidden w-full chat-view"
       style={{
         display: visible ? 'flex' : 'none',
-        height: 560,
-        maxHeight: '70vh',
         border: '1px solid rgba(124,58,237,0.3)',
-        boxShadow: '0 0 60px rgba(124,58,237,0.15)',
       }}
     >
       <div className="flex items-center gap-3 p-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>

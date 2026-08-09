@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import AIChat from '@/components/ai/AIChat'
 import LoginScreen from '@/components/auth/LoginScreen'
 import Header from '@/components/layout/Header'
+import MobileMenu from '@/components/layout/MobileMenu'
 import MobileNav from '@/components/layout/MobileNav'
 import Sidebar from '@/components/layout/Sidebar'
 import Toast from '@/components/ui/Toast'
@@ -35,6 +36,14 @@ for (const [id, path] of Object.entries(SCREEN_PATH)) {
   pathToScreen[path] = id as ScreenId
 }
 
+const CHAT_RIPPLE = [
+  { size: '24vmax', color: '#DDD6FE', delay: 0 },
+  { size: '44vmax', color: '#C4B5FD', delay: 60 },
+  { size: '70vmax', color: '#A78BFA', delay: 120 },
+  { size: '100vmax', color: '#8B5CF6', delay: 180 },
+  { size: '140vmax', color: '#7C3AED', delay: 240 },
+]
+
 const screenFromPath = (): ScreenId => {
   const path = window.location.pathname.replace(/\/+$/, '') || '/'
   return pathToScreen[path] ?? 'dashboard'
@@ -53,6 +62,8 @@ export default function App() {
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [darkMode, setDarkMode] = useState(true)
   const [chatMsg, setChatMsg] = useState('')
+  const [reveal, setReveal] = useState<'idle' | 'expanding' | 'revealing'>('idle')
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const { toasts, showToast, dismiss } = useToasts()
 
   const navigate = (next: ScreenId) => {
@@ -74,6 +85,11 @@ export default function App() {
     setUser(res.user)
   }
 
+  const selectFromMenu = (id: ScreenId) => {
+    setMobileMenuOpen(false)
+    navigate(id)
+  }
+
   const handleLogout = () => {
     localStorage.removeItem(SESSION_KEY)
     setUser(null)
@@ -83,7 +99,12 @@ export default function App() {
 
   const openChat = (msg?: string) => {
     setChatMsg(msg || '')
-    navigate('assistant')
+    if (screen !== 'assistant') {
+      setReveal('expanding')
+      navigate('assistant')
+      window.setTimeout(() => setReveal('revealing'), 820)
+      window.setTimeout(() => setReveal('idle'), 1400)
+    }
   }
 
   const renderScreen = () => {
@@ -121,7 +142,7 @@ export default function App() {
       <div className="nebula" style={{ width: 600, height: 600, top: -200, left: -200, background: 'rgba(124,58,237,0.05)' }} />
       <div className="nebula" style={{ width: 400, height: 400, bottom: 100, right: -100, background: 'rgba(6,214,160,0.04)' }} />
 
-      <Header onToggleSidebar={() => setSidebarOpen(v => !v)} darkMode={darkMode} onToggleDark={() => setDarkMode(v => !v)} onOpenChat={openChat} userName={user?.username} />
+      <Header onToggleSidebar={() => setSidebarOpen(v => !v)} onOpenMenu={() => setMobileMenuOpen(true)} darkMode={darkMode} onToggleDark={() => setDarkMode(v => !v)} onOpenChat={openChat} userName={user?.username} />
 
       <div className="flex flex-1 overflow-hidden" style={{ minHeight: 0 }}>
         {/* Sidebar — hidden on mobile */}
@@ -134,13 +155,43 @@ export default function App() {
           <div className="max-w-5xl mx-auto">
             {renderScreen()}
             {/* AI Chat — rendered as a section, kept mounted to preserve conversation */}
-            <AIChat initialMsg={chatMsg} visible={screen === 'assistant'} />
+            <AIChat initialMsg={chatMsg} visible={screen === 'assistant' && reveal !== 'expanding'} />
           </div>
         </main>
       </div>
 
       {/* Mobile nav */}
       <MobileNav active={screen} setActive={navigate} />
+
+      {/* Mobile hamburger menu */}
+      <MobileMenu
+        open={mobileMenuOpen}
+        active={screen}
+        onSelect={selectFromMenu}
+        onClose={() => setMobileMenuOpen(false)}
+        onLogout={() => { setMobileMenuOpen(false); handleLogout() }}
+        userName={user?.username}
+      />
+
+      {/* Chat transition: concentric circles of different purple tones grow from the center */}
+      {reveal !== 'idle' && (
+        <div className="fixed inset-0 z-50 pointer-events-none" style={{ overflow: 'hidden' }}>
+          {CHAT_RIPPLE.map((c, i) => (
+            <div
+              key={i}
+              className="chat-circle"
+              style={{
+                width: c.size,
+                height: c.size,
+                background: c.color,
+                opacity: 0,
+                transform: 'translate(-50%, -50%) scale(0)',
+                animationDelay: `${c.delay}ms`,
+              }}
+            />
+          ))}
+        </div>
+      )}
 
       {/* Toasts */}
       <Toast toasts={toasts} dismiss={dismiss} />

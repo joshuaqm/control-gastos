@@ -1,7 +1,8 @@
 import { Bell, Menu, Moon, Search, Sun } from 'lucide-react'
 
-export default function Header({ onToggleSidebar, darkMode, onToggleDark, onOpenChat, userName }: {
+export default function Header({ onToggleSidebar, onOpenMenu, darkMode, onToggleDark, onOpenChat, userName }: {
   onToggleSidebar: () => void
+  onOpenMenu: () => void
   darkMode: boolean
   onToggleDark: () => void
   onOpenChat: () => void
@@ -12,6 +13,9 @@ export default function Header({ onToggleSidebar, darkMode, onToggleDark, onOpen
       className="h-14 flex items-center gap-4 px-4 flex-shrink-0"
       style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', background: 'rgba(10,10,15,0.8)', backdropFilter: 'blur(20px)' }}
     >
+      <button onClick={onOpenMenu} className="p-2 rounded-lg transition-colors hover:bg-white/10 sm:hidden flex items-center justify-center" aria-label="Menú">
+        <Menu size={20} style={{ color: '#A0A0B8' }} />
+      </button>
       <button onClick={onToggleSidebar} className="p-2 rounded-lg transition-colors hover:bg-white/10 hidden sm:flex items-center justify-center">
         <Menu size={20} style={{ color: '#A0A0B8' }} />
       </button>
