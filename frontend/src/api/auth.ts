@@ -11,6 +11,17 @@ export interface AuthResponse {
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1'
 
+const TOKEN_KEY = 'financeai.session'
+
+export function getToken(): string | null {
+  try {
+    const raw = localStorage.getItem(TOKEN_KEY)
+    return raw ? (JSON.parse(raw) as { token: string }).token : null
+  } catch {
+    return null
+  }
+}
+
 export async function login(email: string, password: string): Promise<AuthResponse> {
   return request<AuthResponse>('/auth/login', { email, password })
 }

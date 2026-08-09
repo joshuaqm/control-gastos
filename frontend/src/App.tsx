@@ -7,6 +7,7 @@ import Sidebar from '@/components/layout/Sidebar'
 import Toast from '@/components/ui/Toast'
 import { type ScreenId } from '@/config/navigation'
 import { type ApiUser } from '@/api/auth'
+import { type AuthResponse } from '@/api/auth'
 import AccountsScreen from '@/features/Accounts'
 import BudgetsScreen from '@/features/Budgets'
 import Dashboard from '@/features/Dashboard'
@@ -22,7 +23,7 @@ export default function App() {
   const [user, setUser] = useState<ApiUser | null>(() => {
     try {
       const raw = localStorage.getItem(SESSION_KEY)
-      return raw ? (JSON.parse(raw) as ApiUser) : null
+      return raw ? (JSON.parse(raw) as { user: ApiUser }).user : null
     } catch {
       return null
     }
@@ -34,9 +35,9 @@ export default function App() {
   const [chatMsg, setChatMsg] = useState('')
   const { toasts, showToast, dismiss } = useToasts()
 
-  const handleLogin = (u: ApiUser) => {
-    localStorage.setItem(SESSION_KEY, JSON.stringify(u))
-    setUser(u)
+  const handleLogin = (res: AuthResponse) => {
+    localStorage.setItem(SESSION_KEY, JSON.stringify({ user: res.user, token: res.token }))
+    setUser(res.user)
   }
 
   const handleLogout = () => {

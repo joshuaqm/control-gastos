@@ -28,17 +28,28 @@ async function seedDatabase() {
 
     // Usuario de prueba
     const passwordHash = bcrypt.hashSync('TestPass123!', 12);
-    const testUser = await userRepo.findOne({ where: { username: 'testuser' } });
+    let testUser = await userRepo.findOne({ where: { username: 'testuser' } });
     if (!testUser) {
-      const user = userRepo.create({
+      testUser = userRepo.create({
         username: 'testuser',
         email: 'test@finance.com',
         password_hash: passwordHash,
         is_active: true,
       });
-      await userRepo.save(user);
+      await userRepo.save(testUser);
       logger.info('✅ User created: testuser / TestPass123!');
     }
+    const userId = testUser.id;
+
+    // Adoptar registros huérfanos (sin user_id) al usuario de prueba
+    const orphanRepos = [
+      accountRepo, transactionRepo, budgetRepo, debtRepo,
+      receivableRepo, goalRepo, investmentRepo, recurringRepo,
+    ];
+    for (const repo of orphanRepos) {
+      await repo.createQueryBuilder().update().set({ userId }).where('user_id IS NULL').execute();
+    }
+    logger.info('✅ Orphaned records adopted by user testuser');
 
     // Cuentas de ejemplo
     const accountData = [
@@ -56,7 +67,7 @@ async function seedDatabase() {
       });
 
       if (!existing) {
-        const account = accountRepo.create(accountDataItem);
+        const account = accountRepo.create({ ...accountDataItem, userId });
         await accountRepo.save(account);
         logger.info(`✅ Account created: ${account.name}`);
       }
@@ -219,7 +230,7 @@ async function seedDatabase() {
         });
 
         if (!existing) {
-          const transaction = transactionRepo.create(transactionDataItem);
+          const transaction = transactionRepo.create({ ...transactionDataItem, userId });
           await transactionRepo.save(transaction);
           logger.info(`✅ Transaction created: ${transaction.description}`);
         }
@@ -239,7 +250,7 @@ async function seedDatabase() {
       });
 
       if (!existing) {
-        const budget = budgetRepo.create(budgetDataItem);
+        const budget = budgetRepo.create({ ...budgetDataItem, userId });
         await budgetRepo.save(budget);
         logger.info(`✅ Budget created: ${budget.budget_type} ${budget.month.toISOString().slice(0, 7)}`);
       }
@@ -286,7 +297,7 @@ async function seedDatabase() {
       const existing = await debtRepo.findOne({ where: { name: debtDataItem.name } });
 
       if (!existing) {
-        const debt = debtRepo.create(debtDataItem);
+        const debt = debtRepo.create({ ...debtDataItem, userId });
         await debtRepo.save(debt);
         logger.info(`✅ Debt created: ${debt.name}`);
       }
@@ -303,7 +314,7 @@ async function seedDatabase() {
       const existing = await receivableRepo.findOne({ where: { person: receivableDataItem.person, description: receivableDataItem.description } });
 
       if (!existing) {
-        const receivable = receivableRepo.create(receivableDataItem);
+        const receivable = receivableRepo.create({ ...receivableDataItem, userId });
         await receivableRepo.save(receivable);
         logger.info(`✅ Receivable created: ${receivable.person}`);
       }
@@ -320,7 +331,7 @@ async function seedDatabase() {
       const existing = await goalRepo.findOne({ where: { name: goalDataItem.name } });
 
       if (!existing) {
-        const goal = goalRepo.create(goalDataItem);
+        const goal = goalRepo.create({ ...goalDataItem, userId });
         await goalRepo.save(goal);
         logger.info(`✅ Goal created: ${goal.name}`);
       }
@@ -337,7 +348,7 @@ async function seedDatabase() {
       const existing = await investmentRepo.findOne({ where: { name: investmentDataItem.name } });
 
       if (!existing) {
-        const investment = investmentRepo.create(investmentDataItem);
+        const investment = investmentRepo.create({ ...investmentDataItem, userId });
         await investmentRepo.save(investment);
         logger.info(`✅ Investment created: ${investment.name}`);
       }
@@ -356,7 +367,7 @@ async function seedDatabase() {
         const existing = await recurringRepo.findOne({ where: { name: recurringDataItem.name } });
 
         if (!existing) {
-          const recurring = recurringRepo.create(recurringDataItem);
+          const recurring = recurringRepo.create({ ...recurringDataItem, userId });
           await recurringRepo.save(recurring);
           logger.info(`✅ Recurring transaction created: ${recurring.name}`);
         }

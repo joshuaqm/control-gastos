@@ -1,14 +1,14 @@
 import { useState } from 'react'
-import { Eye, EyeOff, Globe, TrendingUp } from 'lucide-react'
+import { Eye, EyeOff, TrendingUp } from 'lucide-react'
 import StarField from '@/components/ui/StarField'
-import { login, register, type ApiUser } from '@/api/auth'
+import { login, register, type AuthResponse } from '@/api/auth'
 
 type Mode = 'login' | 'register'
 
 export default function LoginScreen({
   onLogin,
 }: {
-  onLogin: (user: ApiUser) => void
+  onLogin: (res: AuthResponse) => void
 }) {
   const [mode, setMode] = useState<Mode>('login')
   const [showPass, setShowPass] = useState(false)
@@ -27,7 +27,7 @@ export default function LoginScreen({
         mode === 'login'
           ? await login(email.trim(), pass)
           : await register(name.trim(), email.trim(), pass)
-      onLogin(res.user)
+      onLogin(res)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Ocurrió un error, intenta de nuevo')
     } finally {
