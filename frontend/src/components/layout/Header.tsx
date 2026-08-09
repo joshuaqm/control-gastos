@@ -1,17 +1,36 @@
 import { Bell, Menu, Moon, Search, Sun } from 'lucide-react'
 
-export default function Header({ onToggleSidebar, onOpenMenu, darkMode, onToggleDark, onOpenChat, userName }: {
+export default function Header({ 
+  onToggleSidebar, 
+  onOpenMenu, 
+  darkMode, 
+  onToggleDark, 
+  onOpenChat, 
+  userName,
+  sidebarOffset = 0 
+}: {
   onToggleSidebar: () => void
   onOpenMenu: () => void
   darkMode: boolean
   onToggleDark: () => void
   onOpenChat: () => void
   userName?: string
+  sidebarOffset?: number
 }) {
   return (
     <header
       className="h-14 flex items-center gap-4 px-4 flex-shrink-0"
-      style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', background: 'rgba(10,10,15,0.8)', backdropFilter: 'blur(20px)' }}
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: sidebarOffset,
+        right: 0,
+        zIndex: 40,
+        borderBottom: '1px solid rgba(255,255,255,0.06)',
+        background: 'rgba(10,10,15,0.8)',
+        backdropFilter: 'blur(20px)',
+        transition: 'left 0.3s ease',
+      }}
     >
       <button onClick={onOpenMenu} className="p-2 rounded-lg transition-colors hover:bg-white/10 sm:hidden flex items-center justify-center" aria-label="Menú">
         <Menu size={20} style={{ color: '#A0A0B8' }} />
@@ -35,10 +54,10 @@ export default function Header({ onToggleSidebar, onOpenMenu, darkMode, onToggle
       <div className="flex-1 md:hidden" />
 
       <div className="flex items-center gap-2">
-        <button onClick={onToggleDark} className="p-2 rounded-lg hover:bg-white/10 transition-colors">
+        <button onClick={onToggleDark} className="p-2 rounded-lg hover:bg-white/10 transition-colors cursor-not-allowed" disabled>
           {darkMode ? <Sun size={18} style={{ color: '#F59E0B' }} /> : <Moon size={18} style={{ color: '#A0A0B8' }} />}
         </button>
-        <button className="relative p-2 rounded-lg hover:bg-white/10 transition-colors" onClick={onOpenChat}>
+        <button className="relative p-2 rounded-lg hover:bg-white/10 transition-colors cursor-not-allowed" disabled>
           <Bell size={18} style={{ color: '#A0A0B8' }} />
           <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full" style={{ background: '#7C3AED' }} />
         </button>

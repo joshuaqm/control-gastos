@@ -144,28 +144,67 @@ export default function App() {
 
   if (!user) return <LoginScreen onLogin={handleLogin} />
 
+  // Calcular el offset del sidebar para el header y el contenido
+  const sidebarWidth = sidebarOpen ? 220 : 0
+
   return (
-    <div style={{ background: '#0A0A0F', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ background: '#0A0A0F', minHeight: '100vh' }}>
       {/* Nebula decorations */}
       <div className="nebula" style={{ width: 600, height: 600, top: -200, left: -200, background: 'rgba(124,58,237,0.05)' }} />
       <div className="nebula" style={{ width: 400, height: 400, bottom: 100, right: -100, background: 'rgba(6,214,160,0.04)' }} />
 
-      <Header onToggleSidebar={() => setSidebarOpen(v => !v)} onOpenMenu={() => setMobileMenuOpen(true)} darkMode={darkMode} onToggleDark={() => setDarkMode(v => !v)} onOpenChat={openChat} userName={user?.username} />
+      <div className="flex flex-col" style={{ minHeight: '100vh' }}>
+        {/* Header - se mueve con el sidebar */}
+        <Header 
+          onToggleSidebar={() => setSidebarOpen(v => !v)} 
+          onOpenMenu={() => setMobileMenuOpen(true)} 
+          darkMode={darkMode} 
+          onToggleDark={() => setDarkMode(v => !v)} 
+          onOpenChat={openChat} 
+          userName={user?.username}
+          sidebarOffset={sidebarWidth}
+        />
 
-      <div className="flex flex-1 overflow-hidden" style={{ minHeight: 0 }}>
-        {/* Sidebar — hidden on mobile */}
-        <div className="hidden sm:flex flex-col" style={{ flexShrink: 0 }}>
-          <Sidebar active={screen} setActive={navigate} onLogout={handleLogout} collapsed={!sidebarOpen} />
-        </div>
-
-        {/* Main content */}
-        <main className="flex-1 overflow-y-auto p-4 sm:p-6 relative" style={{ paddingBottom: 80 }}>
-          <div className="max-w-5xl mx-auto">
-            {renderScreen()}
-            {/* AI Chat — rendered as a section, kept mounted to preserve conversation */}
-            <AIChat initialMsg={chatMsg} visible={screen === 'assistant' && reveal !== 'expanding'} />
+        <div className="flex flex-1" style={{ paddingTop: '56px' }}>
+          {/* Sidebar — fijo, ocupando toda la altura */}
+          <div 
+            className="hidden sm:block"
+            style={{
+              position: 'fixed',
+              top: 0, // Empieza desde el tope
+              left: 0,
+              bottom: 0,
+              zIndex: 39, // Un nivel menos que el header (40)
+              flexShrink: 0,
+            }}
+          >
+            <Sidebar 
+              active={screen} 
+              setActive={navigate} 
+              onLogout={handleLogout} 
+              collapsed={!sidebarOpen}
+              headerHeight={56} // Pasamos la altura del header
+            />
           </div>
-        </main>
+
+          {/* Main content con margen para el sidebar */}
+          <main 
+            className="flex-1 overflow-y-auto p-4 sm:p-6 relative" 
+            style={{ 
+              paddingBottom: 80,
+              marginLeft: sidebarWidth,
+              transition: 'margin-left 0.3s ease',
+              minHeight: 'calc(100vh - 56px)',
+              width: '100%',
+              maxWidth: '100%',
+            }}
+          >
+            <div className="w-full max-w-7xl mx-auto px-2 sm:px-4">
+              {renderScreen()}
+              <AIChat initialMsg={chatMsg} visible={screen === 'assistant' && reveal !== 'expanding'} />
+            </div>
+          </main>
+        </div>
       </div>
 
       {/* Mobile nav */}
@@ -181,7 +220,7 @@ export default function App() {
         userName={user?.username}
       />
 
-      {/* Chat transition: concentric circles of different purple tones grow from the center */}
+      {/* Chat transition */}
       {reveal !== 'idle' && (
         <div className="fixed inset-0 z-50 pointer-events-none" style={{ overflow: 'hidden' }}>
           {CHAT_RIPPLE.map((c, i) => (
