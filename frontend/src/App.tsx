@@ -6,6 +6,7 @@ import MobileNav from '@/components/layout/MobileNav'
 import Sidebar from '@/components/layout/Sidebar'
 import Toast from '@/components/ui/Toast'
 import { type ScreenId } from '@/config/navigation'
+import { type ApiUser } from '@/api/auth'
 import AccountsScreen from '@/features/Accounts'
 import BudgetsScreen from '@/features/Budgets'
 import Dashboard from '@/features/Dashboard'
@@ -15,14 +16,34 @@ import SettingsScreen from '@/features/Settings'
 import TransactionsScreen from '@/features/Transactions'
 import { useToasts } from '@/hooks/useToasts'
 
+const SESSION_KEY = 'financeai.session'
+
 export default function App() {
-  const [loggedIn, setLoggedIn] = useState(false)
+  const [user, setUser] = useState<ApiUser | null>(() => {
+    try {
+      const raw = localStorage.getItem(SESSION_KEY)
+      return raw ? (JSON.parse(raw) as ApiUser) : null
+    } catch {
+      return null
+    }
+  })
   const [screen, setScreen] = useState<ScreenId>('dashboard')
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [darkMode, setDarkMode] = useState(true)
   const [chatOpen, setChatOpen] = useState(false)
   const [chatMsg, setChatMsg] = useState('')
   const { toasts, showToast, dismiss } = useToasts()
+
+  const handleLogin = (u: ApiUser) => {
+    localStorage.setItem(SESSION_KEY, JSON.stringify(u))
+    setUser(u)
+  }
+
+  const handleLogout = () => {
+    localStorage.removeItem(SESSION_KEY)
+    setUser(null)
+    setScreen('dashboard')
+  }
 
   const openChat = (msg?: string) => {
     setChatMsg(msg || '')
@@ -56,7 +77,7 @@ export default function App() {
     return () => window.removeEventListener('resize', check)
   }, [])
 
-  if (!loggedIn) return <LoginScreen onLogin={() => setLoggedIn(true)} />
+  if (!user) return <LoginScreen onLogin={handleLogin} />
 
   return (
     <div style={{ background: '#0A0A0F', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
@@ -64,12 +85,12 @@ export default function App() {
       <div className="nebula" style={{ width: 600, height: 600, top: -200, left: -200, background: 'rgba(124,58,237,0.05)' }} />
       <div className="nebula" style={{ width: 400, height: 400, bottom: 100, right: -100, background: 'rgba(6,214,160,0.04)' }} />
 
-      <Header onToggleSidebar={() => setSidebarOpen(v => !v)} darkMode={darkMode} onToggleDark={() => setDarkMode(v => !v)} onOpenChat={openChat} />
+      <Header onToggleSidebar={() => setSidebarOpen(v => !v)} darkMode={darkMode} onToggleDark={() => setDarkMode(v => !v)} onOpenChat={openChat} userName={user?.username} />
 
       <div className="flex flex-1 overflow-hidden" style={{ minHeight: 0 }}>
         {/* Sidebar — hidden on mobile */}
         <div className="hidden sm:flex flex-col" style={{ flexShrink: 0 }}>
-          <Sidebar active={screen} setActive={setScreen} onLogout={() => setLoggedIn(false)} collapsed={!sidebarOpen} />
+          <Sidebar active={screen} setActive={setScreen} onLogout={handleLogout} collapsed={!sidebarOpen} />
         </div>
 
         {/* Main content */}

@@ -84,7 +84,7 @@ services:
       - finance_network
     depends_on:
       - backend
-    command: npm run dev -- --host 0.0.0.0
+    command: npm run dev
     restart: unless-stopped
 
   # Nginx (proxy inverso)

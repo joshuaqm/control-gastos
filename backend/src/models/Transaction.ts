@@ -19,32 +19,32 @@ export class Transaction {
   @Column({ type: 'varchar', length: 20 })
   type!: TransactionType;
 
-  @Column({ length: 50, nullable: true })
+  @Column({ type: 'varchar', length: 50, nullable: true })
   category!: string | null;
 
   @Column({ type: 'varchar', length: 10, nullable: true })
   budget_type!: BudgetType | null;
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', length: 200, nullable: true })
   notes!: string | null;
 
   @ManyToOne(() => Account, account => account.transactions)
   @JoinColumn({ name: 'account_id' })
   account!: Account;
 
-  @Column({ nullable: true })
+  @Column({ type: 'int', nullable: true })
   account_id!: number | null;
 
-  @Column({ nullable: true })
+  @Column({ type: 'int', nullable: true })
   destination_account_id!: number | null;
 
-  @Column({ nullable: true })
+  @Column({ type: 'int', nullable: true })
   debt_id!: number | null;
 
-  @Column({ nullable: true })
+  @Column({ type: 'int', nullable: true })
   receivable_id!: number | null;
 
-  @Column({ nullable: true })
+  @Column({ type: 'int', nullable: true })
   recurring_id!: number | null;
 
   @CreateDateColumn()

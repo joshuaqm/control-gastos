@@ -1,10 +1,11 @@
 import { Bell, Menu, Moon, Search, Sun } from 'lucide-react'
 
-export default function Header({ onToggleSidebar, darkMode, onToggleDark, onOpenChat }: {
+export default function Header({ onToggleSidebar, darkMode, onToggleDark, onOpenChat, userName }: {
   onToggleSidebar: () => void
   darkMode: boolean
   onToggleDark: () => void
   onOpenChat: () => void
+  userName?: string
 }) {
   return (
     <header
@@ -40,8 +41,9 @@ export default function Header({ onToggleSidebar, darkMode, onToggleDark, onOpen
         <div
           className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold cursor-pointer"
           style={{ background: 'linear-gradient(135deg,#7C3AED,#06D6A0)' }}
+          title={userName}
         >
-          AG
+          {(userName || 'AG').slice(0, 2).toUpperCase()}
         </div>
       </div>
     </header>

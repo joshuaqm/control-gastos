@@ -1,20 +1,38 @@
 import { useState } from 'react'
 import { Eye, EyeOff, Globe, TrendingUp } from 'lucide-react'
 import StarField from '@/components/ui/StarField'
+import { login, register, type ApiUser } from '@/api/auth'
 
 type Mode = 'login' | 'register'
 
-export default function LoginScreen({ onLogin }: { onLogin: () => void }) {
+export default function LoginScreen({
+  onLogin,
+}: {
+  onLogin: (user: ApiUser) => void
+}) {
   const [mode, setMode] = useState<Mode>('login')
   const [showPass, setShowPass] = useState(false)
+  const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [pass, setPass] = useState('')
+  const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setError('')
     setLoading(true)
-    setTimeout(() => { setLoading(false); onLogin() }, 1200)
+    try {
+      const res =
+        mode === 'login'
+          ? await login(email.trim(), pass)
+          : await register(name.trim(), email.trim(), pass)
+      onLogin(res.user)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Ocurrió un error, intenta de nuevo')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -37,7 +55,7 @@ export default function LoginScreen({ onLogin }: { onLogin: () => void }) {
           {(['login', 'register'] as const).map(m => (
             <button
               key={m}
-              onClick={() => setMode(m)}
+              onClick={() => { setMode(m); setError('') }}
               className="flex-1 py-2 rounded-lg text-sm font-medium transition-all duration-300"
               style={mode === m ? { background: 'linear-gradient(135deg,#7C3AED,#5B21B6)', color: '#fff', boxShadow: '0 0 15px rgba(124,58,237,0.4)' } : { color: '#A0A0B8' }}
             >
@@ -52,6 +70,8 @@ export default function LoginScreen({ onLogin }: { onLogin: () => void }) {
               <label className="block text-xs font-medium mb-1" style={{ color: '#A0A0B8' }}>Nombre completo</label>
               <input
                 type="text"
+                value={name}
+                onChange={e => setName(e.target.value)}
                 placeholder="Ana García"
                 className="w-full px-4 py-3 rounded-xl text-sm"
                 style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff' }}
@@ -86,6 +106,12 @@ export default function LoginScreen({ onLogin }: { onLogin: () => void }) {
             </div>
           </div>
 
+          {error && (
+            <div className="px-3 py-2 rounded-lg text-xs" style={{ background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.3)', color: '#F87171' }}>
+              {error}
+            </div>
+          )}
+
           {mode === 'login' && (
             <button type="button" className="text-xs text-right transition-colors" style={{ color: '#7C3AED' }}>
               ¿Olvidaste tu contraseña?
@@ -100,21 +126,6 @@ export default function LoginScreen({ onLogin }: { onLogin: () => void }) {
             {loading ? (
               <div className="w-5 h-5 rounded-full border-2 border-white/30 border-t-white animate-spin" />
             ) : mode === 'login' ? 'Iniciar Sesión' : 'Crear Cuenta'}
-          </button>
-
-          <div className="flex items-center gap-3 my-1">
-            <div className="flex-1 h-px" style={{ background: 'rgba(255,255,255,0.1)' }} />
-            <span className="text-xs" style={{ color: '#6B6B85' }}>o</span>
-            <div className="flex-1 h-px" style={{ background: 'rgba(255,255,255,0.1)' }} />
-          </div>
-
-          <button
-            type="button"
-            className="w-full py-3 rounded-xl font-medium text-sm flex items-center justify-center gap-2 transition-all hover:bg-white/10"
-            style={{ border: '1px solid rgba(255,255,255,0.15)', color: '#A0A0B8' }}
-          >
-            <Globe size={16} />
-            Continuar con Google
           </button>
         </form>
       </div>
