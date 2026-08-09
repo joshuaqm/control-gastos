@@ -19,6 +19,27 @@ import { useToasts } from '@/hooks/useToasts'
 
 const SESSION_KEY = 'financeai.session'
 
+const SCREEN_PATH: Record<ScreenId, string> = {
+  dashboard: '/',
+  accounts: '/accounts',
+  transactions: '/transactions',
+  budgets: '/budgets',
+  debts: '/debts',
+  investments: '/investments',
+  settings: '/settings',
+  assistant: '/assistant',
+}
+
+const pathToScreen: Record<string, ScreenId> = {}
+for (const [id, path] of Object.entries(SCREEN_PATH)) {
+  pathToScreen[path] = id as ScreenId
+}
+
+const screenFromPath = (): ScreenId => {
+  const path = window.location.pathname.replace(/\/+$/, '') || '/'
+  return pathToScreen[path] ?? 'dashboard'
+}
+
 export default function App() {
   const [user, setUser] = useState<ApiUser | null>(() => {
     try {
@@ -28,12 +49,25 @@ export default function App() {
       return null
     }
   })
-  const [screen, setScreen] = useState<ScreenId>('dashboard')
+  const [screen, setScreen] = useState<ScreenId>(screenFromPath)
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [darkMode, setDarkMode] = useState(true)
-  const [chatOpen, setChatOpen] = useState(false)
   const [chatMsg, setChatMsg] = useState('')
   const { toasts, showToast, dismiss } = useToasts()
+
+  const navigate = (next: ScreenId) => {
+    setScreen(next)
+    const path = SCREEN_PATH[next]
+    if (window.location.pathname !== path) {
+      window.history.pushState(null, '', path)
+    }
+  }
+
+  useEffect(() => {
+    const onPop = () => setScreen(screenFromPath())
+    window.addEventListener('popstate', onPop)
+    return () => window.removeEventListener('popstate', onPop)
+  }, [])
 
   const handleLogin = (res: AuthResponse) => {
     localStorage.setItem(SESSION_KEY, JSON.stringify({ user: res.user, token: res.token }))
@@ -44,11 +78,12 @@ export default function App() {
     localStorage.removeItem(SESSION_KEY)
     setUser(null)
     setScreen('dashboard')
+    window.history.replaceState(null, '', SCREEN_PATH.dashboard)
   }
 
   const openChat = (msg?: string) => {
     setChatMsg(msg || '')
-    setChatOpen(true)
+    navigate('assistant')
   }
 
   const renderScreen = () => {
@@ -91,20 +126,21 @@ export default function App() {
       <div className="flex flex-1 overflow-hidden" style={{ minHeight: 0 }}>
         {/* Sidebar — hidden on mobile */}
         <div className="hidden sm:flex flex-col" style={{ flexShrink: 0 }}>
-          <Sidebar active={screen} setActive={setScreen} onLogout={handleLogout} collapsed={!sidebarOpen} />
+          <Sidebar active={screen} setActive={navigate} onLogout={handleLogout} collapsed={!sidebarOpen} />
         </div>
 
         {/* Main content */}
         <main className="flex-1 overflow-y-auto p-4 sm:p-6 relative" style={{ paddingBottom: 80 }}>
-          <div className="max-w-5xl mx-auto">{renderScreen()}</div>
+          <div className="max-w-5xl mx-auto">
+            {renderScreen()}
+            {/* AI Chat — rendered as a section, kept mounted to preserve conversation */}
+            <AIChat initialMsg={chatMsg} visible={screen === 'assistant'} />
+          </div>
         </main>
       </div>
 
       {/* Mobile nav */}
-      <MobileNav active={screen} setActive={setScreen} />
-
-      {/* AI Chat */}
-      <AIChat open={chatOpen} onClose={() => setChatOpen(false)} initialMsg={chatMsg} />
+      <MobileNav active={screen} setActive={navigate} />
 
       {/* Toasts */}
       <Toast toasts={toasts} dismiss={dismiss} />

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { Bot, Check, Send, X } from 'lucide-react'
+import { Bot, Check, Send } from 'lucide-react'
 import type { ChatCard, ChatMsg } from '@/types'
 import { fmt } from '@/utils/format'
 
@@ -87,10 +87,9 @@ function MessageCard({ card }: { card?: ChatCard }) {
   )
 }
 
-export default function AIChat({ open, onClose, initialMsg }: {
-  open: boolean
-  onClose: () => void
-  initialMsg: string
+export default function AIChat({ initialMsg = '', visible = true }: {
+  initialMsg?: string
+  visible?: boolean
 }) {
   const [messages, setMessages] = useState<ChatMsg[]>([
     { id: 0, from: 'ai', text: '¡Hola Ana! Soy tu asistente financiero. Puedo ayudarte a registrar gastos, revisar tu presupuesto, consultar tus deudas y mucho más. ¿En qué te ayudo hoy?' },
@@ -98,16 +97,7 @@ export default function AIChat({ open, onClose, initialMsg }: {
   const [input, setInput] = useState('')
   const [typing, setTyping] = useState(false)
   const bottomRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    if (initialMsg && open) {
-      setTimeout(() => sendMessage(initialMsg), 300)
-    }
-  }, [open, initialMsg])
-
-  useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages, typing])
+  const lastMsgRef = useRef('')
 
   const sendMessage = useCallback((text: string) => {
     const userMsg: ChatMsg = { id: Date.now(), from: 'user', text }
@@ -128,32 +118,39 @@ export default function AIChat({ open, onClose, initialMsg }: {
     }, 1200)
   }, [])
 
-  if (!open) return null
+  useEffect(() => {
+    if (initialMsg && initialMsg !== lastMsgRef.current) {
+      lastMsgRef.current = initialMsg
+      sendMessage(initialMsg)
+    }
+  }, [initialMsg, sendMessage])
+
+  useEffect(() => {
+    if (visible) bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [messages, typing, visible])
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-end p-4 sm:p-6 pointer-events-none">
-      <div
-        className="glass animate-slide-up rounded-2xl flex flex-col pointer-events-auto"
-        style={{
-          width: '100%', maxWidth: 400, height: '80vh', maxHeight: 600,
-          border: '1px solid rgba(124,58,237,0.3)',
-          boxShadow: '0 0 60px rgba(124,58,237,0.2)',
-        }}
-      >
-        <div className="flex items-center gap-3 p-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
-          <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg,#7C3AED,#5B21B6)' }}>
-            <Bot size={18} color="white" />
-          </div>
-          <div className="flex-1">
-            <p className="text-sm font-semibold">Asistente Financiero IA</p>
-            <p className="text-xs" style={{ color: '#06D6A0' }}>● En línea</p>
-          </div>
-          <button onClick={onClose} className="p-2 rounded-lg hover:bg-white/10 transition-colors" style={{ color: '#A0A0B8' }}>
-            <X size={18} />
-          </button>
+    <div
+      className="glass rounded-2xl flex-col overflow-hidden"
+      style={{
+        display: visible ? 'flex' : 'none',
+        height: 560,
+        maxHeight: '70vh',
+        border: '1px solid rgba(124,58,237,0.3)',
+        boxShadow: '0 0 60px rgba(124,58,237,0.15)',
+      }}
+    >
+      <div className="flex items-center gap-3 p-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+        <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg,#7C3AED,#5B21B6)' }}>
+          <Bot size={18} color="white" />
         </div>
+        <div className="flex-1">
+          <p className="text-sm font-semibold">Asistente Financiero IA</p>
+          <p className="text-xs" style={{ color: '#06D6A0' }}>● En línea</p>
+        </div>
+      </div>
 
-        <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-3">
+      <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-3">
           {messages.map(msg => (
             <div key={msg.id} className={`flex gap-2 ${msg.from === 'user' ? 'flex-row-reverse' : ''}`}>
               {msg.from === 'ai' && (
@@ -211,7 +208,6 @@ export default function AIChat({ open, onClose, initialMsg }: {
             </button>
           </div>
         </div>
-      </div>
     </div>
   )
 }
