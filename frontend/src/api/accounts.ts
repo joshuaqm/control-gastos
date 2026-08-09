@@ -7,6 +7,7 @@ export interface ApiAccount {
   initial_balance: number
   credit_limit: number | null
   interest_rate: number | null
+  last_interest_at: string | null
   cutoff_day: number | null
   payment_due_day: number | null
   is_active: boolean
@@ -42,6 +43,24 @@ export async function updateAccount(
 
 export async function deleteAccount(id: number): Promise<void> {
   return request<void>(`/accounts/${id}`, { method: 'DELETE' })
+}
+
+export interface AdjustInterestResult {
+  theoreticalRemoved: number
+  balanceDelta: number
+  account: ApiAccount
+  transaction: { id: number; amount: number; date: string; notes: string }
+}
+
+export async function adjustAccountInterest(
+  id: number,
+  amount: number,
+  month?: string
+): Promise<AdjustInterestResult> {
+  return request<AdjustInterestResult>(`/accounts/${id}/adjust-interest`, {
+    method: 'POST',
+    body: { amount, month },
+  })
 }
 
 async function request<T>(

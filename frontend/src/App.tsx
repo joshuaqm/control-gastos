@@ -13,9 +13,11 @@ import AccountsScreen from '@/features/Accounts'
 import BudgetsScreen from '@/features/Budgets'
 import Dashboard from '@/features/Dashboard'
 import DebtsScreen from '@/features/Debts'
+import RecurringScreen from '@/features/Recurring'
 import InvestmentsScreen from '@/features/Investments'
 import SettingsScreen from '@/features/Settings'
 import TransactionsScreen from '@/features/Transactions'
+import GoalsScreen from '@/features/Goals'
 import { useToasts } from '@/hooks/useToasts'
 
 const SESSION_KEY = 'financeai.session'
@@ -25,7 +27,9 @@ const SCREEN_PATH: Record<ScreenId, string> = {
   accounts: '/accounts',
   transactions: '/transactions',
   budgets: '/budgets',
+  goals: '/goals',
   debts: '/debts',
+  recurring: '/recurring',
   investments: '/investments',
   settings: '/settings',
   assistant: '/assistant',
@@ -117,8 +121,12 @@ export default function App() {
         return <AccountsScreen showToast={showToast} />
       case 'budgets':
         return <BudgetsScreen />
+      case 'goals':
+        return <GoalsScreen showToast={showToast} />
       case 'debts':
         return <DebtsScreen showToast={showToast} />
+      case 'recurring':
+        return <RecurringScreen showToast={showToast} />
       case 'investments':
         return <InvestmentsScreen showToast={showToast} />
       case 'settings':

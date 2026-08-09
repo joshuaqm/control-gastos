@@ -55,6 +55,9 @@ export class Transaction {
   @Column({ type: 'int', nullable: true })
   recurring_id!: number | null;
 
+  @Column({ type: 'int', nullable: true })
+  goal_id!: number | null;
+
   @CreateDateColumn()
   created_at!: Date;
 

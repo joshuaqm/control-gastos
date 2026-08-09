@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
-import { Banknote, CreditCard, Landmark, Pencil, PiggyBank, Plus, Trash2, TrendingUp, type LucideIcon } from 'lucide-react'
+import { Banknote, CreditCard, Landmark, Pencil, PiggyBank, Plus, Trash2, TrendingUp, Percent, type LucideIcon } from 'lucide-react'
 import AccountFormModal from '@/components/accounts/AccountFormModal'
-import { createAccount, deleteAccount, fetchAccounts, updateAccount, type ApiAccount } from '@/api/accounts'
+import InterestAdjustModal from '@/components/accounts/InterestAdjustModal'
+import { adjustAccountInterest, createAccount, deleteAccount, fetchAccounts, updateAccount, type ApiAccount } from '@/api/accounts'
 import { fetchTransactions, type ApiTransaction } from '@/api/transactions'
 import { fmt } from '@/utils/format'
 import type { ShowToast } from '@/types'
@@ -30,6 +31,7 @@ export default function AccountsScreen({ showToast }: { showToast: ShowToast }) 
   const [loading, setLoading] = useState(true)
   const [modalOpen, setModalOpen] = useState(false)
   const [editing, setEditing] = useState<ApiAccount | null>(null)
+  const [interestAdjust, setInterestAdjust] = useState<ApiAccount | null>(null)
   const [accountsWithMovements, setAccountsWithMovements] = useState<Set<number>>(new Set())
   const [txns, setTxns] = useState<ApiTransaction[]>([])
 
@@ -68,6 +70,14 @@ export default function AccountsScreen({ showToast }: { showToast: ShowToast }) 
       showToast('Cuenta registrada', 'success')
     }
     setModalOpen(false)
+    await load()
+  }
+
+  const handleInterestAdjust = async (data: { amount: number; month: string }) => {
+    if (!interestAdjust) return
+    await adjustAccountInterest(interestAdjust.id, data.amount, data.month)
+    setInterestAdjust(null)
+    showToast('Rendimiento ajustado', 'success')
     await load()
   }
 
@@ -165,7 +175,7 @@ export default function AccountsScreen({ showToast }: { showToast: ShowToast }) 
                     <span>Límite: {fmt(a.credit_limit)}</span>
                   )}
                   {a.interest_rate != null && (
-                    <span>Tasa: {a.interest_rate}%</span>
+                    <span>Tasa: {a.interest_rate}%{a.last_interest_at ? ` · último ajuste ${new Date(a.last_interest_at).toLocaleDateString('es-MX')}` : ''}</span>
                   )}
                   {isCredit && a.cutoff_day != null && (
                     <span>Corte: día {a.cutoff_day}</span>
@@ -174,6 +184,16 @@ export default function AccountsScreen({ showToast }: { showToast: ShowToast }) 
                     <span>Pago: día {a.payment_due_day}</span>
                   )}
                 </div>
+
+                {!isCredit && a.interest_rate != null && (
+                  <button
+                    onClick={() => setInterestAdjust(a)}
+                    className="mt-3 w-full py-2 rounded-xl text-xs font-medium flex items-center justify-center gap-2 transition-colors hover:bg-white/10"
+                    style={{ background: 'rgba(6,214,160,0.08)', color: '#34D399', border: '1px solid rgba(6,214,160,0.25)' }}
+                  >
+                    <Percent size={14} /> Ajustar rendimiento real
+                  </button>
+                )}
 
                 <div className="flex gap-2 mt-4">
                   <button
@@ -210,6 +230,13 @@ export default function AccountsScreen({ showToast }: { showToast: ShowToast }) 
         account={editing}
         onClose={() => setModalOpen(false)}
         onSave={handleSave}
+      />
+
+      <InterestAdjustModal
+        open={interestAdjust !== null}
+        account={interestAdjust}
+        onClose={() => setInterestAdjust(null)}
+        onSubmit={handleInterestAdjust}
       />
 
       <button

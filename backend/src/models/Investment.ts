@@ -35,6 +35,9 @@ export class Investment {
   current_price!: number;
 
   @Column({ type: 'date', nullable: true })
+  purchase_date!: Date;
+
+  @Column({ type: 'date', nullable: true })
   last_updated!: Date;
 
   @Column({ nullable: true })

@@ -1,7 +1,7 @@
 import { type ScreenId } from '@/config/navigation'
 import { navItems } from '@/config/navigation'
 
-const MOBILE_IDS: ScreenId[] = ['dashboard', 'accounts', 'transactions', 'assistant', 'budgets']
+const MOBILE_IDS: ScreenId[] = ['dashboard', 'accounts', 'transactions', 'recurring', 'assistant']
 
 export default function MobileNav({ active, setActive }: {
   active: ScreenId

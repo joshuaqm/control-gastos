@@ -7,6 +7,9 @@ import { budgetsRouter } from './budgets';
 import { debtsRouter } from './debts';
 import { receivablesRouter } from './receivables';
 import { installmentsRouter } from './installments';
+import { investmentsRouter } from './investments';
+import { recurringRouter } from './recurring';
+import { goalsRouter } from './goals';
 
 const router = Router();
 
@@ -21,5 +24,8 @@ router.use('/budgets', budgetsRouter);
 router.use('/debts', debtsRouter);
 router.use('/receivables', receivablesRouter);
 router.use('/installments', installmentsRouter);
+router.use('/investments', investmentsRouter);
+router.use('/recurring', recurringRouter);
+router.use('/goals', goalsRouter);
 
 export default router;

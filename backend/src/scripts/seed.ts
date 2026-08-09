@@ -60,7 +60,7 @@ async function seedDatabase() {
     // Cuentas de ejemplo
     const accountData = [
       { name: 'BBVA Débito', type: 'debit' as const, initial_balance: 10000 },
-      { name: 'Nu México', type: 'savings' as const, initial_balance: 5000 },
+      { name: 'Nu México', type: 'savings' as const, initial_balance: 5000, interest_rate: 4.5 },
       { name: 'Efectivo', type: 'cash' as const, initial_balance: 2000 },
       { name: 'BBVA Crédito', type: 'credit' as const, initial_balance: 0, credit_limit: 15000 },
       { name: 'Banorte Débito', type: 'debit' as const, initial_balance: 3500 },
@@ -331,9 +331,9 @@ async function seedDatabase() {
 
     // Metas de ahorro
     const goalData = [
-      { name: 'Fondo de emergencia', target_amount: 30000, current_amount: 12000, target_date: new Date('2026-12-31'), priority: 1, notes: '3 meses de gastos' },
-      { name: 'Viaje a CDMX', target_amount: 8000, current_amount: 3500, target_date: new Date('2026-10-15'), priority: 2 },
-      { name: 'Computadora nueva', target_amount: 25000, current_amount: 5000, target_date: new Date('2027-02-01'), priority: 3 },
+      { name: 'Fondo de emergencia', target_amount: 30000, current_amount: 12000, target_date: new Date('2026-12-31'), priority: 1, account_id: nu?.id ?? null, notes: '3 meses de gastos' },
+      { name: 'Viaje a CDMX', target_amount: 8000, current_amount: 3500, target_date: new Date('2026-10-15'), priority: 2, account_id: nu?.id ?? null },
+      { name: 'Computadora nueva', target_amount: 25000, current_amount: 5000, target_date: new Date('2027-02-01'), priority: 3, account_id: nu?.id ?? null },
     ];
 
     for (const goalDataItem of goalData) {
@@ -348,9 +348,9 @@ async function seedDatabase() {
 
     // Inversiones
     const investmentData = [
-      { name: 'S&P 500 ETF', ticker: 'VOO', broker: 'GBM', type: 'etf' as const, units: 5, average_cost: 12000, current_price: 13500, last_updated: new Date('2026-08-01'), notes: 'Largo plazo' },
-      { name: 'Bitcoin', ticker: 'BTC', broker: 'Binance', type: 'crypto' as const, units: 0.05, average_cost: 8000, current_price: 9200, last_updated: new Date('2026-08-05') },
-      { name: 'CETES 28 días', ticker: 'CETES', broker: 'CETES Directo', type: 'fixed_income' as const, units: 1, average_cost: 50000, current_price: 50150, last_updated: new Date('2026-08-09') },
+      { name: 'S&P 500 ETF', ticker: 'VOO', broker: 'GBM', type: 'etf' as const, units: 5, average_cost: 12000, current_price: 13500, purchase_date: new Date('2026-03-10'), last_updated: new Date('2026-08-09'), notes: 'Largo plazo' },
+      { name: 'Bitcoin', ticker: 'BTC', broker: 'Binance', type: 'crypto' as const, units: 0.05, average_cost: 8000, current_price: 9200, purchase_date: new Date('2026-06-01'), last_updated: new Date('2026-08-09') },
+      { name: 'CETES 28 días', ticker: 'CETES', broker: 'CETES Directo', type: 'fixed_income' as const, units: 1, average_cost: 50000, current_price: 50150, purchase_date: new Date('2026-07-20'), last_updated: new Date('2026-08-09') },
     ];
 
     for (const investmentDataItem of investmentData) {

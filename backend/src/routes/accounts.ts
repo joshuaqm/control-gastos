@@ -3,6 +3,7 @@ import type { DeepPartial } from 'typeorm';
 import { AppDataSource } from '../config/database';
 import { Account } from '../models/Account';
 import { Transaction } from '../models/Transaction';
+import { adjustRealInterest } from '../services/interestAccrual';
 import { logger } from '../utils/logger';
 import { authenticate } from '../middleware/auth';
 import { AppError } from '../middleware/errorHandler';
@@ -80,6 +81,20 @@ router.put('/:id', async (req, res, next) => {
 
     logger.info(`Account updated: ${account.name}`);
     res.json(account);
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Adjust real monthly interest for an account (replaces theoretical accruals of that month)
+router.post('/:id/adjust-interest', async (req, res, next) => {
+  try {
+    const id = parseInt(req.params.id);
+    const amount = Number(req.body?.amount);
+    const month = req.body?.month ? new Date(`${String(req.body.month).slice(0, 7)}-01T00:00:00`) : undefined;
+
+    const result = await adjustRealInterest(id, req.user!.id, amount, month);
+    res.json(result);
   } catch (error) {
     next(error);
   }

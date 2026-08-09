@@ -8,6 +8,7 @@ import { AppDataSource } from './config/database';
 import routes from './routes';
 import { errorHandler } from './middleware/errorHandler';
 import { logger } from './utils/logger';
+import { startInterestScheduler } from './services/interestAccrual';
 
 dotenv.config();
 
@@ -56,6 +57,7 @@ AppDataSource.initialize()
       logger.info(`🚀 Server running on port ${PORT}`);
       logger.info(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
     });
+    startInterestScheduler();
   })
   .catch((error) => {
     logger.error('❌ Database connection failed:', error);

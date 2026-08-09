@@ -28,6 +28,9 @@ export class Goal {
   @Column({ default: 1 })
   priority!: number;
 
+  @Column({ type: 'int', nullable: true })
+  account_id!: number | null;
+
   @Column({ nullable: true })
   notes!: string;
 
