@@ -38,8 +38,9 @@ export default function MobileMenu({ open, active, onSelect, onClose, onLogout, 
               <button
                 key={item.id}
                 onClick={() => onSelect(item.id)}
+                disabled={item.disabled}
                 className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium transition-colors"
-                style={{ background: isActive ? 'rgba(124,58,237,0.2)' : 'transparent', color: isActive ? '#A78BFA' : '#A0A0B8' }}
+                style={{ background: isActive ? 'rgba(124,58,237,0.2)' : 'transparent', color: isActive || !item.disabled ? '#A0A0B8' : '#4A4A5E', opacity: item.disabled ? 0.6 : 1 }}
               >
                 <Icon size={18} className="flex-shrink-0" />
                 {item.label}

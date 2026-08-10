@@ -20,6 +20,12 @@ export class User {
   @Column({ type: 'decimal', precision: 12, scale: 2, nullable: true })
   monthly_income!: number | null;
 
+  @Column({ type: 'varchar', length: 10, default: 'MXN' })
+  currency!: string;
+
+  @Column({ name: 'notifications_enabled', default: true })
+  notifications_enabled!: boolean;
+
   @CreateDateColumn()
   created_at!: Date;
 

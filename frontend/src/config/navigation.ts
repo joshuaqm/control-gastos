@@ -29,5 +29,5 @@ export const navItems: NavItem[] = [
   { id: 'recurring', label: 'Recurrentes', icon: Repeat },
   { id: 'investments', label: 'Inversiones', icon: TrendingUp },
   { id: 'assistant', label: 'Asistente IA', icon: Bot, disabled: true }, // Deshabilitado por ahora
-  { id: 'settings', label: 'Configuración', icon: Settings, disabled: true }, // Deshabilitado por ahora
+  { id: 'settings', label: 'Configuración', icon: Settings },
 ]

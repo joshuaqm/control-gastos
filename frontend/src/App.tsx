@@ -136,7 +136,23 @@ export default function App() {
       case 'investments':
         return <InvestmentsScreen showToast={showToast} />
       case 'settings':
-        return <SettingsScreen darkMode={darkMode} onToggleDark={() => setDarkMode(v => !v)} />
+        return (
+          <SettingsScreen
+            darkMode={darkMode}
+            onToggleDark={() => setDarkMode(v => !v)}
+            showToast={showToast}
+            onProfileChange={(username, email) => {
+              setUser(prev => prev ? { ...prev, username, email } : prev)
+              try {
+                const raw = localStorage.getItem(SESSION_KEY)
+                if (raw) {
+                  const parsed = JSON.parse(raw)
+                  localStorage.setItem(SESSION_KEY, JSON.stringify({ ...parsed, user: { ...parsed.user, username, email } }))
+                }
+              } catch { /* ignore */ }
+            }}
+          />
+        )
     }
   }
 

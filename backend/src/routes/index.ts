@@ -10,6 +10,7 @@ import { installmentsRouter } from './installments';
 import { investmentsRouter } from './investments';
 import { recurringRouter } from './recurring';
 import { goalsRouter } from './goals';
+import { settingsRouter } from './settings';
 
 const router = Router();
 
@@ -27,5 +28,6 @@ router.use('/installments', installmentsRouter);
 router.use('/investments', investmentsRouter);
 router.use('/recurring', recurringRouter);
 router.use('/goals', goalsRouter);
+router.use('/settings', settingsRouter);
 
 export default router;
