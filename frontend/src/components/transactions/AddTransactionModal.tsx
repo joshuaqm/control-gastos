@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react'
 import { X } from 'lucide-react'
-import { createTransaction, updateTransaction, type ApiTransaction } from '@/api/transactions'
+import { createTransaction, fetchTransactions, updateTransaction, type ApiTransaction } from '@/api/transactions'
 import { fetchAccounts, type ApiAccount } from '@/api/accounts'
+import { accountBalance } from '@/utils/accountBalance'
+import { fmt } from '@/utils/format'
 
 const CATEGORIES = [
   'Comida', 'Transporte', 'Vivienda', 'Salud', 'Educación',
@@ -44,6 +46,7 @@ export default function AddTransactionModal({ open, onClose, onAdd, transaction 
   const [cat, setCat] = useState('Comida')
   const [budgetType, setBudgetType] = useState('')
   const [accounts, setAccounts] = useState<ApiAccount[]>([])
+  const [txns, setTxns] = useState<ApiTransaction[]>([])
   const [accountId, setAccountId] = useState<number | null>(null)
   const [destAccountId, setDestAccountId] = useState<number | null>(null)
   const [saving, setSaving] = useState(false)
@@ -53,6 +56,7 @@ export default function AddTransactionModal({ open, onClose, onAdd, transaction 
     if (!open) return
     setError(null)
     setAccounts([])
+    setTxns([])
     if (transaction) {
       setDesc(transaction.description ?? '')
       setAmount(String(Math.abs(Number(transaction.amount))))
@@ -75,6 +79,9 @@ export default function AddTransactionModal({ open, onClose, onAdd, transaction 
         setAccountId(transaction?.account_id ?? null)
         setError(e instanceof Error ? e.message : 'Error al cargar cuentas')
       })
+    fetchTransactions()
+      .then(setTxns)
+      .catch(() => undefined)
   }, [open, transaction])
 
   const isStandard = ['expense', 'income', 'transfer'].includes(type)
@@ -88,6 +95,25 @@ export default function AddTransactionModal({ open, onClose, onAdd, transaction 
     if (isTransfer && (accountId == null || destAccountId == null)) {
       setError('Selecciona la cuenta de origen y la de destino')
       return
+    }
+    if (isTransfer && accountId === destAccountId) {
+      setError('La cuenta de origen y la de destino deben ser diferentes')
+      return
+    }
+    if (isTransfer && accountId != null) {
+      const sourceAccount = accounts.find(a => a.id === accountId)
+      if (sourceAccount && sourceAccount.type === 'credit') {
+        setError('No puedes transferir desde una tarjeta de crédito')
+        return
+      }
+      const balanceTxns = editing && transaction
+        ? txns.filter(t => t.id !== transaction.id)
+        : txns
+      const balance = accountBalance(sourceAccount!, balanceTxns)
+      if (balance + 0.005 < Number(amount)) {
+        setError(`Saldo insuficiente en ${sourceAccount!.name}: solo tienes ${fmt(balance)}`)
+        return
+      }
     }
     setSaving(true)
     setError(null)
@@ -225,7 +251,7 @@ export default function AddTransactionModal({ open, onClose, onAdd, transaction 
             >
               {accounts.length === 0 && <option value="">Sin cuentas</option>}
               {accounts.map(a => (
-                <option key={a.id} value={a.id}>{a.name}</option>
+                <option key={a.id} value={a.id}>{a.name} · {fmt(accountBalance(a, txns))}</option>
               ))}
             </select>
           </div>
@@ -243,7 +269,7 @@ export default function AddTransactionModal({ open, onClose, onAdd, transaction 
               >
                 {accounts.length === 0 && <option value="">Sin cuentas</option>}
                 {accounts.map(a => (
-                  <option key={a.id} value={a.id}>{a.name}</option>
+                  <option key={a.id} value={a.id}>{a.name} · {fmt(accountBalance(a, txns))}</option>
                 ))}
               </select>
             </div>

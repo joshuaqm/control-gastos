@@ -150,14 +150,9 @@ export default function DebtsScreen({ showToast }: { showToast: ShowToast }) {
         Number(inst.months_total) - Number(inst.months_paid)
       if (remainingMonths <= 0) continue
       const monthly = Number(inst.monthly_amount)
-      const monthsToMark = Math.min(
-        Math.floor(money / monthly),
-        remainingMonths,
-      )
-      if (monthsToMark > 0) {
-        await markInstallmentMonths(inst.id, monthsToMark)
-        money -= monthsToMark * monthly
-      }
+      if (money + 0.005 < monthly) continue
+      await markInstallmentMonths(inst.id, 1)
+      money -= monthly
     }
   }
 

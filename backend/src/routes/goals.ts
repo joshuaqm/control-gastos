@@ -147,13 +147,6 @@ router.post('/:id/deposit', async (req, res, next) => {
     });
     await transactionRepo.save(transaction);
 
-    source.initial_balance = Number(source.initial_balance) - amount;
-    await accountRepo.save(source);
-    if (destination) {
-      destination.initial_balance = Number(destination.initial_balance) + amount;
-      await accountRepo.save(destination);
-    }
-
     goal.current_amount = Number(goal.current_amount) + amount;
     await goalRepo.save(goal);
 
