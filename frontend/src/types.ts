@@ -16,7 +16,7 @@ export type Transaction = {
   account: string
   amount: number
   date: string
-  type: 'expense' | 'income'
+  type: 'expense' | 'income' | 'transfer'
 }
 
 export type BudgetCategory = {

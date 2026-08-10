@@ -23,7 +23,7 @@ import {
   type BudgetRuleRow,
   type BudgetSummary,
 } from '@/api/budgets'
-import { fmt } from '@/utils/format'
+import { fmt, fmtSigned } from '@/utils/format'
 
 const CATEGORY_META: Record<string, { icon: LucideIcon; color: string }> = {
   Comida: { icon: Utensils, color: '#06D6A0' },
@@ -117,8 +117,10 @@ function RuleRow({ row, saving, onSavePct }: {
       </div>
       <ProgressBar pct={pctUsed} color={row.color} over={over} />
       <div className="flex justify-between mt-1 text-xs">
-        <span style={{ color: '#6B6B85' }}>Restante: {fmt(row.remaining)}</span>
-        <span style={{ color: row.color }}>{pctUsed}%</span>
+        <span style={{ color: over ? '#EF4444' : '#6B6B85' }}>
+          {over ? 'Sobregasto: ' : 'Restante: '}{fmtSigned(row.remaining)}
+        </span>
+        <span style={{ color: over ? '#EF4444' : row.color }}>{pctUsed}%</span>
       </div>
     </div>
   )

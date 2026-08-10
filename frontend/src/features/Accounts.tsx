@@ -229,9 +229,9 @@ export default function AccountsScreen({
                         style={{ background: "rgba(255,255,255,0.08)" }}
                       >
                         <div
-                          className="h-full rounded-full ml-auto"
+                          className="h-full rounded-full"
                           style={{
-                            width: `${100 - usedPct}%`,
+                            width: `${usedPct}%`,
                             background: meta.color,
                           }}
                         />

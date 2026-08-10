@@ -45,6 +45,7 @@ export default function AddTransactionModal({ open, onClose, onAdd, transaction 
   const [budgetType, setBudgetType] = useState('')
   const [accounts, setAccounts] = useState<ApiAccount[]>([])
   const [accountId, setAccountId] = useState<number | null>(null)
+  const [destAccountId, setDestAccountId] = useState<number | null>(null)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -60,13 +61,15 @@ export default function AddTransactionModal({ open, onClose, onAdd, transaction 
       const existingCat = transaction.category ?? 'Comida'
       setCat(CATEGORIES.includes(existingCat) ? existingCat : existingCat)
       setBudgetType(transaction.budget_type ?? '')
+      setDestAccountId(transaction.destination_account_id ?? null)
     } else {
-      setDesc(''); setAmount(''); setDate(today()); setType('expense'); setCat('Comida'); setBudgetType('')
+      setDesc(''); setAmount(''); setDate(today()); setType('expense'); setCat('Comida'); setBudgetType(''); setDestAccountId(null)
     }
     fetchAccounts()
       .then(list => {
         setAccounts(list)
         setAccountId(transaction?.account_id ?? list[0]?.id ?? null)
+        setDestAccountId(prev => prev ?? list[1]?.id ?? list[0]?.id ?? null)
       })
       .catch(e => {
         setAccountId(transaction?.account_id ?? null)
@@ -74,23 +77,31 @@ export default function AddTransactionModal({ open, onClose, onAdd, transaction 
       })
   }, [open, transaction])
 
-  const isStandard = ['expense', 'income'].includes(type)
+  const isStandard = ['expense', 'income', 'transfer'].includes(type)
+  const isTransfer = type === 'transfer'
   const effectiveType: string = isStandard ? type : (transaction?.type ?? 'expense')
   const catOptions = CATEGORIES.includes(cat) ? CATEGORIES : [cat, ...CATEGORIES]
 
   const handleSave = async () => {
-    if (!desc || !amount || Number(amount) <= 0) return
+    if (!amount || Number(amount) <= 0) return
+    if (!isTransfer && !desc) return
+    if (isTransfer && (accountId == null || destAccountId == null)) {
+      setError('Selecciona la cuenta de origen y la de destino')
+      return
+    }
     setSaving(true)
     setError(null)
     const payload = {
       date,
-      description: desc.trim(),
+      description: (isTransfer ? desc.trim() || 'Transferencia' : desc.trim()),
       amount: Math.abs(Number(amount)),
       type: effectiveType,
-      category: cat,
-      budget_type: budgetType || null,
+      category: isTransfer ? 'Transferencia' : cat,
+      budget_type: isTransfer ? null : (budgetType || null),
       account_id: accountId,
-      destination_account_id: editing ? transaction?.destination_account_id ?? null : undefined,
+      destination_account_id: isTransfer
+        ? destAccountId
+        : editing ? transaction?.destination_account_id ?? null : undefined,
     }
     try {
       if (editing) {
@@ -118,14 +129,16 @@ export default function AddTransactionModal({ open, onClose, onAdd, transaction 
 
         {isStandard ? (
           <div className="flex rounded-xl p-1 mb-4" style={{ background: 'rgba(255,255,255,0.05)' }}>
-            {(['expense', 'income'] as const).map(t => (
+            {(['expense', 'income', 'transfer'] as const).map(t => (
               <button
                 key={t}
                 onClick={() => setType(t)}
                 className="flex-1 py-2 rounded-lg text-sm font-medium transition-all"
-                style={type === t ? { background: t === 'expense' ? '#EF4444' : '#06D6A0', color: '#fff' } : { color: '#A0A0B8' }}
+                style={type === t
+                  ? { background: t === 'expense' ? '#EF4444' : t === 'income' ? '#06D6A0' : '#3B82F6', color: '#fff' }
+                  : { color: '#A0A0B8' }}
               >
-                {t === 'expense' ? '↑ Gasto' : '↓ Ingreso'}
+                {t === 'expense' ? '↑ Gasto' : t === 'income' ? '↓ Ingreso' : '⇄ Transferencia'}
               </button>
             ))}
           </div>
@@ -161,6 +174,7 @@ export default function AddTransactionModal({ open, onClose, onAdd, transaction 
             />
           </div>
 
+          {!isTransfer && (
           <div>
             <p className="text-xs mb-1" style={{ color: '#6B6B85' }}>
               Categoría específica
@@ -176,37 +190,64 @@ export default function AddTransactionModal({ open, onClose, onAdd, transaction 
               ))}
             </select>
           </div>
+          )}
+
+          {!isTransfer && (
+            <div>
+              <p className="text-xs mb-1" style={{ color: '#6B6B85' }}>
+                Clasificación 50/30/20
+              </p>
+              <select
+                value={budgetType}
+                onChange={e => setBudgetType(e.target.value)}
+                className="w-full px-4 py-3 rounded-xl text-sm"
+                style={{ background: 'rgba(26,26,46,0.9)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff' }}
+              >
+                {TYPE_OPTIONS.map(o => (
+                  <option key={o.value || 'none'} value={o.value}>{o.label}</option>
+                ))}
+              </select>
+              <p className="text-xs mt-1" style={{ color: '#6B6B85' }}>
+                Ej. despensa va en “Necesidad”; un restaurante en “Deseo”.
+              </p>
+            </div>
+          )}
 
           <div>
             <p className="text-xs mb-1" style={{ color: '#6B6B85' }}>
-              Clasificación 50/30/20
+              Cuenta {isTransfer ? 'de origen' : ''}
             </p>
             <select
-              value={budgetType}
-              onChange={e => setBudgetType(e.target.value)}
+              value={accountId ?? ''}
+              onChange={e => setAccountId(e.target.value ? Number(e.target.value) : null)}
               className="w-full px-4 py-3 rounded-xl text-sm"
               style={{ background: 'rgba(26,26,46,0.9)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff' }}
             >
-              {TYPE_OPTIONS.map(o => (
-                <option key={o.value || 'none'} value={o.value}>{o.label}</option>
+              {accounts.length === 0 && <option value="">Sin cuentas</option>}
+              {accounts.map(a => (
+                <option key={a.id} value={a.id}>{a.name}</option>
               ))}
             </select>
-            <p className="text-xs mt-1" style={{ color: '#6B6B85' }}>
-              Ej. despensa va en “Necesidad”; un restaurante en “Deseo”.
-            </p>
           </div>
 
-          <select
-            value={accountId ?? ''}
-            onChange={e => setAccountId(e.target.value ? Number(e.target.value) : null)}
-            className="w-full px-4 py-3 rounded-xl text-sm"
-            style={{ background: 'rgba(26,26,46,0.9)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff' }}
-          >
-            {accounts.length === 0 && <option value="">Sin cuentas</option>}
-            {accounts.map(a => (
-              <option key={a.id} value={a.id}>{a.name}</option>
-            ))}
-          </select>
+          {isTransfer && (
+            <div>
+              <p className="text-xs mb-1" style={{ color: '#6B6B85' }}>
+                Cuenta de destino
+              </p>
+              <select
+                value={destAccountId ?? ''}
+                onChange={e => setDestAccountId(e.target.value ? Number(e.target.value) : null)}
+                className="w-full px-4 py-3 rounded-xl text-sm"
+                style={{ background: 'rgba(26,26,46,0.9)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff' }}
+              >
+                {accounts.length === 0 && <option value="">Sin cuentas</option>}
+                {accounts.map(a => (
+                  <option key={a.id} value={a.id}>{a.name}</option>
+                ))}
+              </select>
+            </div>
+          )}
         </div>
 
         {error && (
@@ -219,7 +260,7 @@ export default function AddTransactionModal({ open, onClose, onAdd, transaction 
           </button>
           <button
             onClick={handleSave}
-            disabled={saving || !desc || !amount || Number(amount) <= 0}
+            disabled={saving || !amount || Number(amount) <= 0 || (!isTransfer && !desc) || (isTransfer && (accountId == null || destAccountId == null))}
             className="btn-primary flex-1 py-3 rounded-xl text-sm font-semibold"
           >
             {saving ? 'Guardando…' : editing ? 'Guardar cambios' : 'Guardar'}

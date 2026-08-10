@@ -228,6 +228,7 @@ export default function Dashboard({
         .slice(0, 5)
         .map((t) => {
           const isIncome = t.type === "income"
+          const isTransfer = t.type === "transfer"
           const Icon =
             CAT_ICONS[t.category ?? ""] ?? banknoteIcons[t.type] ?? Tag
           const destId = t.destination_account_id ?? t.account_id
@@ -235,11 +236,13 @@ export default function Dashboard({
             id: t.id,
             icon: Icon,
             desc: t.description,
-            cat: t.category ?? (isIncome ? "Ingreso" : "Gasto"),
-            account: accountName(destId) || "—",
+            cat: t.category ?? (isIncome ? "Ingreso" : isTransfer ? "Transferencia" : "Gasto"),
+            account: isTransfer
+              ? `${accountName(t.account_id) || "?"} → ${accountName(destId) || "?"}`
+              : accountName(destId) || "—",
             amount: Math.abs(Number(t.amount)),
             date: fmtDate(t.date),
-            type: isIncome ? "income" : "expense",
+            type: isIncome ? "income" : isTransfer ? "transfer" : "expense",
           } satisfies Transaction
         }),
     [txns, accountName],

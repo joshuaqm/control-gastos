@@ -22,18 +22,6 @@ const freqLabel = (r: Pick<ApiRecurring, 'frequency' | 'interval_days'>) => {
   return FREQ_LABELS[r.frequency] ?? r.frequency
 }
 
-const freqMonths = (r: Pick<ApiRecurring, 'frequency' | 'interval_days'>) => {
-  switch (r.frequency) {
-    case 'weekly': return 52 / 12
-    case 'biweekly': return 26 / 12
-    case 'yearly': return 1 / 12
-    case 'interval':
-      if (r.interval_days && r.interval_days > 0) return 365 / r.interval_days / 12
-      return 1
-    default: return 1
-  }
-}
-
 const fmtDate = (d: string) => {
   const dt = new Date(`${String(d).slice(0, 10)}T00:00:00`)
   if (Number.isNaN(dt.getTime())) return d
@@ -75,7 +63,7 @@ export default function RecurringScreen({ showToast }: { showToast: ShowToast })
 
   const totalMonthly = recurring
     .filter(r => r.is_active)
-    .reduce((sum, r) => sum + Number(r.amount) * freqMonths(r), 0)
+    .reduce((sum, r) => sum + Number(r.amount), 0)
 
   const upcoming = recurring
     .filter(r => r.is_active)
@@ -160,7 +148,7 @@ export default function RecurringScreen({ showToast }: { showToast: ShowToast })
 
       <div className="grid grid-cols-2 gap-4">
         <div className="glass rounded-2xl p-5" style={{ border: '1px solid rgba(139,92,246,0.2)' }}>
-          <p className="text-sm" style={{ color: '#A0A0B8' }}>Compromiso mensual</p>
+          <p className="text-sm" style={{ color: '#A0A0B8' }}>Total en pagos</p>
           <p className="text-3xl font-bold font-mono mt-1" style={{ color: '#A78BFA' }}>{fmt(totalMonthly)}</p>
           <p className="text-xs mt-2" style={{ color: '#6B6B85' }}>{recurring.filter(r => r.is_active).length} recurrentes activos</p>
         </div>
@@ -191,7 +179,6 @@ export default function RecurringScreen({ showToast }: { showToast: ShowToast })
       ) : (
         <div className="flex flex-col gap-3">
           {recurring.map(r => {
-            const periodic = freqMonths(r)
             return (
               <div key={r.id} className="glass card-hover rounded-2xl p-4" style={{ border: '1px solid rgba(255,255,255,0.08)', opacity: r.is_active ? 1 : 0.55 }}>
                 <div className="flex items-center justify-between">
@@ -208,8 +195,8 @@ export default function RecurringScreen({ showToast }: { showToast: ShowToast })
                   </div>
                   <div className="flex items-center gap-3">
                     <div className="text-right">
-                      <p className="text-base font-bold font-mono" style={{ color: '#EF4444' }}>{fmt(Number(r.amount) * periodic)}</p>
-                      <p className="text-xs" style={{ color: '#6B6B85' }}>/mes · {fmt(r.amount)} {freqLabel(r)?.toLowerCase() ?? ''}</p>
+                      <p className="text-base font-bold font-mono" style={{ color: '#EF4444' }}>{fmt(Number(r.amount))}</p>
+                      <p className="text-xs" style={{ color: '#6B6B85' }}>{freqLabel(r)?.toLowerCase() ?? ''}</p>
                     </div>
                     <div className="flex items-center gap-1">
                       {r.is_active && (

@@ -8,10 +8,15 @@ export default function TransactionRow({ transaction, table = false }: {
   const t = transaction
   const Icon = t.icon
   const isIncome = t.type === 'income'
-  const iconBg = isIncome ? 'rgba(6,214,160,0.15)' : 'rgba(124,58,237,0.12)'
-  const iconColor = isIncome ? '#06D6A0' : '#A78BFA'
-  const amountColor = isIncome ? '#06D6A0' : '#EF4444'
-  const sign = isIncome ? '+' : '-'
+  const isTransfer = t.type === 'transfer'
+  const iconBg = isIncome
+    ? 'rgba(6,214,160,0.15)'
+    : isTransfer
+      ? 'rgba(59,130,246,0.15)'
+      : 'rgba(124,58,237,0.12)'
+  const iconColor = isIncome ? '#06D6A0' : isTransfer ? '#60A5FA' : '#A78BFA'
+  const amountColor = isIncome ? '#06D6A0' : isTransfer ? '#60A5FA' : '#EF4444'
+  const sign = isIncome ? '+' : isTransfer ? '' : '-'
 
   const iconBox = (
     <div

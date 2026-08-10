@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { fmt } from "./format"
+import { fmt, fmtSigned } from "./format"
 
 describe("fmt", () => {
   it("formats a positive number as MXN currency without decimals", () => {
@@ -13,5 +13,16 @@ describe("fmt", () => {
 
   it("formats thousands separators", () => {
     expect(fmt(1234567)).toMatch(/1,234,567/)
+  })
+})
+
+describe("fmtSigned", () => {
+  it("preserves the sign for a positive amount", () => {
+    expect(fmtSigned(1500)).toMatch(/1,500/)
+    expect(fmtSigned(1500)).not.toContain("-")
+  })
+
+  it("keeps the minus for a negative amount", () => {
+    expect(fmtSigned(-500)).toContain("-")
   })
 })

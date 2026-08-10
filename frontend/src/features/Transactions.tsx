@@ -6,12 +6,13 @@ import { fetchAccounts, type ApiAccount } from '@/api/accounts'
 import { fmt } from '@/utils/format'
 import type { ShowToast } from '@/types'
 
-type TxFilter = 'all' | 'income' | 'expense'
+type TxFilter = 'all' | 'income' | 'expense' | 'transfer'
 
 const filterLabels: Record<TxFilter, string> = {
   all: 'Todos',
   income: 'Ingresos',
   expense: 'Gastos',
+  transfer: 'Transferencias',
 }
 
 const PAGE_SIZE = 10
@@ -142,8 +143,10 @@ export default function TransactionsScreen({ showToast }: { showToast: ShowToast
       t.description,
       t.category ?? '',
       BUDGET_META[t.budget_type ?? '']?.label ?? '',
-      accountName(t.account_id),
-      t.type === 'income' ? Number(t.amount) : -Number(t.amount),
+      t.type === 'transfer'
+        ? `${accountName(t.account_id) || '?'} → ${accountName(t.destination_account_id) || '?'}`
+        : accountName(t.account_id),
+      t.type === 'income' ? Number(t.amount) : t.type === 'transfer' ? Number(t.amount) : -Number(t.amount),
     ])
     const csv = [header, ...rows].map(r => r.map(esc).join(',')).join('\n')
     const blob = new Blob([`\uFEFF${csv}`], { type: 'text/csv;charset=utf-8;' })
@@ -158,7 +161,8 @@ export default function TransactionsScreen({ showToast }: { showToast: ShowToast
   const totals = useMemo(() => {
     const income = filtered.filter(t => t.type === 'income').reduce((s, t) => s + Number(t.amount), 0)
     const expense = filtered.filter(t => t.type === 'expense').reduce((s, t) => s + Number(t.amount), 0)
-    return { income, expense }
+    const transfer = filtered.filter(t => t.type === 'transfer').reduce((s, t) => s + Number(t.amount), 0)
+    return { income, expense, transfer }
   }, [filtered])
 
   return (
@@ -176,7 +180,7 @@ export default function TransactionsScreen({ showToast }: { showToast: ShowToast
 
       <div className="flex flex-wrap gap-2 items-center">
         <div className="flex gap-2">
-          {(['all', 'income', 'expense'] as const).map(f => (
+          {(['all', 'income', 'expense', 'transfer'] as const).map(f => (
             <button
               key={f}
               onClick={() => setFilter(f)}
@@ -238,6 +242,7 @@ export default function TransactionsScreen({ showToast }: { showToast: ShowToast
       <div className="flex gap-4 text-xs">
         <span style={{ color: '#06D6A0' }}>Ingresos: <span className="font-mono font-semibold">{fmt(totals.income)}</span></span>
         <span style={{ color: '#EF4444' }}>Gastos: <span className="font-mono font-semibold">{fmt(totals.expense)}</span></span>
+        <span style={{ color: '#60A5FA' }}>Transferencias: <span className="font-mono font-semibold">{fmt(totals.transfer)}</span></span>
       </div>
 
       {error && <p className="text-xs" style={{ color: '#EF4444' }}>{error}</p>}
@@ -258,7 +263,12 @@ export default function TransactionsScreen({ showToast }: { showToast: ShowToast
         ) : (
           pageTxs.map(t => {
             const isIncome = t.type === 'income'
-            const amountColor = isIncome ? '#06D6A0' : '#EF4444'
+            const isTransfer = t.type === 'transfer'
+            const amountColor = isIncome ? '#06D6A0' : isTransfer ? '#60A5FA' : '#EF4444'
+            const sign = isIncome ? '+' : isTransfer ? '' : '−'
+            const accountCell = isTransfer
+              ? `${accountName(t.account_id) || '?'} → ${accountName(t.destination_account_id) || '?'}`
+              : accountName(t.account_id) || '—'
             return (
               <div
                 key={t.id}
@@ -275,9 +285,9 @@ export default function TransactionsScreen({ showToast }: { showToast: ShowToast
                   </div>
                 </div>
                 <span className="hidden sm:block text-xs" style={{ color: '#A0A0B8' }}>{t.category ?? '—'}</span>
-                <span className="hidden sm:block text-xs" style={{ color: '#A0A0B8' }}>{accountName(t.account_id) || '—'}</span>
+                <span className="hidden sm:block text-xs" style={{ color: '#A0A0B8' }}>{accountCell}</span>
                 <span className="text-sm font-mono font-semibold flex-shrink-0 sm:text-right" style={{ color: amountColor }}>
-                  {isIncome ? '+' : '−'}{fmt(t.amount)}
+                  {sign}{fmt(t.amount)}
                 </span>
                 <div className="flex gap-1.5 flex-shrink-0 justify-end">
                   <button
