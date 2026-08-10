@@ -166,7 +166,6 @@ export default function App() {
           onOpenMenu={() => setMobileMenuOpen(true)} 
           darkMode={darkMode} 
           onToggleDark={() => setDarkMode(v => !v)} 
-          onOpenChat={openChat} 
           userName={user?.username}
           sidebarOffset={sidebarWidth}
         />
@@ -189,7 +188,6 @@ export default function App() {
               setActive={navigate} 
               onLogout={handleLogout} 
               collapsed={!sidebarOpen}
-              headerHeight={56} // Pasamos la altura del header
             />
           </div>
 

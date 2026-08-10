@@ -5,7 +5,6 @@ export default function Header({
   onOpenMenu, 
   darkMode, 
   onToggleDark, 
-  onOpenChat, 
   userName,
   sidebarOffset = 0 
 }: {
@@ -13,7 +12,6 @@ export default function Header({
   onOpenMenu: () => void
   darkMode: boolean
   onToggleDark: () => void
-  onOpenChat: () => void
   userName?: string
   sidebarOffset?: number
 }) {
