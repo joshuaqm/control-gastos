@@ -3,6 +3,7 @@ import * as bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { AppDataSource } from '../config/database';
 import { User } from '../models/User';
+import { Budget } from '../models/Budget';
 import { AppError } from '../middleware/errorHandler';
 import { logger } from '../utils/logger';
 
@@ -29,10 +30,40 @@ const toSafeUser = (user: User): SafeUser => ({
   email: user.email,
 });
 
+const DEFAULT_INCOME = 15000;
+
+const DEFAULT_BUDGETS = [
+  { budget_type: 'need', percentage: 50, notes: 'Presupuesto de necesidades' },
+  { budget_type: 'want', percentage: 30, notes: 'Presupuesto de deseos' },
+  { budget_type: 'save', percentage: 20, notes: 'Ahorro mensual' },
+];
+
+async function createDefaultBudgets(user: User): Promise<void> {
+  const budgetRepo = AppDataSource.getRepository(Budget);
+  const now = new Date();
+  const month = new Date(now.getFullYear(), now.getMonth(), 1);
+  const income = user.monthly_income && Number(user.monthly_income) > 0
+    ? Number(user.monthly_income)
+    : DEFAULT_INCOME;
+
+  for (const def of DEFAULT_BUDGETS) {
+    const budget = budgetRepo.create({
+      userId: user.id,
+      month,
+      budget_type: def.budget_type,
+      percentage: def.percentage,
+      target_amount: Math.round((def.percentage / 100) * income * 100) / 100,
+      notes: def.notes,
+    });
+    await budgetRepo.save(budget);
+    logger.info(`✅ Default budget created for user ${user.email}: ${def.budget_type}`);
+  }
+}
+
 // POST /api/v1/auth/register
 router.post('/register', async (req, res, next) => {
   try {
-    const { username, email, password } = req.body;
+    const { username, email, password, monthly_income } = req.body;
 
     if (!username || !email || !password) {
       throw new AppError('Username, email and password are required', 400);
@@ -51,8 +82,18 @@ router.post('/register', async (req, res, next) => {
     }
 
     const password_hash = bcrypt.hashSync(password, 12);
-    const user = userRepo.create({ username, email, password_hash, is_active: true });
+    const user = userRepo.create({
+      username,
+      email,
+      password_hash,
+      is_active: true,
+      monthly_income: monthly_income !== undefined && Number(monthly_income) > 0
+        ? Number(monthly_income)
+        : null,
+    });
     await userRepo.save(user);
+
+    await createDefaultBudgets(user);
 
     logger.info(`✅ User registered: ${user.email}`);
     res.status(201).json({ user: toSafeUser(user), token: signToken(user) });

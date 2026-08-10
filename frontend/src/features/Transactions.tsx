@@ -93,7 +93,10 @@ export default function TransactionsScreen({ showToast }: { showToast: ShowToast
     if (toDate) list = list.filter(t => (t.date ?? '') <= toDate)
     const q = search.trim().toLowerCase()
     if (q) list = list.filter(t => (t.description ?? '').toLowerCase().includes(q))
-    return list
+    return [...list].sort(
+      (a, b) =>
+        (b.date || '').localeCompare(a.date || '') || (b.id ?? 0) - (a.id ?? 0),
+    )
   }, [txs, filter, catFilter, search, fromDate, toDate])
 
   useEffect(() => { setPage(1) }, [filter, catFilter, search, fromDate, toDate])

@@ -6,6 +6,7 @@ import type { ApiDebt } from "@/api/debts"
 import type { ApiReceivable } from "@/api/receivables"
 import type { ApiRecurring } from "@/api/recurring"
 import type { ApiGoal } from "@/api/goals"
+import { accountBalance, cardUsed } from "./accountBalance"
 
 export const THEORETICAL_NOTE = "Rendimiento teórico semanal"
 export const REAL_NOTE = "Rendimiento real mensual"
@@ -86,7 +87,7 @@ export interface DonutDatum {
 
 export interface Reminder {
   id: string
-  kind: "credit" | "recurring"
+  kind: "credit" | "recurring" | "interest"
   title: string
   subtitle: string
   amount: number
@@ -132,20 +133,6 @@ export function creditUsed(txns: ApiTransaction[], accountId: number): number {
   }, 0)
 }
 
-const msiRemaining = (
-  installments: ApiInstallment[],
-  accountId: number,
-): number =>
-  installments
-    .filter((i) => i.account_id === accountId && i.status !== "paid")
-    .reduce(
-      (s, i) =>
-        s +
-        Number(i.monthly_amount) *
-          (Number(i.months_total) - Number(i.months_paid)),
-      0,
-    )
-
 const isTheoretical = (t: ApiTransaction): boolean =>
   t.type === "income" &&
   t.category === "Intereses" &&
@@ -156,13 +143,7 @@ export function totalCardDebtFor(
 ): number {
   const totalCardDebt = input.accounts
     .filter((a) => a.type === "credit")
-    .reduce(
-      (sum, a) =>
-        sum +
-        creditUsed(input.txns, a.id) +
-        msiRemaining(input.installments, a.id),
-      0,
-    )
+    .reduce((sum, a) => sum + cardUsed(input.txns, input.installments, a.id), 0)
   return Math.max(0, totalCardDebt)
 }
 
@@ -173,14 +154,14 @@ export function computeTotals(input: DashboardInput): Totals {
   const cashAccounts = accounts.filter((a) => a.type !== "credit")
 
   const cashAssets = cashAccounts.reduce(
-    (s, a) => s + Number(a.initial_balance),
+    (s, a) => s + accountBalance(a, txns),
     0,
   )
   const liquidity = accounts
     .filter(
       (a) => a.type === "debit" || a.type === "cash" || a.type === "savings",
     )
-    .reduce((s, a) => s + Number(a.initial_balance), 0)
+    .reduce((s, a) => s + accountBalance(a, txns), 0)
 
   const investmentValue = investments.reduce(
     (s, i) =>
@@ -308,10 +289,7 @@ export function interestChartData(
   const weekly = theoreticalInterestWeeks(txns, year, month)
   const prefix = `${year}-${String(month + 1).padStart(2, "0")}`
   const real = txns
-    .filter(
-      (t) =>
-        isRealInterest(t) && t.date && t.date.slice(0, 7) === prefix,
-    )
+    .filter((t) => isRealInterest(t) && t.date && t.date.slice(0, 7) === prefix)
     .reduce((s, t) => s + Number(t.amount), 0)
   if (real > 0) {
     weekly.push({
@@ -324,20 +302,20 @@ export function interestChartData(
 }
 
 export function assetDistribution(
-  input: Pick<DashboardInput, "accounts" | "investments" | "receivables">,
+  input: Pick<DashboardInput, "accounts" | "txns" | "investments" | "receivables">,
 ): DonutDatum[] {
   const result: DonutDatum[] = []
   const liquid = input.accounts
     .filter(
       (a) => a.type === "debit" || a.type === "cash" || a.type === "savings",
     )
-    .reduce((s, a) => s + Number(a.initial_balance), 0)
+    .reduce((s, a) => s + accountBalance(a, input.txns), 0)
   if (liquid > 0)
     result.push({ name: "Líquido", value: liquid, color: "#06D6A0" })
 
   const investAccounts = input.accounts
     .filter((a) => a.type === "investment")
-    .reduce((s, a) => s + Number(a.initial_balance), 0)
+    .reduce((s, a) => s + accountBalance(a, input.txns), 0)
   if (investAccounts > 0)
     result.push({
       name: "Cuentas inversión",
@@ -449,4 +427,50 @@ export function recurringReminders(
     })
   }
   return reminders.sort((x, y) => x.days - y.days)
+}
+
+/**
+ * Monthly reminder on the first days of each month to register the real
+ * interest (rendimiento real) of accounts with an interest rate. Shows the
+ * previous month's theoretical total as reference.
+ */
+export function interestReminders(
+  accounts: ApiAccount[],
+  txns: ApiTransaction[],
+  today = new Date(),
+): Reminder[] {
+  const day = today.getDate()
+  if (day > 3) return []
+
+  const rateAccounts = accounts.filter(
+    (a) =>
+      a.is_active &&
+      a.type !== "credit" &&
+      a.interest_rate != null &&
+      Number(a.interest_rate) > 0,
+  )
+  if (rateAccounts.length === 0) return []
+
+  const prev = new Date(today.getFullYear(), today.getMonth() - 1, 1)
+  const prevPrefix = `${prev.getFullYear()}-${String(prev.getMonth() + 1).padStart(2, "0")}`
+
+  const alreadyRecorded = txns.some(
+    (t) => isRealInterest(t) && t.date && t.date.slice(0, 7) === prevPrefix,
+  )
+  if (alreadyRecorded) return []
+
+  const theoreticalRef = txns
+    .filter((t) => isTheoretical(t) && t.date && t.date.slice(0, 7) === prevPrefix)
+    .reduce((s, t) => s + Number(t.amount), 0)
+
+  return [
+    {
+      id: "interest-real",
+      kind: "interest",
+      title: "Registrar rendimientos reales",
+      subtitle: `${rateAccounts.length} cuenta(s) con tasa · mes anterior`,
+      amount: Math.round(theoreticalRef * 100) / 100,
+      days: day - 1,
+    },
+  ]
 }

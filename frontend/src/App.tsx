@@ -114,7 +114,13 @@ export default function App() {
   const renderScreen = () => {
     switch (screen) {
       case 'dashboard':
-        return <Dashboard onOpenChat={openChat} showToast={showToast} />
+        return (
+          <Dashboard
+            onOpenChat={openChat}
+            showToast={showToast}
+            onNavigate={navigate}
+          />
+        )
       case 'transactions':
         return <TransactionsScreen showToast={showToast} />
       case 'accounts':

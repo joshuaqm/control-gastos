@@ -21,6 +21,9 @@ export class CreditInstallment {
   @JoinColumn({ name: 'account_id' })
   account!: Account;
 
+  @Column({ type: 'date', nullable: true })
+  start_date!: Date | null;
+
   @Column({ length: 200 })
   description!: string;
 

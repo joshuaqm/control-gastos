@@ -2,6 +2,7 @@ import { AppDataSource } from '../config/database';
 import { Account } from '../models/Account';
 import { Transaction } from '../models/Transaction';
 import { logger } from '../utils/logger';
+import cron, { type ScheduledTask } from 'node-cron';
 
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 export const THEORETICAL_NOTE = 'Rendimiento teórico semanal';
@@ -167,7 +168,7 @@ export async function adjustRealInterest(
   };
 }
 
-export function startInterestScheduler(intervalMs = 6 * 60 * 60 * 1000): () => void {
+export function startInterestScheduler(): () => void {
   let running = false;
   const check = async () => {
     if (running) return;
@@ -181,8 +182,18 @@ export function startInterestScheduler(intervalMs = 6 * 60 * 60 * 1000): () => v
     }
   };
 
-  void check(); // run on startup
-  const timer = setInterval(check, intervalMs);
-  logger.info('Interest scheduler started (weekly accrual check every 6h)');
-  return () => clearInterval(timer);
+  // Catch up on startup (idempotent: driven by last_interest_at).
+  void check();
+
+  // Weekly cron on Fridays. Override with INTEREST_CRON (cron expression).
+  const expression = process.env.INTEREST_CRON || '0 9 * * 5';
+  if (!cron.validate(expression)) {
+    logger.error(`Invalid INTEREST_CRON expression "${expression}", falling back to Fridays`);
+    void check();
+    return () => undefined;
+  }
+
+  const task: ScheduledTask = cron.schedule(expression, () => void check());
+  logger.info(`Interest scheduler started (weekly accrual cron: ${expression})`);
+  return () => task.stop();
 }

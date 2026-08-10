@@ -36,6 +36,22 @@ router.post('/', async (req, res, next) => {
     });
     await receivableRepo.save(receivable);
 
+    // Register the loan as an expense from the origin account so it's deducted
+    if (receivable.account_id) {
+      const transactionRepo = AppDataSource.getRepository(Transaction);
+      const transaction = transactionRepo.create({
+        date: receivable.due_date ? new Date(receivable.due_date) : new Date(),
+        description: `Préstamo a ${receivable.person}`,
+        amount: Number(receivable.original_amount),
+        type: 'expense',
+        category: 'Préstamos otorgados',
+        account_id: receivable.account_id,
+        receivable_id: receivable.id,
+        userId: req.user!.id,
+      });
+      await transactionRepo.save(transaction);
+    }
+
     logger.info(`Receivable created: ${receivable.person} (user ${req.user!.id})`);
     res.status(201).json(receivable);
   } catch (error) {

@@ -4,6 +4,8 @@ import {
   Bell,
   CalendarClock,
   Car,
+  ChevronLeft,
+  ChevronRight,
   CreditCard,
   Gamepad2,
   Heart,
@@ -37,6 +39,7 @@ import { fetchReceivables, type ApiReceivable } from "@/api/receivables"
 import { fetchRecurring, type ApiRecurring } from "@/api/recurring"
 import { fetchGoals, type ApiGoal } from "@/api/goals"
 import { fetchBudgetSummary, type BudgetRuleRow } from "@/api/budgets"
+import { type ScreenId } from "@/config/navigation"
 import {
   assetDistribution,
   cashFlow,
@@ -44,6 +47,7 @@ import {
   computeTotals,
   creditReminders,
   interestChartData,
+  interestReminders,
   recurringReminders,
 } from "@/utils/dashboardCalc"
 import { fmt } from "@/utils/format"
@@ -88,9 +92,11 @@ const daysLabel = (days: number) =>
 export default function Dashboard({
   onOpenChat,
   showToast,
+  onNavigate,
 }: {
   onOpenChat: (msg?: string) => void
   showToast: ShowToast
+  onNavigate: (screen: ScreenId) => void
 }) {
   const [addOpen, setAddOpen] = useState(false)
   const [loading, setLoading] = useState(true)
@@ -171,19 +177,24 @@ export default function Dashboard({
   )
 
   const now = new Date()
+  const [interestPeriod, setInterestPeriod] = useState(0)
+  const chartRef = useMemo(() => {
+    const d = new Date(now.getFullYear(), now.getMonth() + interestPeriod, 1)
+    return { year: d.getFullYear(), month: d.getMonth() }
+  }, [interestPeriod])
   const catData = useMemo(
     () => categorySpend(txns, now.getFullYear(), now.getMonth()),
     [txns],
   )
   const flowData = useMemo(() => cashFlow(txns), [txns])
   const theoData = useMemo(
-    () => interestChartData(txns, now.getFullYear(), now.getMonth()),
-    [txns],
+    () => interestChartData(txns, chartRef.year, chartRef.month),
+    [txns, chartRef],
   )
   const theoMonthTotal = theoData.reduce((s, d) => s + d.valor, 0)
   const assetData = useMemo(
-    () => assetDistribution({ accounts, investments, receivables }),
-    [accounts, investments, receivables],
+    () => assetDistribution({ accounts, txns, investments, receivables }),
+    [accounts, txns, investments, receivables],
   )
 
   const reminders = useMemo(
@@ -191,6 +202,7 @@ export default function Dashboard({
       [
         ...creditReminders(accounts, txns),
         ...recurringReminders(recurring, txns),
+        ...interestReminders(accounts, txns),
       ]
         .sort((a, b) => a.days - b.days)
         .slice(0, 5),
@@ -308,6 +320,13 @@ export default function Dashboard({
         <div className="flex items-center gap-2 mb-3">
           <Bell size={16} style={{ color: "#FBBF24" }} />
           <h3 className="text-base font-semibold">Recordatorios</h3>
+          <button
+            onClick={() => onNavigate("recurring")}
+            className="ml-auto text-xs font-medium flex items-center gap-1 px-3 py-1.5 rounded-lg transition-colors hover:bg-white/10"
+            style={{ color: "#FBBF24", background: "rgba(250,204,21,0.08)" }}
+          >
+            Ver recurrentes <ChevronRight size={14} />
+          </button>
         </div>
         {reminders.length === 0 ? (
           <p className="text-sm" style={{ color: "#6B6B85" }}>
@@ -317,12 +336,30 @@ export default function Dashboard({
           <div className="flex flex-col gap-2">
             {reminders.map((r) => {
               const isCredit = r.kind === "credit"
-              const Icon = isCredit ? CreditCard : CalendarClock
-              const color = isCredit ? "#EF4444" : "#F59E0B"
+              const isInterest = r.kind === "interest"
+              const Icon = isCredit
+                ? CreditCard
+                : isInterest
+                  ? TrendingUp
+                  : CalendarClock
+              const color = isCredit
+                ? "#EF4444"
+                : isInterest
+                  ? "#06D6A0"
+                  : "#F59E0B"
               return (
-                <div
+                <button
                   key={r.id}
-                  className="flex items-center gap-3 p-3 rounded-xl"
+                  onClick={() =>
+                    onNavigate(
+                      isCredit
+                        ? "debts"
+                        : isInterest
+                          ? "accounts"
+                          : "recurring",
+                    )
+                  }
+                  className="flex items-center gap-3 p-3 rounded-xl text-left transition-colors hover:bg-white/5"
                   style={{ background: "rgba(255,255,255,0.03)" }}
                 >
                   <div
@@ -348,7 +385,7 @@ export default function Dashboard({
                       {daysLabel(r.days)}
                     </p>
                   </div>
-                </div>
+                </button>
               )
             })}
           </div>
@@ -361,12 +398,24 @@ export default function Dashboard({
       >
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-base font-semibold">Presupuesto del Mes</h3>
-          <span
-            className="text-xs px-2 py-1 rounded-full font-medium"
-            style={{ background: "rgba(124,58,237,0.15)", color: "#A78BFA" }}
-          >
-            {todayMonth()}
-          </span>
+          <div className="flex items-center gap-2">
+            <span
+              className="text-xs px-2 py-1 rounded-full font-medium"
+              style={{ background: "rgba(124,58,237,0.15)", color: "#A78BFA" }}
+            >
+              {todayMonth()}
+            </span>
+            <button
+              onClick={() => onNavigate("budgets")}
+              className="text-xs font-medium flex items-center gap-1 px-3 py-1.5 rounded-lg transition-colors hover:bg-white/10"
+              style={{
+                background: "rgba(255,255,255,0.06)",
+                color: "#A0A0B8",
+              }}
+            >
+              Ver todo <ChevronRight size={14} />
+            </button>
+          </div>
         </div>
         {budgetRule.length === 0 ? (
           <p className="text-sm" style={{ color: "#6B6B85" }}>
@@ -451,12 +500,53 @@ export default function Dashboard({
         >
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-sm font-semibold">Rendimientos Teóricos</h3>
-            <span
-              className="text-xs px-2 py-1 rounded-full font-mono font-semibold"
-              style={{ background: "rgba(245,158,11,0.15)", color: "#F59E0B" }}
-            >
-              {fmt(theoMonthTotal)}
-            </span>
+            <div className="flex items-center gap-2">
+              <div
+                className="flex items-center gap-1 rounded-full"
+                style={{ background: "rgba(255,255,255,0.06)" }}
+              >
+                <button
+                  onClick={() =>
+                    setInterestPeriod((p) => Math.max(p - 1, -24))
+                  }
+                  className="p-1.5 rounded-full hover:bg-white/10 transition-colors"
+                  style={{ color: "#A0A0B8" }}
+                  aria-label="Mes anterior"
+                >
+                  <ChevronLeft size={16} />
+                </button>
+                <span
+                  className="text-xs px-1 font-medium min-w-[90px] text-center capitalize"
+                  style={{ color: "#A0A0B8" }}
+                >
+                  {new Date(chartRef.year, chartRef.month, 1).toLocaleDateString(
+                    "es-MX",
+                    { month: "short", year: "2-digit" },
+                  )}
+                </span>
+                <button
+                  onClick={() =>
+                    setInterestPeriod((p) =>
+                      p < 0
+                        ? p + 1
+                        : 0,
+                    )
+                  }
+                  disabled={interestPeriod >= 0}
+                  className="p-1.5 rounded-full hover:bg-white/10 transition-colors disabled:opacity-30 disabled:hover:bg-transparent"
+                  style={{ color: "#A0A0B8" }}
+                  aria-label="Mes siguiente"
+                >
+                  <ChevronRight size={16} />
+                </button>
+              </div>
+              <span
+                className="text-xs px-2 py-1 rounded-full font-mono font-semibold"
+                style={{ background: "rgba(245,158,11,0.15)", color: "#F59E0B" }}
+              >
+                {fmt(theoMonthTotal)}
+              </span>
+            </div>
           </div>
           <TheoreticalInterestChart data={theoData} />
           <p className="text-[11px] mt-2" style={{ color: "#6B6B85" }}>
@@ -471,9 +561,13 @@ export default function Dashboard({
       >
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-base font-semibold">Transacciones Recientes</h3>
-          <span className="text-xs" style={{ color: "#7C3AED" }}>
-            Últimas {recentTxs.length}
-          </span>
+          <button
+            onClick={() => onNavigate("transactions")}
+            className="text-xs font-medium flex items-center gap-1 px-3 py-1.5 rounded-lg transition-colors hover:bg-white/10"
+            style={{ background: "rgba(255,255,255,0.06)", color: "#7C3AED" }}
+          >
+            Ver todas <ChevronRight size={14} />
+          </button>
         </div>
         <div className="flex flex-col gap-2">
           {recentTxs.length === 0 ? (
@@ -492,6 +586,13 @@ export default function Dashboard({
       >
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-base font-semibold">Metas de Ahorro</h3>
+          <button
+            onClick={() => onNavigate("goals")}
+            className="text-xs font-medium flex items-center gap-1 px-3 py-1.5 rounded-lg transition-colors hover:bg-white/10"
+            style={{ background: "rgba(255,255,255,0.06)", color: "#A0A0B8" }}
+          >
+            Ver metas <ChevronRight size={14} />
+          </button>
         </div>
         {goalCards.length === 0 ? (
           <p className="text-sm" style={{ color: "#6B6B85" }}>

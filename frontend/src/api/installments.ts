@@ -1,8 +1,9 @@
-import { getToken } from './auth'
+import { getToken } from "./auth"
 
 export interface ApiInstallment {
   id: number
   account_id: number | null
+  start_date: string | null
   description: string
   monthly_amount: number
   months_total: number
@@ -16,6 +17,7 @@ export interface ApiInstallment {
 
 export interface CreateInstallmentInput {
   account_id?: number | null
+  start_date?: string | null
   description: string
   monthly_amount: number
   months_total: number
@@ -23,16 +25,18 @@ export interface CreateInstallmentInput {
   notes?: string | null
 }
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1'
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000/api/v1"
 
 async function request<T>(
   path: string,
-  options?: { method?: string; body?: unknown }
+  options?: { method?: string; body?: unknown },
 ): Promise<T> {
-  const { method = 'GET', body } = options ?? {}
+  const { method = "GET", body } = options ?? {}
   const token = getToken()
-  const headers: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {}
-  if (method !== 'GET') headers['Content-Type'] = 'application/json'
+  const headers: Record<string, string> = token
+    ? { Authorization: `Bearer ${token}` }
+    : {}
+  if (method !== "GET") headers["Content-Type"] = "application/json"
 
   const res = await fetch(`${API_URL}${path}`, {
     method,
@@ -44,30 +48,53 @@ async function request<T>(
 
   const data = await res.json().catch(() => ({}))
   if (!res.ok) {
-    throw new Error(data.error || 'Ocurrió un error, intenta de nuevo')
+    throw new Error(data.error || "Ocurrió un error, intenta de nuevo")
   }
   return data as T
 }
 
 export async function fetchInstallments(): Promise<ApiInstallment[]> {
-  return request<ApiInstallment[]>('/installments')
+  return request<ApiInstallment[]>("/installments")
 }
 
-export async function createInstallment(body: CreateInstallmentInput): Promise<ApiInstallment> {
-  return request<ApiInstallment>('/installments', { method: 'POST', body })
+export async function createInstallment(
+  body: CreateInstallmentInput,
+): Promise<ApiInstallment> {
+  return request<ApiInstallment>("/installments", { method: "POST", body })
 }
 
 export async function updateInstallment(
   id: number,
-  body: Partial<CreateInstallmentInput>
+  body: Partial<CreateInstallmentInput>,
 ): Promise<ApiInstallment> {
-  return request<ApiInstallment>(`/installments/${id}`, { method: 'PUT', body })
+  return request<ApiInstallment>(`/installments/${id}`, { method: "PUT", body })
 }
 
 export async function deleteInstallment(id: number): Promise<void> {
-  return request<void>(`/installments/${id}`, { method: 'DELETE' })
+  return request<void>(`/installments/${id}`, { method: "DELETE" })
 }
 
-export async function payInstallmentMonth(id: number): Promise<ApiInstallment> {
-  return request<ApiInstallment>(`/installments/${id}/pay-month`, { method: 'POST' })
+export interface PayInstallmentInput {
+  account_id?: number | null
+  date?: string
+}
+
+export async function payInstallmentMonth(
+  id: number,
+  body: PayInstallmentInput,
+): Promise<ApiInstallment> {
+  return request<ApiInstallment>(`/installments/${id}/pay-month`, {
+    method: "POST",
+    body,
+  })
+}
+
+export async function markInstallmentMonths(
+  id: number,
+  months: number,
+): Promise<ApiInstallment> {
+  return request<ApiInstallment>(`/installments/${id}/mark-months`, {
+    method: "POST",
+    body: { months },
+  })
 }
