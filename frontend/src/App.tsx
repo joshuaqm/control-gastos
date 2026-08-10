@@ -19,6 +19,7 @@ import SettingsScreen from '@/features/Settings'
 import TransactionsScreen from '@/features/Transactions'
 import GoalsScreen from '@/features/Goals'
 import { useToasts } from '@/hooks/useToasts'
+import { useNotifications } from '@/hooks/useNotifications'
 
 const SESSION_KEY = 'financeai.session'
 
@@ -69,6 +70,7 @@ export default function App() {
   const [reveal, setReveal] = useState<'idle' | 'expanding' | 'revealing'>('idle')
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const { toasts, showToast, dismiss } = useToasts()
+  const notifs = useNotifications()
 
   const navigate = (next: ScreenId) => {
     setScreen(next)
@@ -184,6 +186,8 @@ export default function App() {
           onToggleDark={() => setDarkMode(v => !v)} 
           userName={user?.username}
           sidebarOffset={sidebarWidth}
+          notifs={notifs}
+          onNavigate={(screen) => { notifs.close(); navigate(screen) }}
         />
 
         <div className="flex flex-1" style={{ paddingTop: '56px' }}>

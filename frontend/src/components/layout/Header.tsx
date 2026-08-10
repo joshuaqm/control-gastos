@@ -1,12 +1,17 @@
 import { Bell, Menu, Moon, Search, Sun } from 'lucide-react'
+import { type ScreenId } from '@/config/navigation'
+import NotificationsPanel from '@/components/layout/NotificationsPanel'
+import type { NotificationsController } from '@/hooks/useNotifications'
 
-export default function Header({ 
-  onToggleSidebar, 
-  onOpenMenu, 
-  darkMode, 
-  onToggleDark, 
+export default function Header({
+  onToggleSidebar,
+  onOpenMenu,
+  darkMode,
+  onToggleDark,
   userName,
-  sidebarOffset = 0 
+  sidebarOffset = 0,
+  notifs,
+  onNavigate,
 }: {
   onToggleSidebar: () => void
   onOpenMenu: () => void
@@ -14,6 +19,8 @@ export default function Header({
   onToggleDark: () => void
   userName?: string
   sidebarOffset?: number
+  notifs: NotificationsController
+  onNavigate: (screen: ScreenId) => void
 }) {
   return (
     <header
@@ -55,10 +62,40 @@ export default function Header({
         <button onClick={onToggleDark} className="p-2 rounded-lg hover:bg-white/10 transition-colors cursor-not-allowed" disabled>
           {darkMode ? <Sun size={18} style={{ color: '#F59E0B' }} /> : <Moon size={18} style={{ color: '#A0A0B8' }} />}
         </button>
-        <button className="relative p-2 rounded-lg hover:bg-white/10 transition-colors cursor-not-allowed" disabled>
-          <Bell size={18} style={{ color: '#A0A0B8' }} />
-          <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full" style={{ background: '#7C3AED' }} />
-        </button>
+        <div className="relative">
+          {notifs.open && (
+            <div
+              className="fixed inset-0 z-40"
+              style={{ background: 'transparent' }}
+              onClick={notifs.close}
+              aria-hidden="true"
+            />
+          )}
+          <button
+            onClick={notifs.toggle}
+            className="relative p-2 rounded-lg hover:bg-white/10 transition-colors"
+            aria-label="Notificaciones"
+          >
+            <Bell size={18} style={{ color: notifs.open ? '#7C3AED' : '#A0A0B8' }} />
+            {notifs.enabled && notifs.unreadCount > 0 && (
+              <span
+                className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 px-1 rounded-full flex items-center justify-center text-[10px] font-bold"
+                style={{ background: '#EF4444', color: '#fff' }}
+              >
+                {notifs.unreadCount}
+              </span>
+            )}
+          </button>
+          <NotificationsPanel
+            open={notifs.open}
+            reminders={notifs.reminders}
+            enabled={notifs.enabled}
+            loading={notifs.loading}
+            onClose={notifs.close}
+            onNavigate={onNavigate}
+            onMarkAllRead={notifs.markAllRead}
+          />
+        </div>
         <div
           className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold cursor-pointer"
           style={{ background: 'linear-gradient(135deg,#7C3AED,#06D6A0)' }}
