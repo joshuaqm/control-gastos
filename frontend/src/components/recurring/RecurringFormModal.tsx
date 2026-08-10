@@ -7,6 +7,7 @@ export interface RecurringFormData {
   name: string
   amount: number
   frequency: string
+  interval_days?: number | null
   next_date: string
   category?: string | null
   budget_type?: string | null
@@ -20,6 +21,7 @@ const FREQUENCIES = [
   { value: 'weekly', label: 'Semanal' },
   { value: 'biweekly', label: 'Quincenal' },
   { value: 'yearly', label: 'Anual' },
+  { value: 'interval', label: 'Cada X días' },
 ] as const
 
 const BUDGET_TYPES = [
@@ -44,6 +46,7 @@ export default function RecurringFormModal({
   const [name, setName] = useState(recurring?.name ?? '')
   const [amount, setAmount] = useState(recurring ? recurring.amount.toString() : '')
   const [frequency, setFrequency] = useState(recurring?.frequency ?? 'monthly')
+  const [intervalDays, setIntervalDays] = useState(recurring?.interval_days?.toString() ?? '')
   const [nextDate, setNextDate] = useState(recurring?.next_date?.slice(0, 10) ?? '')
   const [category, setCategory] = useState(recurring?.category ?? '')
   const [budgetType, setBudgetType] = useState(recurring?.budget_type ?? '')
@@ -64,6 +67,10 @@ export default function RecurringFormModal({
       setError('Ingresa un monto válido')
       return
     }
+    if (frequency === 'interval' && (!intervalDays || !Number.isFinite(Number(intervalDays)) || Number(intervalDays) <= 0)) {
+      setError('Indica cada cuántos días')
+      return
+    }
     if (!nextDate) {
       setError('La fecha del próximo cobro es obligatoria')
       return
@@ -80,6 +87,7 @@ export default function RecurringFormModal({
         name: name.trim(),
         amount: Number(amount),
         frequency,
+        interval_days: frequency === 'interval' ? Math.round(Number(intervalDays)) : null,
         next_date: nextDate,
         category: category.trim() || null,
         budget_type: budgetType || null,
@@ -139,6 +147,20 @@ export default function RecurringFormModal({
                   <option key={f.value} value={f.value}>{f.label}</option>
                 ))}
               </select>
+              {frequency === 'interval' && (
+                <div className="mt-2">
+                  <input
+                    value={intervalDays}
+                    onChange={e => setIntervalDays(e.target.value)}
+                    type="number"
+                    min="1"
+                    step="1"
+                    placeholder="Ej. 25 días"
+                    className="w-full px-4 py-3 rounded-xl text-sm font-mono"
+                    style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff' }}
+                  />
+                </div>
+              )}
             </div>
           </div>
 

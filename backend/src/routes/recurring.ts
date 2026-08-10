@@ -15,7 +15,7 @@ function toDate(value: Date | string): Date {
   return value instanceof Date ? new Date(value) : new Date(`${String(value).slice(0, 10)}T00:00:00`);
 }
 
-function advanceDate(value: Date | string, frequency: string): Date {
+function advanceDate(value: Date | string, frequency: string, intervalDays?: number | null): Date {
   const current = toDate(value);
   const next = new Date(current);
   switch (frequency) {
@@ -27,6 +27,9 @@ function advanceDate(value: Date | string, frequency: string): Date {
       break;
     case 'yearly':
       next.setFullYear(current.getFullYear() + 1);
+      break;
+    case 'interval':
+      next.setDate(current.getDate() + (intervalDays && intervalDays > 0 ? intervalDays : 30));
       break;
     case 'monthly':
     default:
@@ -145,7 +148,7 @@ router.post('/:id/register', async (req, res, next) => {
     });
     await transactionRepo.save(transaction);
 
-    recurring.next_date = advanceDate(recurring.next_date, recurring.frequency);
+    recurring.next_date = advanceDate(recurring.next_date, recurring.frequency, recurring.interval_days);
     await recurringRepo.save(recurring);
 
     logger.info(`Recurring payment registered: ${recurring.name} (user ${req.user!.id})`);

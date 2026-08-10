@@ -66,6 +66,20 @@ async function getUsdToMxn(): Promise<number> {
 }
 
 /**
+ * Normalize a BMV (Mexican Stock Exchange) symbol to the format Yahoo Finance
+ * accepts. BMV uses "WALMEX *" and "FUNO 11"; Yahoo expects "WALMEX.MX" and
+ * "FUNO11.MX". Simple tickers like "VOO" or "AAPL" are left untouched.
+ */
+function toYahooSymbol(ticker: string): string {
+  const t = ticker.trim().toUpperCase();
+  if (!t) return t;
+  if (t.includes('.')) return t;
+  if (!t.includes(' ') && !t.includes('*')) return t;
+  const base = t.replace(/[*\s]/g, '');
+  return `${base}.MX`;
+}
+
+/**
  * Fetch the latest market price (in MXN) for a symbol.
  * - crypto: CoinGecko
  * - stocks / ETFs / fixed income: Yahoo Finance + USD/MXN conversion
@@ -90,8 +104,9 @@ export async function fetchMarketPrice(ticker: string, type: string): Promise<{
     return { price, currency: 'MXN', source: 'CoinGecko' };
   }
 
+  const symbol = toYahooSymbol(t);
   const data = await fetchJson(
-    `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(t)}?interval=1d&range=1d`
+    `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=1d`
   ) as {
     chart?: {
       result?: { meta?: { regularMarketPrice?: number; currency?: string } }[];

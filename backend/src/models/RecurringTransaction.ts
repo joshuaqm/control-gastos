@@ -22,6 +22,9 @@ export class RecurringTransaction {
   @Column({ type: 'varchar', length: 20 })
   frequency!: string;
 
+  @Column({ name: 'interval_days', type: 'int', nullable: true })
+  interval_days!: number | null;
+
   @Column({ type: 'date' })
   next_date!: Date;
 

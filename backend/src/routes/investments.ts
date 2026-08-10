@@ -106,7 +106,10 @@ router.post('/:id/refresh', async (req, res, next) => {
     logger.info(`Investment price refreshed: ${investment.name} → ${result.price} MXN`);
     res.json(investment);
   } catch (error) {
-    next(error);
+    next(new AppError(
+      error instanceof Error ? error.message : 'No se pudo actualizar el precio',
+      404
+    ));
   }
 });
 

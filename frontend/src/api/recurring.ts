@@ -5,6 +5,7 @@ export interface ApiRecurring {
   name: string
   amount: number
   frequency: string
+  interval_days: number | null
   next_date: string
   category: string | null
   budget_type: string | null
@@ -20,6 +21,7 @@ export interface CreateRecurringInput {
   name: string
   amount: number
   frequency: string
+  interval_days?: number | null
   next_date: string
   category?: string | null
   budget_type?: string | null

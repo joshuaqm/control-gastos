@@ -30,6 +30,8 @@ function buildEvolution(investments: ApiInvestment[]): PortfolioPoint[] {
   const points: PortfolioPoint[] = []
   if (investments.length === 0) return [{ month: 'Hoy', valor: 0, costo: 0 }]
 
+  const end = new Date()
+
   const dated = investments.map(inv => {
     const created = new Date(inv.created_at)
     const base = inv.purchase_date ? new Date(inv.purchase_date + 'T00:00:00') : created
@@ -42,19 +44,21 @@ function buildEvolution(investments: ApiInvestment[]): PortfolioPoint[] {
   })
 
   const start = dated.reduce((min, d) => (d.base < min ? d.base : min), dated[0].base)
-  const end = new Date()
-  const cursor = new Date(start.getFullYear(), start.getMonth(), 1)
+  const startMonth = new Date(start.getFullYear(), start.getMonth(), 1)
+  const cursor = startMonth
 
   while (cursor <= end) {
     const monthLabel = `${MONTHS_ES[cursor.getMonth()]} ${String(cursor.getFullYear()).slice(2)}`
-    const monthEnd = new Date(cursor.getFullYear(), cursor.getMonth() + 1, 0, 23, 59, 59)
 
     let costo = 0
     let valor = 0
     for (const d of dated) {
-      if (d.base <= monthEnd) {
+      if (d.base <= cursor) {
         costo += d.costo
-        valor += d.valor
+        // Interpolación lineal entre costo (fecha de compra) y valor actual (hoy)
+        const span = Math.max(1, end.getTime() - d.base.getTime())
+        const frac = Math.min(1, Math.max(0, (cursor.getTime() - d.base.getTime()) / span))
+        valor += d.costo + (d.valor - d.costo) * frac
       }
     }
 

@@ -12,13 +12,24 @@ const FREQ_LABELS: Record<string, string> = {
   weekly: 'Semanal',
   biweekly: 'Quincenal',
   yearly: 'Anual',
+  interval: 'Cada X días',
 }
 
-const freqMonths = (f: string) => {
-  switch (f) {
+const freqLabel = (r: Pick<ApiRecurring, 'frequency' | 'interval_days'>) => {
+  if (r.frequency === 'interval') {
+    return r.interval_days && r.interval_days > 0 ? `Cada ${r.interval_days} días` : 'Cada X días'
+  }
+  return FREQ_LABELS[r.frequency] ?? r.frequency
+}
+
+const freqMonths = (r: Pick<ApiRecurring, 'frequency' | 'interval_days'>) => {
+  switch (r.frequency) {
     case 'weekly': return 52 / 12
     case 'biweekly': return 26 / 12
     case 'yearly': return 1 / 12
+    case 'interval':
+      if (r.interval_days && r.interval_days > 0) return 365 / r.interval_days / 12
+      return 1
     default: return 1
   }
 }
@@ -64,7 +75,7 @@ export default function RecurringScreen({ showToast }: { showToast: ShowToast })
 
   const totalMonthly = recurring
     .filter(r => r.is_active)
-    .reduce((sum, r) => sum + Number(r.amount) * freqMonths(r.frequency), 0)
+    .reduce((sum, r) => sum + Number(r.amount) * freqMonths(r), 0)
 
   const upcoming = recurring
     .filter(r => r.is_active)
@@ -180,7 +191,7 @@ export default function RecurringScreen({ showToast }: { showToast: ShowToast })
       ) : (
         <div className="flex flex-col gap-3">
           {recurring.map(r => {
-            const periodic = freqMonths(r.frequency)
+            const periodic = freqMonths(r)
             return (
               <div key={r.id} className="glass card-hover rounded-2xl p-4" style={{ border: '1px solid rgba(255,255,255,0.08)', opacity: r.is_active ? 1 : 0.55 }}>
                 <div className="flex items-center justify-between">
@@ -191,14 +202,14 @@ export default function RecurringScreen({ showToast }: { showToast: ShowToast })
                     <div>
                       <p className="text-sm font-semibold">{r.name}</p>
                       <p className="text-xs" style={{ color: '#6B6B85' }}>
-                        {FREQ_LABELS[r.frequency] ?? r.frequency} · {r.category || 'Sin categoría'} · {accountName(r.account_id) || 'Sin cuenta'} · próximo {fmtDate(r.next_date)}
+                        {freqLabel(r)} · {r.category || 'Sin categoría'} · {accountName(r.account_id) || 'Sin cuenta'} · próximo {fmtDate(r.next_date)}
                       </p>
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
                     <div className="text-right">
                       <p className="text-base font-bold font-mono" style={{ color: '#EF4444' }}>{fmt(Number(r.amount) * periodic)}</p>
-                      <p className="text-xs" style={{ color: '#6B6B85' }}>/mes · {fmt(r.amount)} {FREQ_LABELS[r.frequency]?.toLowerCase() ?? ''}</p>
+                      <p className="text-xs" style={{ color: '#6B6B85' }}>/mes · {fmt(r.amount)} {freqLabel(r)?.toLowerCase() ?? ''}</p>
                     </div>
                     <div className="flex items-center gap-1">
                       {r.is_active && (
