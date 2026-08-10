@@ -1,11 +1,11 @@
 import { useEffect, useMemo } from "react"
-import { BellOff, CalendarClock, CheckCheck, CreditCard, TrendingUp } from "lucide-react"
+import { BellOff, CalendarClock, CheckCheck, CreditCard, Landmark, TrendingUp } from "lucide-react"
 import { type ScreenId } from "@/config/navigation"
 import { fmt } from "@/utils/format"
 import type { Reminder } from "@/utils/dashboardCalc"
 
 const daysLabel = (days: number) =>
-  days <= 0 ? "Hoy" : days === 1 ? "Mañana" : `En ${days} días`
+  days < 0 ? "Atrasado" : days === 0 ? "Hoy" : days === 1 ? "Mañana" : `En ${days} días`
 
 export default function NotificationsPanel({
   open,
@@ -95,16 +95,29 @@ export default function NotificationsPanel({
         <div className="flex flex-col gap-1 p-2 overflow-y-auto">
           {sorted.map((r) => {
             const isCredit = r.kind === "credit"
+            const isDebt = r.kind === "debt"
             const isInterest = r.kind === "interest"
-            const Icon = isCredit ? CreditCard : isInterest ? TrendingUp : CalendarClock
-            const color = isCredit ? "#EF4444" : isInterest ? "#06D6A0" : "#F59E0B"
+            const Icon = isCredit
+              ? CreditCard
+              : isInterest
+                ? TrendingUp
+                : isDebt
+                  ? Landmark
+                  : CalendarClock
+            const color = isCredit
+              ? "#EF4444"
+              : isInterest
+                ? "#06D6A0"
+                : isDebt
+                  ? "#A78BFA"
+                  : "#F59E0B"
             return (
               <button
                 key={r.id}
                 onClick={() => {
                   onMarkAllRead()
                   onNavigate(
-                    isCredit ? "debts" : isInterest ? "accounts" : "recurring",
+                    isCredit || isDebt ? "debts" : isInterest ? "accounts" : "recurring",
                   )
                 }}
                 className="flex items-center gap-3 p-2.5 rounded-xl text-left transition-colors hover:bg-white/5"

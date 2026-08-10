@@ -87,7 +87,7 @@ export interface DonutDatum {
 
 export interface Reminder {
   id: string
-  kind: "credit" | "recurring" | "interest"
+  kind: "credit" | "recurring" | "interest" | "debt"
   title: string
   subtitle: string
   amount: number
@@ -362,11 +362,6 @@ export function creditReminders(
       today.getMonth(),
       a.payment_due_day,
     )
-    if (due < toDay(today)) {
-      due.setMonth(due.getMonth() + 1)
-    }
-    const days = Math.round((due.getTime() - toDay(today).getTime()) / DAY_MS)
-    if (days > 3) continue
 
     // paid when a transfer to the card (or debt_payment on it) exists after the cycle cutoff
     const cutoff = dayOfMonthDate(
@@ -388,12 +383,56 @@ export function creditReminders(
     })
     if (paidThisCycle) continue
 
+    let days: number
+    if (due < toDay(today)) {
+      // El pago del mes ya venció sin registrarse: seguir recordando como atrasado
+      days = Math.round((due.getTime() - toDay(today).getTime()) / DAY_MS)
+    } else {
+      days = Math.round((due.getTime() - toDay(today).getTime()) / DAY_MS)
+      if (days > 3) continue
+    }
+
     reminders.push({
       id: `credit-${a.id}`,
       kind: "credit",
       title: `Pago tarjeta ${a.name}`,
       subtitle: `Corte día ${a.cutoff_day ?? "—"} · pago día ${a.payment_due_day}`,
       amount: creditUsed(txns, a.id),
+      days,
+    })
+  }
+  return reminders.sort((x, y) => x.days - y.days)
+}
+
+/**
+ * Reminders for independent credits (debts with a due date) that are not fully
+ * paid. Shows them from 3 days before the due date and keeps sending them as
+ * long as there is a pending balance (no registered payment).
+ */
+export function debtReminders(
+  debts: ApiDebt[],
+  today = new Date(),
+): Reminder[] {
+  const reminders: Reminder[] = []
+  for (const d of debts) {
+    if (d.type === "credit_card") continue
+    if (d.status === "paid") continue
+    if (!d.due_date) continue
+    const pending =
+      Math.round(
+        (Number(d.original_amount) - Number(d.paid_amount)) * 100,
+      ) / 100
+    if (pending <= 0) continue
+
+    const days = daysUntil(d.due_date, today)
+    if (days > 3) continue
+
+    reminders.push({
+      id: `debt-${d.id}`,
+      kind: "debt",
+      title: `Pago ${d.name}`,
+      subtitle: `${d.creditor === "—" ? "Deuda independiente" : d.creditor} · vence ${String(d.due_date).slice(0, 10)}`,
+      amount: pending,
       days,
     })
   }

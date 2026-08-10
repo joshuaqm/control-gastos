@@ -2,9 +2,11 @@ import { useCallback, useEffect, useState } from 'react'
 import { fetchAccounts } from '@/api/accounts'
 import { fetchTransactions } from '@/api/transactions'
 import { fetchRecurring } from '@/api/recurring'
+import { fetchDebts } from '@/api/debts'
 import { fetchSettings } from '@/api/settings'
 import {
   creditReminders,
+  debtReminders,
   interestReminders,
   recurringReminders,
   type Reminder,
@@ -32,11 +34,12 @@ export function useNotifications() {
   const refresh = useCallback(async () => {
     setLoading(true)
     try {
-      const [settings, accounts, txns, recurring] = await Promise.all([
+      const [settings, accounts, txns, recurring, debts] = await Promise.all([
         fetchSettings(),
         fetchAccounts(),
         fetchTransactions(),
         fetchRecurring(),
+        fetchDebts(),
       ])
       setEnabled(settings.notifications_enabled)
       if (!settings.notifications_enabled) {
@@ -46,6 +49,7 @@ export function useNotifications() {
       const all: Reminder[] = [
         ...creditReminders(accounts, txns),
         ...recurringReminders(recurring, txns),
+        ...debtReminders(debts),
         ...interestReminders(accounts, txns),
       ]
         .sort((a, b) => a.days - b.days)

@@ -46,6 +46,7 @@ import {
   categorySpend,
   computeTotals,
   creditReminders,
+  debtReminders,
   interestChartData,
   interestReminders,
   recurringReminders,
@@ -87,7 +88,7 @@ const banknoteIcons: Record<string, LucideIcon> = {
 }
 
 const daysLabel = (days: number) =>
-  days <= 0 ? "Hoy" : days === 1 ? "Mañana" : `En ${days} días`
+  days < 0 ? "Atrasado" : days === 0 ? "Hoy" : days === 1 ? "Mañana" : `En ${days} días`
 
 export default function Dashboard({
   onOpenChat,
@@ -202,11 +203,12 @@ export default function Dashboard({
       [
         ...creditReminders(accounts, txns),
         ...recurringReminders(recurring, txns),
+        ...debtReminders(debts),
         ...interestReminders(accounts, txns),
       ]
         .sort((a, b) => a.days - b.days)
-        .slice(0, 5),
-    [accounts, txns, recurring],
+        .slice(0, 6),
+    [accounts, txns, recurring, debts],
   )
 
   const investGain = useMemo(() => {
@@ -336,23 +338,28 @@ export default function Dashboard({
           <div className="flex flex-col gap-2">
             {reminders.map((r) => {
               const isCredit = r.kind === "credit"
+              const isDebt = r.kind === "debt"
               const isInterest = r.kind === "interest"
               const Icon = isCredit
                 ? CreditCard
                 : isInterest
                   ? TrendingUp
-                  : CalendarClock
+                  : isDebt
+                    ? Wallet
+                    : CalendarClock
               const color = isCredit
                 ? "#EF4444"
                 : isInterest
                   ? "#06D6A0"
-                  : "#F59E0B"
+                  : isDebt
+                    ? "#A78BFA"
+                    : "#F59E0B"
               return (
                 <button
                   key={r.id}
                   onClick={() =>
                     onNavigate(
-                      isCredit
+                      isCredit || isDebt
                         ? "debts"
                         : isInterest
                           ? "accounts"
