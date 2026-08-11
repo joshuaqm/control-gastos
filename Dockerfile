@@ -1,43 +1,43 @@
-# Etapa de desarrollo
-FROM node:20-alpine AS development
+# Etapa de desarrollo (backend + frontend comparten imagen con todas las dependencias)
+FROM node:22-alpine AS development
 
 WORKDIR /app
 
-# Instalar dependencias del sistema necesarias
+# Dependencias del sistema
 RUN apk add --no-cache python3 make g++ postgresql-client
 
-# Copiar package.json y package-lock.json
-COPY package*.json ./
+# Copiar package.json y lockfile
+COPY package.json pnpm-lock.yaml ./
 
 # Instalar dependencias
-RUN npm ci
+RUN pnpm install --no-frozen-lockfile
 
 # Copiar código fuente
 COPY . .
 
-# Compilar TypeScript
-RUN npm run build
+# Compilar TypeScript del backend (para la etapa de producción)
+RUN pnpm run build:backend
 
-# Exponer puerto
-EXPOSE 8000
+# Exponer puertos
+EXPOSE 8000 3000 5173 8443
 
-# Etapa de producción
-FROM node:20-alpine AS production
+# Etapa de producción (backend)
+FROM node:22-alpine AS production
 
 WORKDIR /app
 
-# Instalar dependencias del sistema
+# Dependencias del sistema
 RUN apk add --no-cache postgresql-client
 
-# Copiar package.json y package-lock.json
-COPY package*.json ./
+# Copiar package.json y lockfile
+COPY package.json pnpm-lock.yaml ./
 
 # Instalar solo dependencias de producción
-RUN npm ci --only=production
+RUN pnpm install --prod --no-frozen-lockfile
 
 # Copiar código compilado desde etapa de desarrollo
-COPY --from=development /app/dist ./dist
-COPY --from=development /app/node_modules ./node_modules
+COPY --from=development /app/backend/dist ./backend/dist
+COPY --from=development /app/backend/src ./backend/src
 
 # Crear usuario no-root
 RUN addgroup -g 1001 -S nodejs && \
@@ -48,4 +48,4 @@ USER nodejs
 
 EXPOSE 8000
 
-CMD ["node", "dist/index.js"]
+CMD ["node", "backend/dist/index.js"]
