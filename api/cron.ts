@@ -1,6 +1,6 @@
 import "reflect-metadata";
 import type { Request, Response } from "express";
-import { ensureDb } from "../src/config/database";
+import { ensureDb } from "../backend/src/config/database";
 
 export default async function handler(_req: Request, res: Response): Promise<void> {
   try {

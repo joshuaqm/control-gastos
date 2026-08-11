@@ -1,6 +1,6 @@
 import "reflect-metadata";
 import type { Request, Response } from "express";
-import app from "../src/app";
+import app from "../backend/src/app";
 
 export default function handler(req: Request, res: Response): Promise<void> {
   const url = req.url || "/";

@@ -1,0 +1,14 @@
+{
+  "buildCommand": "npm run build",
+  "outputDirectory": "frontend/dist",
+  "rewrites": [
+    { "source": "/cron", "destination": "/api/cron" },
+    { "source": "/health", "destination": "/api" },
+    { "source": "/api", "destination": "/api" },
+    { "source": "/api/(.*)", "destination": "/api" },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ],
+  "crons": [
+    { "path": "/cron", "schedule": "0 0 * * *" }
+  ]
+}
