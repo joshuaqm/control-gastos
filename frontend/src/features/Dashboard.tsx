@@ -41,15 +41,18 @@ import { fetchGoals, type ApiGoal } from "@/api/goals"
 import { fetchBudgetSummary, type BudgetRuleRow } from "@/api/budgets"
 import { type ScreenId } from "@/config/navigation"
 import {
+  addMonths,
   assetDistribution,
-  cashFlow,
-  categorySpend,
+  cashFlowRange,
+  categorySpendInRange,
   computeTotals,
   creditReminders,
   debtReminders,
-  interestChartData,
+  interestChartDataRange,
   interestReminders,
+  monthPrefix,
   recurringReminders,
+  type MonthRef,
 } from "@/utils/dashboardCalc"
 import { fmt } from "@/utils/format"
 import type { SavingsGoal, ShowToast, Transaction } from "@/types"
@@ -88,7 +91,13 @@ const banknoteIcons: Record<string, LucideIcon> = {
 }
 
 const daysLabel = (days: number) =>
-  days < 0 ? "Atrasado" : days === 0 ? "Hoy" : days === 1 ? "Mañana" : `En ${days} días`
+  days < 0
+    ? "Atrasado"
+    : days === 0
+      ? "Hoy"
+      : days === 1
+        ? "Mañana"
+        : `En ${days} días`
 
 export default function Dashboard({
   onOpenChat,
@@ -112,10 +121,11 @@ export default function Dashboard({
   const [recurring, setRecurring] = useState<ApiRecurring[]>([])
   const [goals, setGoals] = useState<ApiGoal[]>([])
   const [budgetRule, setBudgetRule] = useState<BudgetRuleRow[]>([])
+  const [refreshKey, setRefreshKey] = useState(0)
 
   const load = async () => {
     try {
-      const [a, t, i, inst, d, r, rec, g, b] = await Promise.all([
+      const [a, t, i, inst, d, r, rec, g] = await Promise.all([
         fetchAccounts(),
         fetchTransactions(),
         fetchInvestments(),
@@ -124,7 +134,6 @@ export default function Dashboard({
         fetchReceivables(),
         fetchRecurring(),
         fetchGoals(),
-        fetchBudgetSummary(),
       ])
       setAccounts(a)
       setTxns(t)
@@ -134,7 +143,6 @@ export default function Dashboard({
       setReceivables(r)
       setRecurring(rec)
       setGoals(g)
-      setBudgetRule(b.rule)
       setError(null)
     } catch (e) {
       setError(e instanceof Error ? e.message : "Error al cargar el dashboard")
@@ -177,25 +185,114 @@ export default function Dashboard({
     ],
   )
 
-  const now = new Date()
-  const [interestPeriod, setInterestPeriod] = useState(0)
-  const chartRef = useMemo(() => {
-    const d = new Date(now.getFullYear(), now.getMonth() + interestPeriod, 1)
-    return { year: d.getFullYear(), month: d.getMonth() }
-  }, [interestPeriod])
-  const catData = useMemo(
-    () => categorySpend(txns, now.getFullYear(), now.getMonth()),
-    [txns],
+  type RangeKey = "1M" | "3M" | "6M" | "1Y" | "YTD"
+  const currentRef = useMemo<MonthRef>(() => {
+    const n = new Date()
+    return { year: n.getFullYear(), month: n.getMonth() }
+  }, [])
+  const [range, setRange] = useState<RangeKey>("1M")
+  const [anchor, setAnchor] = useState<MonthRef>(currentRef)
+
+  const rangeMonths = useMemo(() => {
+    if (range === "YTD") return currentRef.month + 1
+    return { "1M": 1, "3M": 3, "6M": 6, "1Y": 12 }[range]
+  }, [range, currentRef.month])
+
+  const startRef = useMemo(
+    () => addMonths(anchor, -(rangeMonths - 1)),
+    [anchor, rangeMonths],
   )
-  const flowData = useMemo(() => cashFlow(txns), [txns])
+
+  const isCurrent =
+    anchor.year === currentRef.year && anchor.month === currentRef.month
+  const goPrev = () => setAnchor((m) => addMonths(m, -1))
+  const goNext = () => setAnchor((m) => (isCurrent ? m : addMonths(m, 1)))
+  const selectRange = (key: RangeKey) => {
+    setRange(key)
+    setAnchor(currentRef)
+  }
+
+  const monthLabel = (m: MonthRef) =>
+    new Date(m.year, m.month, 1).toLocaleDateString("es-MX", { month: "short" })
+
+  const windowLabel = useMemo(() => {
+    if (rangeMonths === 1)
+      return new Date(anchor.year, anchor.month, 1)
+        .toLocaleDateString("es-MX", { month: "long", year: "numeric" })
+        .replace(/^./, (c) => c.toUpperCase())
+    if (startRef.year === anchor.year)
+      return `${monthLabel(startRef)} – ${monthLabel(anchor)} ${anchor.year}`
+    return `${monthLabel(startRef)} ${String(startRef.year).slice(2)} – ${monthLabel(anchor)} ${String(anchor.year).slice(2)}`
+  }, [rangeMonths, startRef, anchor])
+
+  useEffect(() => {
+    let cancelled = false
+    fetchBudgetSummary(monthPrefix(anchor))
+      .then((b) => {
+        if (!cancelled) setBudgetRule(b.rule)
+      })
+      .catch(() => {
+        if (!cancelled) showToast("Error al cargar presupuesto", "error")
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [anchor, refreshKey, showToast])
+
+  const budgetRows = useMemo(() => {
+    if (budgetRule.length === 0) return []
+    if (rangeMonths <= 1) return budgetRule
+    const fromPrefix = monthPrefix(startRef)
+    const toPrefix = monthPrefix(anchor)
+    const spentByType = new Map<string, number>()
+    for (const t of txns) {
+      if (!t.date) continue
+      const prefix = t.date.slice(0, 7)
+      if (prefix < fromPrefix || prefix > toPrefix) continue
+      if (t.type !== "expense" || !t.budget_type) continue
+      spentByType.set(
+        t.budget_type,
+        (spentByType.get(t.budget_type) || 0) + Number(t.amount),
+      )
+    }
+    return budgetRule.map((r) => {
+      const spent = Math.round((spentByType.get(r.budgetType) || 0) * 100) / 100
+      const target = Math.round(r.target * rangeMonths * 100) / 100
+      return {
+        ...r,
+        spent,
+        target,
+        remaining: Math.round((target - spent) * 100) / 100,
+      }
+    })
+  }, [budgetRule, txns, rangeMonths, startRef, anchor])
+
+  const catData = useMemo(
+    () => categorySpendInRange(txns, startRef, anchor),
+    [txns, startRef, anchor],
+  )
+  const flowData = useMemo(
+    () => cashFlowRange(txns, anchor, rangeMonths),
+    [txns, anchor, rangeMonths],
+  )
   const theoData = useMemo(
-    () => interestChartData(txns, chartRef.year, chartRef.month),
-    [txns, chartRef],
+    () => interestChartDataRange(txns, anchor, rangeMonths),
+    [txns, anchor, rangeMonths],
   )
   const theoMonthTotal = theoData.reduce((s, d) => s + d.valor, 0)
+  const assetTxns = useMemo(() => {
+    const toPrefix = monthPrefix(anchor)
+    return txns.filter((t) => !t.date || t.date.slice(0, 7) <= toPrefix)
+  }, [txns, anchor])
   const assetData = useMemo(
-    () => assetDistribution({ accounts, txns, investments, receivables }),
-    [accounts, txns, investments, receivables],
+    () =>
+      assetDistribution({
+        accounts,
+        txns: assetTxns,
+        investments,
+        receivables,
+      }),
+    [accounts, assetTxns, investments, receivables],
   )
 
   const reminders = useMemo(
@@ -236,7 +333,9 @@ export default function Dashboard({
             id: t.id,
             icon: Icon,
             desc: t.description,
-            cat: t.category ?? (isIncome ? "Ingreso" : isTransfer ? "Transferencia" : "Gasto"),
+            cat:
+              t.category ??
+              (isIncome ? "Ingreso" : isTransfer ? "Transferencia" : "Gasto"),
             account: isTransfer
               ? `${accountName(t.account_id) || "?"} → ${accountName(destId) || "?"}`
               : accountName(destId) || "—",
@@ -407,13 +506,17 @@ export default function Dashboard({
         style={{ border: "1px solid rgba(255,255,255,0.08)" }}
       >
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-base font-semibold">Presupuesto del Mes</h3>
+          <h3 className="text-base font-semibold">
+            {rangeMonths === 1
+              ? "Presupuesto del Mes"
+              : "Presupuesto por Periodo"}
+          </h3>
           <div className="flex items-center gap-2">
             <span
               className="text-xs px-2 py-1 rounded-full font-medium"
               style={{ background: "rgba(124,58,237,0.15)", color: "#A78BFA" }}
             >
-              {todayMonth()}
+              {windowLabel}
             </span>
             <button
               onClick={() => onNavigate("budgets")}
@@ -427,13 +530,13 @@ export default function Dashboard({
             </button>
           </div>
         </div>
-        {budgetRule.length === 0 ? (
+        {budgetRows.length === 0 ? (
           <p className="text-sm" style={{ color: "#6B6B85" }}>
-            Sin presupuesto configurado para este mes.
+            Sin presupuesto configurado para este periodo.
           </p>
         ) : (
           <div className="flex flex-col gap-4">
-            {budgetRule.map((b) => (
+            {budgetRows.map((b) => (
               <div key={b.name}>
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
@@ -480,6 +583,64 @@ export default function Dashboard({
         )}
       </div>
 
+      <div
+        className="glass rounded-2xl p-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
+        style={{ border: "1px solid rgba(255,255,255,0.08)" }}
+      >
+        <div className="flex items-center justify-between sm:justify-start gap-2">
+          <div
+            className="flex items-center gap-1 rounded-full"
+            style={{ background: "rgba(255,255,255,0.06)" }}
+          >
+            <button
+              onClick={goPrev}
+              className="p-1.5 rounded-full hover:bg-white/10 transition-colors"
+              style={{ color: "#A0A0B8" }}
+              aria-label="Periodo anterior"
+            >
+              <ChevronLeft size={16} />
+            </button>
+            <span
+              className="text-xs px-1 font-medium min-w-[130px] text-center capitalize"
+              style={{ color: "#A0A0B8" }}
+            >
+              {windowLabel}
+            </span>
+            <button
+              onClick={goNext}
+              disabled={isCurrent}
+              className="p-1.5 rounded-full hover:bg-white/10 transition-colors disabled:opacity-30 disabled:hover:bg-transparent"
+              style={{ color: "#A0A0B8" }}
+              aria-label="Periodo siguiente"
+            >
+              <ChevronRight size={16} />
+            </button>
+          </div>
+        </div>
+        <div className="flex flex-wrap items-center gap-1.5">
+          {([
+            { key: "1M", label: "Este mes" },
+            { key: "3M", label: "3 meses" },
+            { key: "6M", label: "6 meses" },
+            { key: "1Y", label: "1 año" },
+            { key: "YTD", label: "Este año" },
+          ] as { key: RangeKey; label: string }[]).map((o) => (
+            <button
+              key={o.key}
+              onClick={() => selectRange(o.key)}
+              className="text-xs font-medium px-3 py-1.5 rounded-lg transition-colors"
+              style={
+                range === o.key
+                  ? { background: "rgba(124,58,237,0.25)", color: "#C4B5FD" }
+                  : { background: "rgba(255,255,255,0.06)", color: "#A0A0B8" }
+              }
+            >
+              {o.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
       <div className="charts-grid grid gap-4">
         <div
           className="glass rounded-2xl p-5"
@@ -511,48 +672,21 @@ export default function Dashboard({
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-sm font-semibold">Rendimiento Real</h3>
             <div className="flex items-center gap-2">
-              <div
-                className="flex items-center gap-1 rounded-full"
-                style={{ background: "rgba(255,255,255,0.06)" }}
+              <span
+                className="text-xs px-2 py-1 rounded-full font-medium"
+                style={{
+                  background: "rgba(255,255,255,0.06)",
+                  color: "#A0A0B8",
+                }}
               >
-                <button
-                  onClick={() =>
-                    setInterestPeriod((p) => Math.max(p - 1, -24))
-                  }
-                  className="p-1.5 rounded-full hover:bg-white/10 transition-colors"
-                  style={{ color: "#A0A0B8" }}
-                  aria-label="Mes anterior"
-                >
-                  <ChevronLeft size={16} />
-                </button>
-                <span
-                  className="text-xs px-1 font-medium min-w-[90px] text-center capitalize"
-                  style={{ color: "#A0A0B8" }}
-                >
-                  {new Date(chartRef.year, chartRef.month, 1).toLocaleDateString(
-                    "es-MX",
-                    { month: "short", year: "2-digit" },
-                  )}
-                </span>
-                <button
-                  onClick={() =>
-                    setInterestPeriod((p) =>
-                      p < 0
-                        ? p + 1
-                        : 0,
-                    )
-                  }
-                  disabled={interestPeriod >= 0}
-                  className="p-1.5 rounded-full hover:bg-white/10 transition-colors disabled:opacity-30 disabled:hover:bg-transparent"
-                  style={{ color: "#A0A0B8" }}
-                  aria-label="Mes siguiente"
-                >
-                  <ChevronRight size={16} />
-                </button>
-              </div>
+                {windowLabel}
+              </span>
               <span
                 className="text-xs px-2 py-1 rounded-full font-mono font-semibold"
-                style={{ background: "rgba(245,158,11,0.15)", color: "#F59E0B" }}
+                style={{
+                  background: "rgba(245,158,11,0.15)",
+                  color: "#F59E0B",
+                }}
               >
                 {fmt(theoMonthTotal)}
               </span>
@@ -629,15 +763,10 @@ export default function Dashboard({
         onClose={() => setAddOpen(false)}
         onAdd={() => {
           void load()
+          setRefreshKey((k) => k + 1)
           showToast("Movimiento registrado exitosamente", "success")
         }}
       />
     </div>
   )
-}
-
-function todayMonth() {
-  return new Date()
-    .toLocaleDateString("es-MX", { month: "long", year: "numeric" })
-    .replace(/^./, (c) => c.toUpperCase())
 }

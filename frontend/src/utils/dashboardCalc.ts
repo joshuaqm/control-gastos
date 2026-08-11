@@ -104,6 +104,19 @@ export interface DashboardInput {
   goals: ApiGoal[]
 }
 
+export interface MonthRef {
+  year: number
+  month: number
+}
+
+export const monthPrefix = (m: MonthRef): string =>
+  `${m.year}-${String(m.month + 1).padStart(2, "0")}`
+
+export const addMonths = (m: MonthRef, delta: number): MonthRef => {
+  const d = new Date(m.year, m.month + delta, 1)
+  return { year: d.getFullYear(), month: d.getMonth() }
+}
+
 const toDay = (date: string | Date): Date => {
   const d = new Date(date)
   return new Date(d.getFullYear(), d.getMonth(), d.getDate())
@@ -146,7 +159,10 @@ export function interestChartData(
     if (!isRealInterest(t) || !t.date || t.date.slice(0, 7) !== prefix) continue
     const day = Number(t.date.slice(8, 10))
     if (Number.isNaN(day)) continue
-    byDay.set(t.date.slice(0, 10), (byDay.get(t.date.slice(0, 10)) || 0) + Number(t.amount))
+    byDay.set(
+      t.date.slice(0, 10),
+      (byDay.get(t.date.slice(0, 10)) || 0) + Number(t.amount),
+    )
   }
   const result: ChartDatum[] = []
   for (const [day, val] of [...byDay.entries()].sort()) {
@@ -273,6 +289,106 @@ export function cashFlow(
   return result
 }
 
+export function categorySpendInRange(
+  txns: ApiTransaction[],
+  from: MonthRef,
+  to: MonthRef,
+): DonutDatum[] {
+  const fromPrefix = monthPrefix(from)
+  const toPrefix = monthPrefix(to)
+  const map = new Map<string, number>()
+  for (const t of txns) {
+    if (!t.date) continue
+    const prefix = t.date.slice(0, 7)
+    if (prefix < fromPrefix || prefix > toPrefix) continue
+    if (t.type !== "expense" && t.type !== "debt_payment") continue
+    const cat = t.category || "Sin categoría"
+    map.set(cat, (map.get(cat) || 0) + Number(t.amount))
+  }
+  const sorted = [...map.entries()].sort((a, b) => b[1] - a[1])
+  return sorted.map(([name, value], i) => ({
+    name,
+    value: Math.round(value * 100) / 100,
+    color: CATEGORY_COLORS[i % CATEGORY_COLORS.length],
+  }))
+}
+
+export function cashFlowRange(
+  txns: ApiTransaction[],
+  anchor: MonthRef,
+  months: number,
+): CashFlowPoint[] {
+  const result: CashFlowPoint[] = []
+  const startRef = addMonths(anchor, -(months - 1))
+  const spansYear = startRef.year !== anchor.year
+  for (let i = months - 1; i >= 0; i--) {
+    const m = addMonths(anchor, -i)
+    const prefix = monthPrefix(m)
+    let ingresos = 0
+    let gastos = 0
+    for (const t of txns) {
+      if (!t.date || t.date.slice(0, 7) !== prefix) continue
+      if (t.type === "income" || t.type === "receivable")
+        ingresos += Number(t.amount)
+      if (t.type === "expense" || t.type === "debt_payment")
+        gastos += Number(t.amount)
+    }
+    result.push({
+      month: spansYear
+        ? `${MONTHS_SHORT[m.month]} ${String(m.year).slice(2)}`
+        : MONTHS_SHORT[m.month],
+      ingresos,
+      gastos,
+    })
+  }
+  return result
+}
+
+export function interestChartDataRange(
+  txns: ApiTransaction[],
+  anchor: MonthRef,
+  months: number,
+): ChartDatum[] {
+  const toPrefix = monthPrefix(anchor)
+  if (months <= 1) {
+    const byDay = new Map<string, number>()
+    for (const t of txns) {
+      if (!isRealInterest(t) || !t.date) continue
+      if (t.date.slice(0, 7) !== toPrefix) continue
+      const day = Number(t.date.slice(8, 10))
+      if (Number.isNaN(day)) continue
+      byDay.set(
+        t.date.slice(0, 10),
+        (byDay.get(t.date.slice(0, 10)) || 0) + Number(t.amount),
+      )
+    }
+    return [...byDay.entries()].sort().map(([day, val]) => ({
+      month: day,
+      valor: Math.round(val * 100) / 100,
+      isReal: true,
+    }))
+  }
+  const fromPrefix = monthPrefix(addMonths(anchor, -(months - 1)))
+  const byMonth = new Map<string, number>()
+  for (const t of txns) {
+    if (!isRealInterest(t) || !t.date) continue
+    const prefix = t.date.slice(0, 7)
+    if (prefix < fromPrefix || prefix > toPrefix) continue
+    byMonth.set(prefix, (byMonth.get(prefix) || 0) + Number(t.amount))
+  }
+  const result: ChartDatum[] = []
+  const startRef = addMonths(anchor, -(months - 1))
+  for (let i = 0; i < months; i++) {
+    const m = addMonths(startRef, i)
+    result.push({
+      month: `${MONTHS_SHORT[m.month]} ${String(m.year).slice(2)}`,
+      valor: Math.round((byMonth.get(monthPrefix(m)) || 0) * 100) / 100,
+      isReal: true,
+    })
+  }
+  return result
+}
+
 export function assetDistribution(
   input: Pick<DashboardInput, "accounts" | "txns" | "investments" | "receivables">,
 ): DonutDatum[] {
@@ -391,9 +507,8 @@ export function debtReminders(
     if (d.status === "paid") continue
     if (!d.due_date) continue
     const pending =
-      Math.round(
-        (Number(d.original_amount) - Number(d.paid_amount)) * 100,
-      ) / 100
+      Math.round((Number(d.original_amount) - Number(d.paid_amount)) * 100) /
+      100
     if (pending <= 0) continue
 
     const days = daysUntil(d.due_date, today)
@@ -403,7 +518,9 @@ export function debtReminders(
       id: `debt-${d.id}`,
       kind: "debt",
       title: `Pago ${d.name}`,
-      subtitle: `${d.creditor === "—" ? "Deuda independiente" : d.creditor} · vence ${String(d.due_date).slice(0, 10)}`,
+      subtitle: `${
+        d.creditor === "—" ? "Deuda independiente" : d.creditor
+      } · vence ${String(d.due_date).slice(0, 10)}`,
       amount: pending,
       days,
     })

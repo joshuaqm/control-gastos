@@ -10,15 +10,20 @@ import type { ApiGoal } from "@/api/goals"
 import {
   computeTotals,
   categorySpend,
+  categorySpendInRange,
   cashFlow,
+  cashFlowRange,
   totalCardDebtFor,
   creditReminders,
   debtReminders,
   recurringReminders,
   interestReminders,
   interestChartData,
+  interestChartDataRange,
   assetDistribution,
   daysUntil,
+  addMonths,
+  monthPrefix,
   REAL_NOTE,
 } from "./dashboardCalc"
 
@@ -170,6 +175,128 @@ describe("cashFlow", () => {
     const last = result[result.length - 1]
     expect(last.ingresos).toBe(110)
     expect(last.gastos).toBe(100)
+  })
+})
+
+describe("monthPrefix / addMonths", () => {
+  it("formats month prefixes and shifts months across years", () => {
+    expect(monthPrefix({ year: 2026, month: 7 })).toBe("2026-08")
+    expect(monthPrefix({ year: 2026, month: 0 })).toBe("2026-01")
+    expect(addMonths({ year: 2026, month: 0 }, -1)).toEqual({
+      year: 2025,
+      month: 11,
+    })
+    expect(addMonths({ year: 2026, month: 7 }, -5)).toEqual({
+      year: 2026,
+      month: 2,
+    })
+  })
+})
+
+describe("categorySpendInRange", () => {
+  it("aggregates expenses across a multi-month window sorted desc", () => {
+    const result = categorySpendInRange(
+      [
+        txn({
+          date: "2026-06-10",
+          type: "expense",
+          amount: 50,
+          category: "Comida",
+        }),
+        txn({
+          date: "2026-07-11",
+          type: "expense",
+          amount: 200,
+          category: "Renta",
+        }),
+        txn({
+          date: "2026-07-12",
+          type: "expense",
+          amount: 25,
+          category: "Comida",
+        }),
+        txn({
+          date: "2026-09-01",
+          type: "expense",
+          amount: 999,
+          category: "Fuera del rango",
+        }),
+        txn({
+          date: "2026-07-13",
+          type: "income",
+          amount: 500,
+          category: "Nómina",
+        }),
+      ],
+      { year: 2026, month: 5 },
+      { year: 2026, month: 6 },
+    )
+    expect(result).toEqual([
+      { name: "Renta", value: 200, color: "#7C3AED" },
+      { name: "Comida", value: 75, color: "#06D6A0" },
+    ])
+  })
+})
+
+describe("cashFlowRange", () => {
+  it("builds one bar per month ending at the anchor", () => {
+    const result = cashFlowRange(
+      [
+        txn({ date: "2026-08-05", type: "income", amount: 100 }),
+        txn({ date: "2026-08-06", type: "expense", amount: 40 }),
+        txn({ date: "2026-07-06", type: "expense", amount: 60 }),
+      ],
+      { year: 2026, month: 7 },
+      2,
+    )
+    expect(result).toEqual([
+      { month: "Jul", ingresos: 0, gastos: 60 },
+      { month: "Ago", ingresos: 100, gastos: 40 },
+    ])
+  })
+  it("labels months with a short year when the window spans years", () => {
+    const result = cashFlowRange([], { year: 2026, month: 0 }, 2)
+    expect(result[0].month).toBe("Dic 25")
+    expect(result[1].month).toBe("Ene 26")
+  })
+})
+
+describe("interestChartDataRange", () => {
+  const realInterest = (date: string, amount: number) =>
+    txn({
+      type: "income",
+      category: "Intereses",
+      notes: REAL_NOTE,
+      amount,
+      date,
+    })
+
+  it("groups by day within a single month", () => {
+    const result = interestChartDataRange(
+      [
+        realInterest("2026-08-01", 10),
+        realInterest("2026-08-01", 15),
+        realInterest("2026-08-15", 25),
+      ],
+      { year: 2026, month: 7 },
+      1,
+    )
+    expect(result).toEqual([
+      { month: "2026-08-01", valor: 25, isReal: true },
+      { month: "2026-08-15", valor: 25, isReal: true },
+    ])
+  })
+
+  it("groups by month across a multi-month window including zero months", () => {
+    const result = interestChartDataRange(
+      [realInterest("2026-07-10", 30), realInterest("2026-08-10", 20)],
+      { year: 2026, month: 7 },
+      2,
+    )
+    expect(result).toEqual([
+      { month: "Jul 26", valor: 30, isReal: true },
+      { month: "Ago 26", valor: 20, isReal: true },
+    ])
   })
 })
 

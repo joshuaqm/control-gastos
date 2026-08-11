@@ -76,13 +76,24 @@ async function getEffectiveIncome(userId: number): Promise<number> {
   return real > 0 ? real : 15000;
 }
 
-// Get budgets summary with real data from transactions
+// Get budgets summary with real data from transactions.
+// Optional ?month=YYYY-MM selects another month for the summary.
 router.get('/summary', async (req, res, next) => {
   try {
     const userId = req.user!.id;
     const budgetRepo = AppDataSource.getRepository(Budget);
     const transactionRepo = AppDataSource.getRepository(Transaction);
-    const { start, end, monthKey, label } = monthBounds();
+    let { start, end, monthKey, label } = monthBounds();
+    const qMonth = req.query.month;
+    if (typeof qMonth === 'string' && /^\d{4}-\d{2}$/.test(qMonth)) {
+      const [yy, mm] = qMonth.split('-').map(Number);
+      if (mm >= 1 && mm <= 12) {
+        start = new Date(yy, mm - 1, 1);
+        end = new Date(yy, mm, 1);
+        monthKey = `${yy}-${String(mm).padStart(2, '0')}-01`;
+        label = MONTHS_ES[mm - 1];
+      }
+    }
 
     // Real monthly income from transactions
     const incomeRow = await transactionRepo
