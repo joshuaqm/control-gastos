@@ -1,5 +1,7 @@
 {
   "installCommand": "npm install --production=false",
+  "buildCommand": "npm run build",
+  "outputDirectory": "public",
   "rewrites": [
     { "source": "/cron", "destination": "/api/cron" },
     { "source": "/health", "destination": "/api" },
