@@ -509,7 +509,7 @@ export default function Dashboard({
           style={{ border: "1px solid rgba(255,255,255,0.08)" }}
         >
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-semibold">Rendimientos Teóricos</h3>
+            <h3 className="text-sm font-semibold">Rendimiento Real</h3>
             <div className="flex items-center gap-2">
               <div
                 className="flex items-center gap-1 rounded-full"
@@ -560,7 +560,7 @@ export default function Dashboard({
           </div>
           <TheoreticalInterestChart data={theoData} />
           <p className="text-[11px] mt-2" style={{ color: "#6B6B85" }}>
-            Teórico semanal por cuenta; el real del mes se muestra en verde.
+            Rendimiento real registrado manualmente por cuenta.
           </p>
         </div>
       </div>

@@ -2,24 +2,12 @@ import { AppDataSource } from '../config/database';
 import { Account } from '../models/Account';
 import { Transaction } from '../models/Transaction';
 import { logger } from '../utils/logger';
-import cron, { type ScheduledTask } from 'node-cron';
 
-const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 export const THEORETICAL_NOTE = 'Rendimiento teórico semanal';
 const REAL_NOTE = 'Rendimiento real mensual';
 
-function startOfDay(d: Date): Date {
-  const out = new Date(d);
-  out.setHours(0, 0, 0, 0);
-  return out;
-}
-
 function endOfMonth(month: Date): Date {
   return new Date(month.getFullYear(), month.getMonth() + 1, 0, 23, 59, 59);
-}
-
-function daysBetween(from: Date, to: Date): number {
-  return Math.round((startOfDay(to).getTime() - startOfDay(from).getTime()) / 86400000);
 }
 
 function round2(n: number): number {
@@ -27,73 +15,10 @@ function round2(n: number): number {
 }
 
 /**
- * Theoretical weekly interest accrual for every active, non-credit account with an interest rate.
- * Creates one income transaction per elapsed week (compounded on the balance) and adds it to the account balance.
- * Idempotent: driven by `last_interest_at`; safe to run repeatedly.
- */
-export async function accrueWeeklyInterest(): Promise<{ accountId: number; transactions: number; weeks: number }[]> {
-  const accountRepo = AppDataSource.getRepository(Account);
-  const transactionRepo = AppDataSource.getRepository(Transaction);
-
-  const accounts = await accountRepo.find({
-    where: { is_active: true },
-  });
-
-  const accrueTargets = accounts.filter(a =>
-    a.type !== 'credit' &&
-    a.interest_rate != null &&
-    Number(a.interest_rate) > 0
-  );
-
-  const results: { accountId: number; transactions: number; weeks: number }[] = [];
-
-  for (const account of accrueTargets) {
-    const rate = Number(account.interest_rate);
-    const weeklyRate = rate / 100 / 52;
-
-    const reference = account.last_interest_at ? startOfDay(new Date(account.last_interest_at)) : startOfDay(new Date(account.created_at));
-    const today = startOfDay(new Date());
-    const elapsedDays = daysBetween(reference, today);
-    if (elapsedDays < 7) continue;
-
-    const weeks = Math.min(Math.floor(elapsedDays / 7), 52); // cap flood after long downtime
-
-    let balance = Number(account.initial_balance);
-    const created: Transaction[] = [];
-    let cursor = reference;
-    for (let w = 0; w < weeks; w++) {
-      cursor = new Date(cursor.getTime() + WEEK_MS);
-      const amount = round2(balance * weeklyRate);
-      balance = round2(balance + amount);
-      created.push(transactionRepo.create({
-        date: cursor,
-        description: 'Rendimiento de intereses',
-        amount,
-        type: 'income',
-        category: 'Intereses',
-        budget_type: null,
-        notes: THEORETICAL_NOTE,
-        account_id: account.id,
-        userId: account.userId,
-      }));
-    }
-
-    if (created.length > 0) {
-      await transactionRepo.save(created);
-      account.initial_balance = balance;
-      account.last_interest_at = today;
-      await accountRepo.save(account);
-      results.push({ accountId: account.id, transactions: created.length, weeks });
-      logger.info(`Interest accrued for account ${account.id} (${account.name}): ${created.length} week(s), balance → ${balance}`);
-    }
-  }
-
-  return results;
-}
-
-/**
- * Monthly real-interest adjustment. Replaces the theoretical accruals of the given (default: current) month
- * for an account with a single real interest transaction.
+ * Registers the real monthly interest of an account as a single income
+ * transaction ("Rendimiento real de intereses"). The balance is derived from
+ * `initial_balance` plus the account's transactions, so the income transaction
+ * accounts for the yield exactly once (no theoretical accrual involved).
  */
 export async function adjustRealInterest(
   accountId: number,
@@ -116,32 +41,23 @@ export async function adjustRealInterest(
   }
 
   const monthRef = month ?? new Date();
-  const monthStart = new Date(monthRef.getFullYear(), monthRef.getMonth(), 1, 0, 0, 0);
   const monthEnd = endOfMonth(monthRef);
 
-  const theoretical = await transactionRepo.find({
-    where: {
-      account_id: accountId,
-      userId,
-      type: 'income',
-    },
+  // Clean up any legacy theoretical income transactions. The old weekly
+  // accrual also inflated `initial_balance`, so we un-inflate it by the same
+  // amount to guarantee the real interest is counted exactly once.
+  const allIncome = await transactionRepo.find({
+    where: { account_id: accountId, userId, type: 'income' },
   });
-
-  const theoreticalForMonth = theoretical.filter(t => {
-    if (t.notes !== THEORETICAL_NOTE) return false;
-    const d = new Date(t.date);
-    return d >= monthStart && d <= monthEnd;
-  });
-
-  const theoreticalSum = round2(theoreticalForMonth.reduce((s, t) => s + Number(t.amount), 0));
-
-  // Remove theoretical transactions from the month and reverse their balance effect
-  if (theoreticalForMonth.length > 0) {
-    await transactionRepo.remove(theoreticalForMonth);
+  const theoreticalToRemove = allIncome.filter(t => t.notes === THEORETICAL_NOTE);
+  const theoreticalSum = round2(theoreticalToRemove.reduce((s, t) => s + Number(t.amount), 0));
+  if (theoreticalToRemove.length > 0) {
+    await transactionRepo.remove(theoreticalToRemove);
   }
-  const balanceBefore = Number(account.initial_balance);
-  const newBalance = round2(balanceBefore - theoreticalSum + amount);
-  account.initial_balance = newBalance;
+  if (theoreticalSum > 0) {
+    account.initial_balance = round2(Number(account.initial_balance) - theoreticalSum);
+  }
+
   account.last_interest_at = new Date(monthEnd.getFullYear(), monthEnd.getMonth(), monthEnd.getDate());
   await accountRepo.save(account);
 
@@ -158,42 +74,12 @@ export async function adjustRealInterest(
   });
   await transactionRepo.save(transaction);
 
-  logger.info(`Real interest adjusted for account ${accountId}: +${amount} (removed ${theoreticalForMonth.length} theoretical, balance → ${newBalance})`);
+  logger.info(`Real interest adjusted for account ${accountId}: +${amount} (removed ${theoreticalToRemove.length} theoretical)`);
 
   return {
     transaction,
     account,
-    theoreticalRemoved: theoreticalForMonth.length,
-    balanceDelta: round2(amount - theoreticalSum),
+    theoreticalRemoved: theoreticalToRemove.length,
+    balanceDelta: round2(amount),
   };
-}
-
-export function startInterestScheduler(): () => void {
-  let running = false;
-  const check = async () => {
-    if (running) return;
-    running = true;
-    try {
-      await accrueWeeklyInterest();
-    } catch (error) {
-      logger.error('Weekly interest cron failed:', error);
-    } finally {
-      running = false;
-    }
-  };
-
-  // Catch up on startup (idempotent: driven by last_interest_at).
-  void check();
-
-  // Weekly cron on Fridays. Override with INTEREST_CRON (cron expression).
-  const expression = process.env.INTEREST_CRON || '0 9 * * 5';
-  if (!cron.validate(expression)) {
-    logger.error(`Invalid INTEREST_CRON expression "${expression}", falling back to Fridays`);
-    void check();
-    return () => undefined;
-  }
-
-  const task: ScheduledTask = cron.schedule(expression, () => void check());
-  logger.info(`Interest scheduler started (weekly accrual cron: ${expression})`);
-  return () => task.stop();
 }

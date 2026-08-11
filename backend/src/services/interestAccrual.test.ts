@@ -1,6 +1,6 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { Mock } from "vitest";
-import { accrueWeeklyInterest, adjustRealInterest, THEORETICAL_NOTE } from "./interestAccrual";
+import { adjustRealInterest, THEORETICAL_NOTE } from "./interestAccrual";
 
 vi.mock("../config/database", () => ({
   AppDataSource: {
@@ -41,119 +41,74 @@ beforeEach(() => {
   getRepository.mockReset();
 });
 
-afterEach(() => {
-  vi.useRealTimers();
-});
-
-describe("accrueWeeklyInterest", () => {
-  it("creates one income interest transaction per elapsed week on the balance", async () => {
+describe("adjustRealInterest", () => {
+  it("creates one real income interest transaction", async () => {
     const account = {
       id: 1,
       userId: 5,
       name: "Ahorro",
       type: "savings",
-      interest_rate: 5.2,
       initial_balance: 1000,
-      created_at: new Date("2026-07-01"),
       last_interest_at: null,
-      is_active: true,
     } as Account;
 
     const accountRepo = fakeRepo();
-    accountRepo.find.mockResolvedValue([account]);
+    accountRepo.findOne.mockResolvedValue(account);
     const transactionRepo = fakeRepo();
+    transactionRepo.find.mockResolvedValue([]);
     transactionRepo.create.mockImplementation((obj) => obj as Transaction);
-    transactionRepo.save.mockResolvedValue([]);
-
+    transactionRepo.save.mockResolvedValue({} as Transaction);
     getRepository.mockImplementation((entity) =>
       entity === Account ? (accountRepo as never) : (transactionRepo as never),
     );
 
-    vi.useFakeTimers();
-    vi.setSystemTime(new Date("2026-08-10T12:00:00"));
+    const result = await adjustRealInterest(1, 5, 60);
 
-    const accountId = account.id;
-    const results = await accrueWeeklyInterest();
-
-    const created = transactionRepo.save.mock.calls[0]?.[0] as Transaction[];
-    expect(results.length).toBe(1);
-    expect(results[0]).toMatchObject({ accountId: accountId });
-
-    // 40 days -> 5 full weeks
-    expect(created.length).toBe(5);
-    expect(created[0]).toMatchObject({
+    const created = transactionRepo.create.mock.calls[0]?.[0] as Transaction;
+    expect(created).toMatchObject({
       type: "income",
       category: "Intereses",
-      notes: THEORETICAL_NOTE,
+      amount: 60,
       userId: 5,
     });
-    // compound: weekly rate 5.2% / 52
-    expect(created[0].amount).toBeCloseTo(1000 * (5.2 / 100 / 52), 2);
-    expect(account.initial_balance).toBeGreaterThan(1000);
+    expect(transactionRepo.save).toHaveBeenCalledTimes(1);
+    expect(transactionRepo.remove).not.toHaveBeenCalled();
+    expect(accountRepo.save).toHaveBeenCalledTimes(1);
+    expect(result.balanceDelta).toBe(60);
   });
 
-  it("skips accounts without an interest rate or credit cards", async () => {
-    const debit = {
-      id: 2,
-      userId: 5,
-      type: "debit",
-      interest_rate: null,
-      is_active: true,
-    } as Account;
-    const credit = {
-      id: 3,
-      userId: 5,
-      type: "credit",
-      interest_rate: 30,
-      is_active: true,
-    } as Account;
-    const accountRepo = fakeRepo();
-    accountRepo.find.mockResolvedValue([debit, credit]);
-
-    getRepository.mockImplementation((entity) =>
-      entity === Account ? (accountRepo as never) : (fakeRepo() as never),
-    );
-
-    vi.useFakeTimers();
-    vi.setSystemTime(new Date("2026-08-10T12:00:00"));
-
-    const results = await accrueWeeklyInterest();
-    expect(results).toEqual([]);
-  });
-
-  it("caps accrual at 52 weeks after long downtime", async () => {
+  it("removes legacy theoretical transactions and un-inflates initial_balance", async () => {
     const account = {
-      id: 4,
+      id: 1,
       userId: 5,
-      name: "Ahorro",
       type: "savings",
-      interest_rate: 5,
-      initial_balance: 100,
-      created_at: new Date("2020-01-01"),
+      initial_balance: 1020,
       last_interest_at: null,
-      is_active: true,
     } as Account;
+    const theoretical = [
+      { id: 99, amount: 10, notes: THEORETICAL_NOTE, type: "income" },
+      { id: 98, amount: 10, notes: THEORETICAL_NOTE, type: "income" },
+    ] as Transaction[];
+    const income = [...theoretical, { id: 97, amount: 500, notes: "Nómina", type: "income" }] as Transaction[];
 
     const accountRepo = fakeRepo();
-    accountRepo.find.mockResolvedValue([account]);
+    accountRepo.findOne.mockResolvedValue(account);
     const transactionRepo = fakeRepo();
+    transactionRepo.find.mockResolvedValue(income);
     transactionRepo.create.mockImplementation((obj) => obj as Transaction);
-    transactionRepo.save.mockResolvedValue([]);
+    transactionRepo.save.mockResolvedValue({} as Transaction);
+    transactionRepo.remove.mockResolvedValue({} as Transaction[]);
     getRepository.mockImplementation((entity) =>
       entity === Account ? (accountRepo as never) : (transactionRepo as never),
     );
 
-    vi.useFakeTimers();
-    vi.setSystemTime(new Date("2026-08-10T12:00:00"));
+    await adjustRealInterest(1, 5, 60);
 
-    const results = await accrueWeeklyInterest();
-    const created = transactionRepo.save.mock.calls[0]?.[0] as Transaction[];
-    expect(created.length).toBe(52);
-    expect(results[0].weeks).toBe(52);
+    expect(transactionRepo.remove).toHaveBeenCalledWith(theoretical);
+    expect(account.initial_balance).toBe(1000);
+    expect(transactionRepo.save).toHaveBeenCalledTimes(1);
   });
-});
 
-describe("adjustRealInterest", () => {
   it("throws when the account is a credit card", async () => {
     const accountRepo = fakeRepo();
     accountRepo.findOne.mockResolvedValue({ id: 9, type: "credit" } as Account);

@@ -8,7 +8,6 @@ import type { ApiRecurring } from "@/api/recurring"
 import type { ApiGoal } from "@/api/goals"
 import { accountBalance, cardUsed } from "./accountBalance"
 
-export const THEORETICAL_NOTE = "Rendimiento teórico semanal"
 export const REAL_NOTE = "Rendimiento real mensual"
 
 export const MONTHS_SHORT = [
@@ -133,10 +132,32 @@ export function creditUsed(txns: ApiTransaction[], accountId: number): number {
   }, 0)
 }
 
-const isTheoretical = (t: ApiTransaction): boolean =>
-  t.type === "income" &&
-  t.category === "Intereses" &&
-  t.notes === THEORETICAL_NOTE
+const isRealInterest = (t: ApiTransaction): boolean =>
+  t.type === "income" && t.category === "Intereses" && t.notes === REAL_NOTE
+
+export function interestChartData(
+  txns: ApiTransaction[],
+  year: number,
+  month: number,
+): ChartDatum[] {
+  const prefix = `${year}-${String(month + 1).padStart(2, "0")}`
+  const byDay = new Map<string, number>()
+  for (const t of txns) {
+    if (!isRealInterest(t) || !t.date || t.date.slice(0, 7) !== prefix) continue
+    const day = Number(t.date.slice(8, 10))
+    if (Number.isNaN(day)) continue
+    byDay.set(t.date.slice(0, 10), (byDay.get(t.date.slice(0, 10)) || 0) + Number(t.amount))
+  }
+  const result: ChartDatum[] = []
+  for (const [day, val] of [...byDay.entries()].sort()) {
+    result.push({
+      month: day,
+      valor: Math.round(val * 100) / 100,
+      isReal: true,
+    })
+  }
+  return result
+}
 
 export function totalCardDebtFor(
   input: Pick<DashboardInput, "accounts" | "txns" | "installments">,
@@ -242,7 +263,6 @@ export function cashFlow(
     let gastos = 0
     for (const t of txns) {
       if (!t.date || t.date.slice(0, 7) !== prefix) continue
-      if (isTheoretical(t)) continue
       if (t.type === "income" || t.type === "receivable")
         ingresos += Number(t.amount)
       if (t.type === "expense" || t.type === "debt_payment")
@@ -251,54 +271,6 @@ export function cashFlow(
     result.push({ month: MONTHS_SHORT[d.getMonth()], ingresos, gastos })
   }
   return result
-}
-
-const isRealInterest = (t: ApiTransaction): boolean =>
-  t.type === "income" && t.category === "Intereses" && t.notes === REAL_NOTE
-
-export function theoreticalInterestWeeks(
-  txns: ApiTransaction[],
-  year: number,
-  month: number,
-): ChartDatum[] {
-  const prefix = `${year}-${String(month + 1).padStart(2, "0")}`
-  const byWeek = new Map<string, number>()
-  for (const t of txns) {
-    if (!isTheoretical(t) || !t.date || t.date.slice(0, 7) !== prefix) continue
-    const day = Number(t.date.slice(8, 10))
-    if (Number.isNaN(day)) continue
-    const week = `Sem ${Math.ceil(day / 7)}`
-    byWeek.set(week, (byWeek.get(week) || 0) + Number(t.amount))
-  }
-  const totalWeeks = Math.ceil(new Date(year, month + 1, 0).getDate() / 7)
-  const result: ChartDatum[] = []
-  for (let w = 1; w <= totalWeeks; w++) {
-    result.push({
-      month: `Sem ${w}`,
-      valor: Math.round((byWeek.get(`Sem ${w}`) || 0) * 100) / 100,
-    })
-  }
-  return result
-}
-
-export function interestChartData(
-  txns: ApiTransaction[],
-  year: number,
-  month: number,
-): ChartDatum[] {
-  const weekly = theoreticalInterestWeeks(txns, year, month)
-  const prefix = `${year}-${String(month + 1).padStart(2, "0")}`
-  const real = txns
-    .filter((t) => isRealInterest(t) && t.date && t.date.slice(0, 7) === prefix)
-    .reduce((s, t) => s + Number(t.amount), 0)
-  if (real > 0) {
-    weekly.push({
-      month: "Real",
-      valor: Math.round(real * 100) / 100,
-      isReal: true,
-    })
-  }
-  return weekly
 }
 
 export function assetDistribution(
@@ -470,8 +442,7 @@ export function recurringReminders(
 
 /**
  * Monthly reminder on the first days of each month to register the real
- * interest (rendimiento real) of accounts with an interest rate. Shows the
- * previous month's theoretical total as reference.
+ * interest (rendimiento real) of accounts with an interest rate.
  */
 export function interestReminders(
   accounts: ApiAccount[],
@@ -498,17 +469,13 @@ export function interestReminders(
   )
   if (alreadyRecorded) return []
 
-  const theoreticalRef = txns
-    .filter((t) => isTheoretical(t) && t.date && t.date.slice(0, 7) === prevPrefix)
-    .reduce((s, t) => s + Number(t.amount), 0)
-
   return [
     {
       id: "interest-real",
       kind: "interest",
       title: "Registrar rendimientos reales",
       subtitle: `${rateAccounts.length} cuenta(s) con tasa · mes anterior`,
-      amount: Math.round(theoreticalRef * 100) / 100,
+      amount: 0,
       days: day - 1,
     },
   ]

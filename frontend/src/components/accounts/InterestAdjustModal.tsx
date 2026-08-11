@@ -51,8 +51,8 @@ export default function InterestAdjustModal({
         </div>
 
         <p className="text-xs mb-4 px-3 py-2 rounded-lg" style={{ background: 'rgba(124,58,237,0.1)', border: '1px solid rgba(124,58,237,0.25)', color: '#C4B5FD' }}>
-          {account?.name ?? ''} · tasa {account?.interest_rate ?? 0}%. Reemplaza el rendimiento
-          teórico del mes por el monto real que la institución te pagó.
+          {account?.name ?? ''} · tasa {account?.interest_rate ?? 0}%. Registra el
+          rendimiento real que la institución te pagó este mes.
         </p>
 
         <div className="flex flex-col gap-3">

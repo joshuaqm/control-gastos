@@ -16,11 +16,9 @@ import {
   debtReminders,
   recurringReminders,
   interestReminders,
-  theoreticalInterestWeeks,
   interestChartData,
   assetDistribution,
   daysUntil,
-  THEORETICAL_NOTE,
   REAL_NOTE,
 } from "./dashboardCalc"
 
@@ -163,14 +161,14 @@ describe("cashFlow", () => {
           type: "income",
           amount: 10,
           category: "Intereses",
-          notes: THEORETICAL_NOTE,
+          notes: REAL_NOTE,
           date: `${month}-08`,
         }),
       ],
       1,
     )
     const last = result[result.length - 1]
-    expect(last.ingresos).toBe(100)
+    expect(last.ingresos).toBe(110)
     expect(last.gastos).toBe(100)
   })
 })
@@ -189,46 +187,66 @@ describe("totalCardDebtFor", () => {
   })
 })
 
-describe("theoreticalInterestWeeks / interestChartData", () => {
+describe("interestChartData", () => {
   const txns = [
     txn({
       type: "income",
       category: "Intereses",
-      notes: THEORETICAL_NOTE,
+      notes: REAL_NOTE,
       amount: 10,
       date: "2026-08-01",
     }),
     txn({
       type: "income",
       category: "Intereses",
-      notes: THEORETICAL_NOTE,
-      amount: 10,
+      notes: REAL_NOTE,
+      amount: 15,
+      date: "2026-08-01",
+    }),
+    txn({
+      type: "income",
+      category: "Intereses",
+      notes: REAL_NOTE,
+      amount: 25,
       date: "2026-08-15",
     }),
   ]
-  it("buckets theoretical interest by week", () => {
-    const weeks = theoreticalInterestWeeks(txns, 2026, 7)
-    expect(weeks.length).toBe(5)
-    expect(weeks[0].valor).toBe(10)
-    expect(weeks[2].valor).toBe(10)
+  it("groups real interest by day within the month", () => {
+    const data = interestChartData(txns, 2026, 7)
+    expect(data).toEqual([
+      { month: "2026-08-01", valor: 25, isReal: true },
+      { month: "2026-08-15", valor: 25, isReal: true },
+    ])
   })
-  it("appends a real bar when a real interest txn exists", () => {
-    const withReal = [
-      ...txns,
-      txn({
-        type: "income",
-        category: "Intereses",
-        notes: REAL_NOTE,
-        amount: 77,
-        date: "2026-08-20",
-      }),
-    ]
-    const data = interestChartData(withReal, 2026, 7)
-    expect(data[data.length - 1]).toEqual({
-      month: "Real",
-      valor: 77,
-      isReal: true,
-    })
+  it("ignores interest outside the month and non-real notes", () => {
+    const data = interestChartData(
+      [
+        ...txns,
+        txn({
+          type: "income",
+          category: "Intereses",
+          notes: REAL_NOTE,
+          amount: 99,
+          date: "2026-07-20",
+        }),
+        txn({
+          type: "income",
+          category: "Intereses",
+          amount: 77,
+          date: "2026-08-20",
+        }),
+      ],
+      2026,
+      7,
+    )
+    expect(data).toEqual([
+      { month: "2026-08-01", valor: 25, isReal: true },
+      { month: "2026-08-15", valor: 25, isReal: true },
+    ])
+  })
+  it("returns empty when no real interest exists in the month", () => {
+    const data = interestChartData([], 2026, 7)
+    expect(data).toEqual([])
   })
 })
 
