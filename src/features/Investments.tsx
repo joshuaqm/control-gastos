@@ -6,10 +6,12 @@ import {
   createInvestment,
   deleteInvestment,
   fetchInvestments,
+  fetchInvestmentEvolution,
   refreshAllInvestments,
   refreshInvestment,
   updateInvestment,
   type ApiInvestment,
+  type EvolutionPoint,
 } from '@/api/investments'
 import { fmt } from '@/utils/format'
 import type { ShowToast } from '@/types'
@@ -69,8 +71,18 @@ function buildEvolution(investments: ApiInvestment[]): PortfolioPoint[] {
   return points
 }
 
+/** Maps backend evolution points (YYYY-MM) to chart points with ES month labels. */
+function mapEvolution(evolution: EvolutionPoint[]): PortfolioPoint[] {
+  return evolution.map(p => {
+    const [y, m] = p.month.split('-').map(Number)
+    const monthLabel = `${MONTHS_ES[m - 1]} ${String(y).slice(2)}`
+    return { month: monthLabel, valor: p.valor, costo: p.costo }
+  })
+}
+
 export default function InvestmentsScreen({ showToast }: { showToast: ShowToast }) {
   const [investments, setInvestments] = useState<ApiInvestment[]>([])
+  const [evolution, setEvolution] = useState<EvolutionPoint[] | null>(null)
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const [refreshingIds, setRefreshingIds] = useState<number[]>([])
@@ -88,7 +100,18 @@ export default function InvestmentsScreen({ showToast }: { showToast: ShowToast 
     }
   }
 
-  useEffect(() => { load() }, [])
+  const loadEvolution = async () => {
+    try {
+      setEvolution(await fetchInvestmentEvolution())
+    } catch {
+      setEvolution(null)
+    }
+  }
+
+  useEffect(() => {
+    load()
+    loadEvolution()
+  }, [])
 
   const marketValue = (i: ApiInvestment) => Number(i.units) * (i.current_price != null ? Number(i.current_price) : Number(i.average_cost))
   const costBasis = (i: ApiInvestment) => Number(i.units) * Number(i.average_cost)
@@ -119,6 +142,7 @@ export default function InvestmentsScreen({ showToast }: { showToast: ShowToast 
       }
       setModalOpen(false)
       await load()
+      await loadEvolution()
     } catch (err) {
       showToast(err instanceof Error ? err.message : 'Error al guardar', 'error')
     }
@@ -130,6 +154,7 @@ export default function InvestmentsScreen({ showToast }: { showToast: ShowToast 
       await deleteInvestment(inv.id)
       showToast('Inversión eliminada', 'success')
       await load()
+      await loadEvolution()
     } catch (err) {
       showToast(err instanceof Error ? err.message : 'Error al eliminar', 'error')
     }
@@ -141,6 +166,7 @@ export default function InvestmentsScreen({ showToast }: { showToast: ShowToast 
       await refreshInvestment(inv.id)
       showToast(`Precio actualizado de ${inv.name}`, 'success')
       await load()
+      await loadEvolution()
     } catch (err) {
       showToast(err instanceof Error ? err.message : 'Error al actualizar precio', 'error')
     } finally {
@@ -153,6 +179,7 @@ export default function InvestmentsScreen({ showToast }: { showToast: ShowToast 
     try {
       const result = await refreshAllInvestments()
       await load()
+      await loadEvolution()
       showToast(
         `Precios actualizados: ${result.successCount}/${result.total}`,
         result.successCount === result.total ? 'success' : 'error'
@@ -226,7 +253,7 @@ export default function InvestmentsScreen({ showToast }: { showToast: ShowToast 
             <span className="flex items-center gap-1.5"><span className="w-3 h-0.5 rounded" style={{ background: '#7C3AED', borderTop: '2px dashed #7C3AED', height: 0 }} /> Costo</span>
           </div>
         </div>
-        <AreaEvolutionChart data={buildEvolution(investments)} color="#06D6A0" height={180} />
+        <AreaEvolutionChart data={evolution && evolution.length > 0 ? mapEvolution(evolution) : buildEvolution(investments)} color="#06D6A0" height={180} />
       </div>
 
       {loading ? (

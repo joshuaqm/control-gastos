@@ -2,7 +2,7 @@ import { Router } from 'express';
 import type { DeepPartial } from 'typeorm';
 import { AppDataSource } from '../config/database';
 import { Investment } from '../models/Investment';
-import { refreshInvestmentPrice } from '../services/marketData';
+import { fetchMonthlyHistory, refreshInvestmentPrice } from '../services/marketData';
 import { logger } from '../utils/logger';
 import { authenticate } from '../middleware/auth';
 import { AppError } from '../middleware/errorHandler';
@@ -10,6 +10,11 @@ import { AppError } from '../middleware/errorHandler';
 const router = Router();
 
 router.use(authenticate);
+
+const monthKey = (d: Date): string =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+
+const round2 = (n: number): number => Math.round(n * 100) / 100;
 
 // Get all investments (scoped to logged-in user)
 router.get('/', async (req, res, next) => {
@@ -20,6 +25,70 @@ router.get('/', async (req, res, next) => {
       order: { id: 'ASC' }
     });
     res.json(investments);
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Monthly portfolio evolution using historical market prices (max per month),
+// with the current month valued at the most up-to-date current_price.
+router.get('/evolution', async (req, res, next) => {
+  try {
+    const investmentRepo = AppDataSource.getRepository(Investment);
+    const investments = await investmentRepo.find({
+      where: { userId: req.user!.id },
+      order: { id: 'ASC' }
+    });
+
+    const now = new Date();
+    const nowKey = monthKey(now);
+
+    const series = new Map<string, { valor: number; costo: number }>();
+    for (const inv of investments) {
+      const units = Number(inv.units) || 0;
+      const avg = Number(inv.average_cost) || 0;
+      const curr = inv.current_price != null ? Number(inv.current_price) : avg;
+      const base = inv.purchase_date
+        ? new Date(`${String(inv.purchase_date)}T00:00:00`)
+        : new Date(inv.created_at);
+      const baseKey = monthKey(base);
+
+      let monthly: { month: string; price: number }[] = [];
+      if (inv.ticker?.trim()) {
+        try {
+          monthly = await fetchMonthlyHistory(inv.ticker.trim(), inv.type);
+        } catch (error) {
+          logger.warn(`Evolution ${inv.name} (${inv.ticker}): ${error instanceof Error ? error.message : error}`);
+          monthly = [];
+        }
+      }
+
+      const pricesByMonth = new Map(monthly.map((m) => [m.month, m.price]));
+      // The current month is always valued with the most up-to-date price.
+      pricesByMonth.set(nowKey, curr);
+
+      // Walk every month from the purchase month to today.
+      const cursor = new Date(base.getFullYear(), base.getMonth(), 1);
+      while (cursor <= now) {
+        const key = monthKey(cursor);
+        const price = pricesByMonth.get(key) ?? curr;
+        const entry = series.get(key) ?? { valor: 0, costo: 0 };
+        entry.valor += units * price;
+        entry.costo += units * avg;
+        series.set(key, entry);
+        cursor.setMonth(cursor.getMonth() + 1);
+      }
+    }
+
+    const points = [...series.entries()]
+      .sort((a, b) => a[0].localeCompare(b[0]))
+      .map(([month, entry]) => ({
+        month,
+        valor: round2(entry.valor),
+        costo: round2(entry.costo),
+      }));
+
+    res.json(points);
   } catch (error) {
     next(error);
   }

@@ -97,3 +97,13 @@ export interface RefreshAllResponse {
 export async function refreshAllInvestments(): Promise<RefreshAllResponse> {
   return request<RefreshAllResponse>('/investments/refresh-all', { method: 'POST' })
 }
+
+export interface EvolutionPoint {
+  month: string
+  valor: number
+  costo: number
+}
+
+export async function fetchInvestmentEvolution(): Promise<EvolutionPoint[]> {
+  return request<EvolutionPoint[]>('/investments/evolution')
+}
