@@ -440,6 +440,69 @@ describe("reminders", () => {
     expect(creditReminders(accounts, [])).toHaveLength(0)
   })
 
+  it("creditReminders does not flag a fresh balance as overdue when the cut day already passed", () => {
+    const accounts = [
+      account({
+        id: 5,
+        type: "credit",
+        is_active: true,
+        cutoff_day: 3,
+        payment_due_day: 3,
+        name: "Nueva",
+      }),
+    ]
+    const txns = [
+      txn({ type: "expense", amount: 1200, account_id: 5, date: "2026-08-11" }),
+    ]
+    const reminders = creditReminders(accounts, txns)
+    expect(reminders).toHaveLength(0)
+  })
+
+  it("creditReminders flags a previous-cut balance as atrasado", () => {
+    const accounts = [
+      account({
+        id: 5,
+        type: "credit",
+        is_active: true,
+        cutoff_day: 3,
+        payment_due_day: 3,
+        name: "Nueva",
+      }),
+    ]
+    const txns = [
+      txn({ type: "expense", amount: 1200, account_id: 5, date: "2026-08-02" }),
+    ]
+    const reminders = creditReminders(accounts, txns)
+    expect(reminders).toHaveLength(1)
+    expect(reminders[0].kind).toBe("credit")
+    expect(reminders[0].days).toBeLessThan(0)
+  })
+
+  it("creditReminders skips when a payment covers the oldest cut", () => {
+    const accounts = [
+      account({
+        id: 5,
+        type: "credit",
+        is_active: true,
+        cutoff_day: 3,
+        payment_due_day: 3,
+        name: "Nueva",
+      }),
+    ]
+    const txns = [
+      txn({ type: "expense", amount: 1200, account_id: 5, date: "2026-08-02" }),
+      txn({
+        type: "transfer",
+        amount: 1200,
+        account_id: 1,
+        destination_account_id: 5,
+        date: "2026-08-05",
+      }),
+    ]
+    const reminders = creditReminders(accounts, txns)
+    expect(reminders).toHaveLength(0)
+  })
+
   it("debtReminders reminds about due debts not yet paid", () => {
     const debts = [
       {

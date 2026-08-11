@@ -3,6 +3,9 @@ FROM node:22-alpine AS development
 
 WORKDIR /app
 
+# pnpm vía corepack (usa la versión de "packageManager")
+RUN corepack enable
+
 # Dependencias del sistema
 RUN apk add --no-cache python3 make g++ postgresql-client
 
@@ -25,6 +28,9 @@ EXPOSE 8000 3000 5173 8443
 FROM node:22-alpine AS production
 
 WORKDIR /app
+
+# pnpm vía corepack (usa la versión de "packageManager")
+RUN corepack enable
 
 # Dependencias del sistema
 RUN apk add --no-cache postgresql-client

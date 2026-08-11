@@ -127,6 +127,28 @@ const dayOfMonthDate = (year: number, month: number, day: number): Date => {
   return new Date(year, month, Math.min(day, last))
 }
 
+/** Most recent cutoff date on or before `date`. */
+const nextCutoffOnOrAfter = (date: Date, cutoffDay: number): Date => {
+  const cand = dayOfMonthDate(date.getFullYear(), date.getMonth(), cutoffDay)
+  return cand >= date
+    ? cand
+    : dayOfMonthDate(date.getFullYear(), date.getMonth() + 1, cutoffDay)
+}
+
+/**
+ * Payment due date for a statement that closes at `cutoff`. When the payment
+ * day falls earlier than the cutoff day (e.g. corte 20, pago 3), the payment
+ * is due the next month; otherwise it is due in the same month as the cutoff.
+ */
+const paymentDueForCutoff = (
+  cutoff: Date,
+  cutoffDay: number,
+  dueDay: number,
+): Date =>
+  dueDay >= cutoffDay
+    ? dayOfMonthDate(cutoff.getFullYear(), cutoff.getMonth(), dueDay)
+    : dayOfMonthDate(cutoff.getFullYear(), cutoff.getMonth() + 1, dueDay)
+
 export const daysUntil = (date: string | Date, from = new Date()): number => {
   const d = toDay(date)
   const f = toDay(from)
@@ -434,32 +456,75 @@ export function assetDistribution(
   return result
 }
 
+/**
+ * Returns the date of the oldest charge on a credit card that is still
+ * outstanding, applying payments FIFO (payments cover the oldest charges
+ * first). Returns null when everything has been paid off.
+ */
+function oldestOutstandingDate(
+  txns: ApiTransaction[],
+  accountId: number,
+): Date | null {
+  const charges: { date: Date; remaining: number }[] = []
+  const payments: { date: Date; amount: number }[] = []
+  for (const t of txns) {
+    if (!t.date) continue
+    const d = toDay(t.date)
+    if (t.account_id === accountId) {
+      if (t.type === "expense" || t.type === "transfer")
+        charges.push({ date: d, remaining: Number(t.amount) })
+      else if (t.type === "income")
+        payments.push({ date: d, amount: Number(t.amount) })
+    } else if (t.destination_account_id === accountId && t.type === "transfer") {
+      payments.push({ date: d, amount: Number(t.amount) })
+    }
+  }
+  charges.sort((a, b) => a.date.getTime() - b.date.getTime())
+  payments.sort((a, b) => a.date.getTime() - b.date.getTime())
+  let ci = 0
+  for (const p of payments) {
+    let amount = p.amount
+    while (ci < charges.length && amount > 0.005) {
+      if (charges[ci].remaining <= 0.005) {
+        ci += 1
+        continue
+      }
+      const take = Math.min(charges[ci].remaining, amount)
+      charges[ci].remaining -= take
+      amount -= take
+      if (charges[ci].remaining <= 0.005) ci += 1
+    }
+  }
+  for (const c of charges) {
+    if (c.remaining > 0.005) return c.date
+  }
+  return null
+}
+
 export function creditReminders(
   accounts: ApiAccount[],
   txns: ApiTransaction[],
   today = new Date(),
 ): Reminder[] {
   const reminders: Reminder[] = []
+  const todayDay = toDay(today)
   for (const a of accounts) {
     if (a.type !== "credit" || !a.is_active || a.payment_due_day == null)
       continue
     if (creditUsed(txns, a.id) <= 0) continue
 
-    const due = dayOfMonthDate(
-      today.getFullYear(),
-      today.getMonth(),
-      a.payment_due_day,
-    )
+    const cutoffDay = a.cutoff_day ?? a.payment_due_day
+    const dueDay = a.payment_due_day
+
+    // The oldest charge that hasn't been paid off defines the billing cycle
+    // the outstanding balance belongs to.
+    const oldestDate = oldestOutstandingDate(txns, a.id)
+    const refDate = oldestDate ?? todayDay
+
+    const cutoff = nextCutoffOnOrAfter(refDate, cutoffDay)
+    const due = paymentDueForCutoff(cutoff, cutoffDay, dueDay)
 
     // paid when a transfer to the card (or debt_payment on it) exists after the cycle cutoff
-    const cutoff = dayOfMonthDate(
-      due.getFullYear(),
-      due.getMonth(),
-      a.cutoff_day ?? a.payment_due_day,
-    )
-    if (a.cutoff_day != null && a.cutoff_day > a.payment_due_day) {
-      cutoff.setMonth(cutoff.getMonth() - 1)
-    }
     const paidThisCycle = txns.some((t) => {
       if (!t.date) return false
       const td = toDay(t.date)
@@ -471,14 +536,8 @@ export function creditReminders(
     })
     if (paidThisCycle) continue
 
-    let days: number
-    if (due < toDay(today)) {
-      // El pago del mes ya venció sin registrarse: seguir recordando como atrasado
-      days = Math.round((due.getTime() - toDay(today).getTime()) / DAY_MS)
-    } else {
-      days = Math.round((due.getTime() - toDay(today).getTime()) / DAY_MS)
-      if (days > 3) continue
-    }
+    const days = Math.round((due.getTime() - todayDay.getTime()) / DAY_MS)
+    if (days > 3) continue
 
     reminders.push({
       id: `credit-${a.id}`,

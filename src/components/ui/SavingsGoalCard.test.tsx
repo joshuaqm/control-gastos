@@ -11,7 +11,7 @@ describe("SavingsGoalCard", () => {
     )
     expect(screen.getByText("Viaje")).toBeInTheDocument()
     expect(screen.getByText("25%")).toBeInTheDocument()
-    expect(screen.getByText("$2,500 / $10,000")).toBeInTheDocument()
+    expect(screen.getByText("$2,500.00 / $10,000.00")).toBeInTheDocument()
   })
 
   it("caps the percentage at rendering values without overflow", () => {
