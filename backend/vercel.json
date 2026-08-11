@@ -1,0 +1,11 @@
+{
+  "installCommand": "npm install --production=false",
+  "rewrites": [
+    { "source": "/cron", "destination": "/api/cron" },
+    { "source": "/health", "destination": "/api" },
+    { "source": "/api/(.*)", "destination": "/api" }
+  ],
+  "crons": [
+    { "path": "/cron", "schedule": "0 0 * * *" }
+  ]
+}

@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import rateLimit from 'express-rate-limit';
 import * as bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { AppDataSource } from '../config/database';
@@ -10,6 +11,17 @@ import { logger } from '../utils/logger';
 const router = Router();
 const JWT_SECRET = process.env.JWT_SECRET || 'dev_secret_key';
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '7d';
+
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: () => process.env.NODE_ENV === 'test',
+  handler: (req, res) => {
+    res.status(429).json({ error: 'Too many requests, please try again later' });
+  },
+});
 
 const signToken = (user: User) =>
   jwt.sign(
@@ -61,7 +73,7 @@ async function createDefaultBudgets(user: User): Promise<void> {
 }
 
 // POST /api/v1/auth/register
-router.post('/register', async (req, res, next) => {
+router.post('/register', authLimiter, async (req, res, next) => {
   try {
     const { username, email, password, monthly_income } = req.body;
 
@@ -103,7 +115,7 @@ router.post('/register', async (req, res, next) => {
 });
 
 // POST /api/v1/auth/login
-router.post('/login', async (req, res, next) => {
+router.post('/login', authLimiter, async (req, res, next) => {
   try {
     const { email, password } = req.body;
 

@@ -1,64 +1,24 @@
 import 'reflect-metadata';
-import express from 'express';
-import cors from 'cors';
-import helmet from 'helmet';
-import compression from 'compression';
 import dotenv from 'dotenv';
-import { AppDataSource } from './config/database';
-import routes from './routes';
-import { errorHandler } from './middleware/errorHandler';
+import app from './app';
+import { ensureDb } from './config/database';
 import { logger } from './utils/logger';
 
 dotenv.config();
 
-const app = express();
-const PORT = process.env.PORT || 8000;
+const PORT = Number(process.env.PORT) || 8000;
 
-// Middleware
-app.use(helmet({
-  contentSecurityPolicy: process.env.NODE_ENV === 'production' ? undefined : false,
-  crossOriginEmbedderPolicy: false
-}));
-app.use(compression());
-app.use(cors({
-  origin: process.env.CORS_ORIGINS?.split(',') || ['http://localhost:3000', 'http://localhost:5173'],
-  credentials: true
-}));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-
-// Logging middleware
-app.use((req, res, next) => {
-  logger.info(`${req.method} ${req.path}`);
-  next();
-});
-
-// Routes
-app.use('/api/v1', routes);
-
-// Health check
-app.get('/health', (req, res) => {
-  res.json({ 
-    status: 'healthy', 
-    timestamp: new Date().toISOString(),
-    environment: process.env.NODE_ENV || 'development'
-  });
-});
-
-// Error handler
-app.use(errorHandler);
-
-// Inicializar base de datos y servidor
-AppDataSource.initialize()
+// Inicializar base de datos y servidor (desarrollo local / Docker)
+ensureDb()
   .then(() => {
-    logger.info('✅ Database connected successfully');
+    logger.info('Database connected successfully');
     app.listen(PORT, () => {
-      logger.info(`🚀 Server running on port ${PORT}`);
-      logger.info(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
+      logger.info(`Server running on port ${PORT}`);
+      logger.info(`Environment: ${process.env.NODE_ENV || 'development'}`);
     });
   })
   .catch((error) => {
-    logger.error('❌ Database connection failed:', error);
+    logger.error('Database connection failed:', error);
     process.exit(1);
   });
 
