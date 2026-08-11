@@ -30,6 +30,15 @@ const TYPE_COLORS: Record<string, string> = {
 
 const MONTHS_ES = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']
 
+/** Normaliza purchase_date ("YYYY-MM-DD", ISO, o Date) a un objeto Date local. */
+function parseBaseDate(value: string | null | undefined, fallback: Date): Date {
+  if (!value) return fallback
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(value)
+  if (m) return new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]))
+  const d = new Date(value)
+  return isNaN(d.getTime()) ? fallback : d
+}
+
 function buildEvolution(investments: ApiInvestment[]): SeriesPoint[] {
   const points: SeriesPoint[] = []
   if (investments.length === 0) {
@@ -41,7 +50,7 @@ function buildEvolution(investments: ApiInvestment[]): SeriesPoint[] {
 
   const dated = investments.map(inv => {
     const created = new Date(inv.created_at)
-    const base = inv.purchase_date ? new Date(inv.purchase_date + 'T00:00:00') : created
+    const base = parseBaseDate(inv.purchase_date, created)
     const units = Number(inv.units)
     const avg = Number(inv.average_cost) || 0
     const curr = inv.current_price != null ? Number(inv.current_price) : avg
@@ -56,16 +65,24 @@ function buildEvolution(investments: ApiInvestment[]): SeriesPoint[] {
 
   while (cursor <= end) {
     const monthLabel = `${MONTHS_ES[cursor.getMonth()]} ${String(cursor.getFullYear()).slice(2)}`
+    const isCurrentMonth =
+      cursor.getFullYear() === end.getFullYear() && cursor.getMonth() === end.getMonth()
 
     let costo = 0
     let valor = 0
     for (const d of dated) {
       if (d.base <= cursor) {
         costo += d.costo
-        // Interpolación lineal entre costo (fecha de compra) y valor actual (hoy)
-        const span = Math.max(1, end.getTime() - d.base.getTime())
-        const frac = Math.min(1, Math.max(0, (cursor.getTime() - d.base.getTime()) / span))
-        valor += d.costo + (d.valor - d.costo) * frac
+        if (isCurrentMonth) {
+          // El mes en curso siempre refleja el valor real (units × current_price),
+          // idéntico al total de la card del portafolio.
+          valor += d.valor
+        } else {
+          // Interpolación lineal entre costo (fecha de compra) y valor actual (hoy)
+          const span = Math.max(1, end.getTime() - d.base.getTime())
+          const frac = Math.min(1, Math.max(0, (cursor.getTime() - d.base.getTime()) / span))
+          valor += d.costo + (d.valor - d.costo) * frac
+        }
       }
     }
 
@@ -261,7 +278,7 @@ export default function InvestmentsScreen({ showToast }: { showToast: ShowToast 
 
   const formatPurchase = (inv: ApiInvestment) => {
     if (!inv.purchase_date) return 'Sin fecha'
-    const d = new Date(inv.purchase_date + 'T00:00:00')
+    const d = parseBaseDate(inv.purchase_date, new Date(inv.created_at))
     return `${MONTHS_ES[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`
   }
 

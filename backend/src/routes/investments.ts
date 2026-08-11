@@ -16,6 +16,18 @@ const monthKey = (d: Date): string =>
 
 const round2 = (n: number): number => Math.round(n * 100) / 100;
 
+/** Normaliza purchase_date ("YYYY-MM-DD", ISO, o Date) a un Date local. */
+const parseBaseDate = (value: Date | string | null | undefined, fallback: Date): Date => {
+  if (!value) return fallback;
+  if (value instanceof Date) {
+    return isNaN(value.getTime()) ? fallback : value;
+  }
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(value);
+  if (m) return new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+  const d = new Date(value);
+  return isNaN(d.getTime()) ? fallback : d;
+};
+
 // Get all investments (scoped to logged-in user)
 router.get('/', async (req, res, next) => {
   try {
@@ -48,9 +60,7 @@ router.get('/evolution', async (req, res, next) => {
       const units = Number(inv.units) || 0;
       const avg = Number(inv.average_cost) || 0;
       const curr = inv.current_price != null ? Number(inv.current_price) : avg;
-      const base = inv.purchase_date
-        ? new Date(`${String(inv.purchase_date)}T00:00:00`)
-        : new Date(inv.created_at);
+      const base = parseBaseDate(inv.purchase_date, new Date(inv.created_at));
       const baseKey = monthKey(base);
 
       let monthly: { month: string; price: number }[] = [];
