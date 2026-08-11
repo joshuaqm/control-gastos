@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react'
-import { ArrowDownRight, ArrowUpRight, Pencil, Plus, RefreshCw, Trash2 } from 'lucide-react'
+import { useEffect, useMemo, useState } from 'react'
+import { ArrowDownRight, ArrowUpRight, ChevronLeft, ChevronRight, Pencil, Plus, RefreshCw, Trash2 } from 'lucide-react'
 import AreaEvolutionChart from '@/components/charts/AreaEvolutionChart'
 import InvestmentFormModal from '@/components/investments/InvestmentFormModal'
 import {
@@ -13,10 +13,12 @@ import {
   type ApiInvestment,
   type EvolutionPoint,
 } from '@/api/investments'
+import { addMonths, monthPrefix, type MonthRef } from '@/utils/dashboardCalc'
 import { fmt } from '@/utils/format'
 import type { ShowToast } from '@/types'
 
 export type PortfolioPoint = { month: string; valor: number; costo?: number }
+export type SeriesPoint = PortfolioPoint & { prefix: string }
 
 const TYPE_COLORS: Record<string, string> = {
   etf: '#3B82F6',
@@ -28,9 +30,12 @@ const TYPE_COLORS: Record<string, string> = {
 
 const MONTHS_ES = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']
 
-function buildEvolution(investments: ApiInvestment[]): PortfolioPoint[] {
-  const points: PortfolioPoint[] = []
-  if (investments.length === 0) return [{ month: 'Hoy', valor: 0, costo: 0 }]
+function buildEvolution(investments: ApiInvestment[]): SeriesPoint[] {
+  const points: SeriesPoint[] = []
+  if (investments.length === 0) {
+    const now = new Date()
+    return [{ month: 'Hoy', prefix: monthPrefix({ year: now.getFullYear(), month: now.getMonth() }), valor: 0, costo: 0 }]
+  }
 
   const end = new Date()
 
@@ -64,7 +69,12 @@ function buildEvolution(investments: ApiInvestment[]): PortfolioPoint[] {
       }
     }
 
-    points.push({ month: monthLabel, costo, valor })
+    points.push({
+      month: monthLabel,
+      prefix: monthPrefix({ year: cursor.getFullYear(), month: cursor.getMonth() }),
+      costo,
+      valor,
+    })
     cursor.setMonth(cursor.getMonth() + 1)
   }
 
@@ -72,11 +82,11 @@ function buildEvolution(investments: ApiInvestment[]): PortfolioPoint[] {
 }
 
 /** Maps backend evolution points (YYYY-MM) to chart points with ES month labels. */
-function mapEvolution(evolution: EvolutionPoint[]): PortfolioPoint[] {
+function mapEvolution(evolution: EvolutionPoint[]): SeriesPoint[] {
   return evolution.map(p => {
     const [y, m] = p.month.split('-').map(Number)
     const monthLabel = `${MONTHS_ES[m - 1]} ${String(y).slice(2)}`
-    return { month: monthLabel, valor: p.valor, costo: p.costo }
+    return { month: monthLabel, prefix: p.month, valor: p.valor, costo: p.costo }
   })
 }
 
@@ -88,6 +98,53 @@ export default function InvestmentsScreen({ showToast }: { showToast: ShowToast 
   const [refreshingIds, setRefreshingIds] = useState<number[]>([])
   const [modalOpen, setModalOpen] = useState(false)
   const [editing, setEditing] = useState<ApiInvestment | null>(null)
+
+  type RangeKey = '1M' | '3M' | '6M' | '1Y' | 'YTD'
+  const currentRef = useMemo<MonthRef>(() => {
+    const n = new Date()
+    return { year: n.getFullYear(), month: n.getMonth() }
+  }, [])
+  const [range, setRange] = useState<RangeKey>('1Y')
+  const [anchor, setAnchor] = useState<MonthRef>(currentRef)
+
+  const rangeMonths = useMemo(() => {
+    if (range === 'YTD') return currentRef.month + 1
+    return { '1M': 1, '3M': 3, '6M': 6, '1Y': 12 }[range]
+  }, [range, currentRef.month])
+
+  const startRef = useMemo(
+    () => addMonths(anchor, -(rangeMonths - 1)),
+    [anchor, rangeMonths],
+  )
+
+  const isCurrent =
+    anchor.year === currentRef.year && anchor.month === currentRef.month
+  const goPrev = () => setAnchor((m) => addMonths(m, -1))
+  const goNext = () => setAnchor((m) => (isCurrent ? m : addMonths(m, 1)))
+  const selectRange = (key: RangeKey) => {
+    setRange(key)
+    setAnchor(currentRef)
+  }
+
+  const monthLabel = (m: MonthRef) =>
+    new Date(m.year, m.month, 1).toLocaleDateString('es-MX', { month: 'short' })
+
+  const windowLabel = useMemo(() => {
+    if (rangeMonths === 1)
+      return new Date(anchor.year, anchor.month, 1)
+        .toLocaleDateString('es-MX', { month: 'long', year: 'numeric' })
+        .replace(/^./, (c) => c.toUpperCase())
+    if (startRef.year === anchor.year)
+      return `${monthLabel(startRef)} \u2013 ${monthLabel(anchor)} ${anchor.year}`
+    return `${monthLabel(startRef)} ${String(startRef.year).slice(2)} \u2013 ${monthLabel(anchor)} ${String(anchor.year).slice(2)}`
+  }, [rangeMonths, startRef, anchor])
+
+  const evolutionPoints = useMemo(() => {
+    const full = evolution && evolution.length > 0 ? mapEvolution(evolution) : buildEvolution(investments)
+    const fromPrefix = monthPrefix(startRef)
+    const toPrefix = monthPrefix(anchor)
+    return full.filter(p => p.prefix >= fromPrefix && p.prefix <= toPrefix)
+  }, [evolution, investments, startRef, anchor])
 
   const load = async () => {
     setLoading(true)
@@ -253,7 +310,58 @@ export default function InvestmentsScreen({ showToast }: { showToast: ShowToast 
             <span className="flex items-center gap-1.5"><span className="w-3 h-0.5 rounded" style={{ background: '#7C3AED', borderTop: '2px dashed #7C3AED', height: 0 }} /> Costo</span>
           </div>
         </div>
-        <AreaEvolutionChart data={evolution && evolution.length > 0 ? mapEvolution(evolution) : buildEvolution(investments)} color="#06D6A0" height={180} />
+
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+          <div className="flex items-center gap-1 rounded-full" style={{ background: 'rgba(255,255,255,0.06)' }}>
+            <button
+              onClick={goPrev}
+              className="p-1.5 rounded-full hover:bg-white/10 transition-colors"
+              style={{ color: '#A0A0B8' }}
+              aria-label="Periodo anterior"
+            >
+              <ChevronLeft size={16} />
+            </button>
+            <span
+              className="text-xs px-1 font-medium min-w-[130px] text-center capitalize"
+              style={{ color: '#A0A0B8' }}
+            >
+              {windowLabel}
+            </span>
+            <button
+              onClick={goNext}
+              disabled={isCurrent}
+              className="p-1.5 rounded-full hover:bg-white/10 transition-colors disabled:opacity-30 disabled:hover:bg-transparent"
+              style={{ color: '#A0A0B8' }}
+              aria-label="Periodo siguiente"
+            >
+              <ChevronRight size={16} />
+            </button>
+          </div>
+          <div className="flex flex-wrap items-center gap-1.5">
+            {([
+              { key: '1M', label: 'Este mes' },
+              { key: '3M', label: '3 meses' },
+              { key: '6M', label: '6 meses' },
+              { key: '1Y', label: '1 año' },
+              { key: 'YTD', label: 'Este año' },
+            ] as { key: RangeKey; label: string }[]).map((o) => (
+              <button
+                key={o.key}
+                onClick={() => selectRange(o.key)}
+                className="text-xs font-medium px-3 py-1.5 rounded-lg transition-colors"
+                style={
+                  range === o.key
+                    ? { background: 'rgba(124,58,237,0.25)', color: '#C4B5FD' }
+                    : { background: 'rgba(255,255,255,0.06)', color: '#A0A0B8' }
+                }
+              >
+                {o.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <AreaEvolutionChart data={evolutionPoints} color="#06D6A0" height={180} />
       </div>
 
       {loading ? (
