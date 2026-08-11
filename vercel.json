@@ -1,6 +1,6 @@
 {
   "buildCommand": "npm run build",
-  "outputDirectory": "frontend/dist",
+  "outputDirectory": "public",
   "rewrites": [
     { "source": "/cron", "destination": "/api/cron" },
     { "source": "/health", "destination": "/api" },

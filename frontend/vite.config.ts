@@ -10,6 +10,10 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url)),
     },
   },
+  build: {
+    outDir: '../public',
+    emptyOutDir: true,
+  },
   server: {
     host: true,
     port: 3000,
