@@ -106,6 +106,32 @@ describe("computeTotals", () => {
     expect(t.totalDebt).toBe(800)
     expect(t.patrimonio).toBe(1300 + 1200 - 800)
   })
+
+  it("subtracts outstanding receivables from liquidity", () => {
+    const t = computeTotals({
+      ...input,
+      receivables: [
+        {
+          id: 1,
+          person: "Ana",
+          description: "Préstamo",
+          original_amount: 250,
+          collected_amount: 50,
+          account_id: 1,
+          due_date: "2026-09-10",
+          status: "active",
+          notes: null,
+          created_at: "2026-08-01",
+          updated_at: "2026-08-01",
+          userId: 1,
+        },
+      ],
+    })
+
+    expect(t.cashAssets).toBe(1300)
+    expect(t.receivablesPending).toBe(200)
+    expect(t.liquidity).toBe(1100)
+  })
 })
 
 describe("categorySpend", () => {
