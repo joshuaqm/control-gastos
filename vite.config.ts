@@ -2,6 +2,7 @@ import { defineConfig, type HtmlTagDescriptor, type Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import path from 'node:path'
+import zlib from 'node:zlib'
 
 import siteConfiguration from './.figma/make/site.json'
 
@@ -26,6 +27,7 @@ export default defineConfig(({ mode }) => {
       figmaErrorOverlayReplay(),
       figmaReactRefreshBoundaryFallback(),
       figmaMakeKitPlugin({ storiesGlob: '/src/**/*.stories.{ts,tsx,js,jsx}' }),
+      figmaPwaPlugin(),
     ],
     resolve: {
       alias: {
@@ -354,6 +356,106 @@ function figmaMakeKitPlugin(options: { storiesGlob: string | string[] }): Plugin
           next(err as Error)
         }
       })
+    },
+  }
+}
+
+/**
+ * Emits PWA assets (web manifest + icons) so the deployed app runs in
+ * standalone mode on iOS/Android instead of inside the browser UI.
+ * With `display: standalone` + `apple-mobile-web-app-capable` the app
+ * launches fullscreen from the home screen, hiding Safari's toolbar and
+ * the Siri Suggestions bar.
+ */
+function figmaPwaPlugin(): Plugin {
+  const PRIMARY: [number, number, number] = [124, 58, 237]
+  const WHITE: [number, number, number] = [255, 255, 255]
+
+  let crcTable: Int32Array | null = null
+
+  function crc32(buf: Buffer): number {
+    let table = crcTable
+    if (!table) {
+      table = crcTable = new Int32Array(256)
+      for (let n = 0; n < 256; n++) {
+        let c = n
+        for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1
+        table[n] = c
+      }
+    }
+    let crc = -1
+    for (let i = 0; i < buf.length; i++) crc = (crc >>> 8) ^ table[(crc ^ buf[i]) & 0xff]
+    return (crc ^ -1) >>> 0
+  }
+
+  function pngChunk(type: string, data: Buffer): Buffer {
+    const len = Buffer.alloc(4)
+    len.writeUInt32BE(data.length, 0)
+    const typeBuf = Buffer.from(type, 'ascii')
+    const crc = Buffer.alloc(4)
+    crc.writeUInt32BE(crc32(Buffer.concat([typeBuf, data])), 0)
+    return Buffer.concat([len, typeBuf, data, crc])
+  }
+
+  function encodePng(size: number, pixel: (x: number, y: number) => [number, number, number]): Buffer {
+    const signature = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])
+    const ihdr = Buffer.alloc(13)
+    ihdr.writeUInt32BE(size, 0)
+    ihdr.writeUInt32BE(size, 4)
+    ihdr[8] = 8 // bit depth
+    ihdr[9] = 2 // color type: truecolor RGB
+    ihdr[10] = 0
+    ihdr[11] = 0
+    ihdr[12] = 0
+    const stride = size * 3
+    const raw = Buffer.alloc((stride + 1) * size)
+    for (let y = 0; y < size; y++) {
+      raw[y * (stride + 1)] = 0 // filter type: none
+      for (let x = 0; x < size; x++) {
+        const [r, g, b] = pixel(x, y)
+        const o = y * (stride + 1) + 1 + x * 3
+        raw[o] = r
+        raw[o + 1] = g
+        raw[o + 2] = b
+      }
+    }
+    return Buffer.concat([signature, pngChunk('IHDR', ihdr), pngChunk('IDAT', zlib.deflateSync(raw)), pngChunk('IEND', Buffer.alloc(0))])
+  }
+
+  function appIconPng(size: number): Buffer {
+    const cx = size / 2
+    const cy = size / 2
+    const outer = size * 0.34
+    const inner = size * 0.23
+    return encodePng(size, (x, y) => {
+      const d = Math.hypot(x + 0.5 - cx, y + 0.5 - cy)
+      return d <= outer && d >= inner ? WHITE : PRIMARY
+    })
+  }
+
+  return {
+    name: 'figma-pwa',
+    generateBundle() {
+      const manifest = {
+        name: 'Control Gastos',
+        short_name: 'Finanzas',
+        description: 'Personal finance tracker',
+        start_url: '/',
+        scope: '/',
+        display: 'standalone',
+        orientation: 'portrait',
+        background_color: '#0A0A0F',
+        theme_color: '#0A0A0F',
+        icons: [
+          { src: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
+          { src: '/icons/icon-512.png', sizes: '512x512', type: 'image/png' },
+          { src: '/icons/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
+        ],
+      }
+      this.emitFile({ type: 'asset', fileName: 'manifest.webmanifest', source: JSON.stringify(manifest, null, 2) })
+      this.emitFile({ type: 'asset', fileName: 'icons/apple-touch-icon.png', source: appIconPng(180) })
+      this.emitFile({ type: 'asset', fileName: 'icons/icon-192.png', source: appIconPng(192) })
+      this.emitFile({ type: 'asset', fileName: 'icons/icon-512.png', source: appIconPng(512) })
     },
   }
 }

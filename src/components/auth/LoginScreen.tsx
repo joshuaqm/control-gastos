@@ -1,18 +1,14 @@
 import { useState } from 'react'
 import { Eye, EyeOff, TrendingUp } from 'lucide-react'
 import StarField from '@/components/ui/StarField'
-import { login, register, type AuthResponse } from '@/api/auth'
-
-type Mode = 'login' | 'register'
+import { login, type AuthResponse } from '@/api/auth'
 
 export default function LoginScreen({
   onLogin,
 }: {
   onLogin: (res: AuthResponse) => void
 }) {
-  const [mode, setMode] = useState<Mode>('login')
   const [showPass, setShowPass] = useState(false)
-  const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [pass, setPass] = useState('')
   const [error, setError] = useState('')
@@ -23,10 +19,7 @@ export default function LoginScreen({
     setError('')
     setLoading(true)
     try {
-      const res =
-        mode === 'login'
-          ? await login(email.trim(), pass)
-          : await register(name.trim(), email.trim(), pass)
+      const res = await login(email.trim(), pass)
       onLogin(res)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Ocurrió un error, intenta de nuevo')
@@ -51,33 +44,7 @@ export default function LoginScreen({
           <p className="text-sm mt-1" style={{ color: '#A0A0B8' }}>Finanzas inteligentes</p>
         </div>
 
-        <div className="flex rounded-xl p-1 mb-6" style={{ background: 'rgba(255,255,255,0.05)' }}>
-          {(['login', 'register'] as const).map(m => (
-            <button
-              key={m}
-              onClick={() => { setMode(m); setError('') }}
-              className="flex-1 py-2 rounded-lg text-sm font-medium transition-all duration-300"
-              style={mode === m ? { background: 'linear-gradient(135deg,#7C3AED,#5B21B6)', color: '#fff', boxShadow: '0 0 15px rgba(124,58,237,0.4)' } : { color: '#A0A0B8' }}
-            >
-              {m === 'login' ? 'Iniciar Sesión' : 'Registrarse'}
-            </button>
-          ))}
-        </div>
-
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          {mode === 'register' && (
-            <div>
-              <label className="block text-xs font-medium mb-1" style={{ color: '#A0A0B8' }}>Nombre completo</label>
-              <input
-                type="text"
-                value={name}
-                onChange={e => setName(e.target.value)}
-                placeholder="Ana García"
-                className="w-full px-4 py-3 rounded-xl text-sm"
-                style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff' }}
-              />
-            </div>
-          )}
           <div>
             <label className="block text-xs font-medium mb-1" style={{ color: '#A0A0B8' }}>Correo electrónico</label>
             <input
@@ -112,11 +79,9 @@ export default function LoginScreen({
             </div>
           )}
 
-          {mode === 'login' && (
-            <button type="button" className="text-xs text-right transition-colors" style={{ color: '#7C3AED' }}>
-              ¿Olvidaste tu contraseña?
-            </button>
-          )}
+          <button type="button" className="text-xs text-right transition-colors" style={{ color: '#7C3AED' }}>
+            ¿Olvidaste tu contraseña?
+          </button>
 
           <button
             type="submit"
@@ -125,7 +90,7 @@ export default function LoginScreen({
           >
             {loading ? (
               <div className="w-5 h-5 rounded-full border-2 border-white/30 border-t-white animate-spin" />
-            ) : mode === 'login' ? 'Iniciar Sesión' : 'Crear Cuenta'}
+            ) : 'Iniciar Sesión'}
           </button>
         </form>
       </div>

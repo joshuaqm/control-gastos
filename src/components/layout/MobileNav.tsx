@@ -11,7 +11,7 @@ export default function MobileNav({ active, setActive }: {
   return (
     <nav
       className="fixed bottom-0 left-0 right-0 z-40 flex items-center justify-around px-2 py-2 sm:hidden"
-      style={{ background: '#14141E', borderTop: '1px solid rgba(255,255,255,0.08)' }}
+      style={{ background: '#14141E', borderTop: '1px solid rgba(255,255,255,0.08)', paddingBottom: 'calc(0.5rem + env(safe-area-inset-bottom))' }}
     >
       {items.map(item => {
         const Icon = item.icon

@@ -31,6 +31,7 @@ export default function Header({
         left: sidebarOffset,
         right: 0,
         zIndex: 40,
+        paddingTop: 'env(safe-area-inset-top)',
         borderBottom: '1px solid rgba(255,255,255,0.06)',
         background: 'rgba(10,10,15,0.8)',
         backdropFilter: 'blur(20px)',

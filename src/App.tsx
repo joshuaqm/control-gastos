@@ -190,7 +190,7 @@ export default function App() {
           onNavigate={(screen) => { notifs.close(); navigate(screen) }}
         />
 
-        <div className="flex flex-1" style={{ paddingTop: '56px' }}>
+        <div className="flex flex-1" style={{ paddingTop: 'calc(56px + env(safe-area-inset-top))' }}>
           {/* Sidebar — fijo, ocupando toda la altura */}
           <div 
             className="hidden sm:block"
@@ -215,7 +215,7 @@ export default function App() {
           <main 
             className="flex-1 overflow-y-auto p-4 sm:p-6 relative" 
             style={{ 
-              paddingBottom: 80,
+              paddingBottom: 'calc(80px + env(safe-area-inset-bottom))',
               marginLeft: sidebarWidth,
               transition: 'margin-left 0.3s ease',
               minHeight: 'calc(100vh - 56px)',

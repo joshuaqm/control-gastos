@@ -26,10 +26,6 @@ export async function login(email: string, password: string): Promise<AuthRespon
   return request<AuthResponse>('/auth/login', { email, password })
 }
 
-export async function register(username: string, email: string, password: string): Promise<AuthResponse> {
-  return request<AuthResponse>('/auth/register', { username, email, password })
-}
-
 async function request<T>(path: string, body: unknown): Promise<T> {
   const res = await fetch(`${API_URL}${path}`, {
     method: 'POST',
