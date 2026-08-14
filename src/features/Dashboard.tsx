@@ -249,7 +249,11 @@ export default function Dashboard({
       if (!t.date) continue
       const prefix = t.date.slice(0, 7)
       if (prefix < fromPrefix || prefix > toPrefix) continue
-      if (t.type !== "expense" || !t.budget_type) continue
+      if (!t.budget_type) continue
+      const isSaveAllocation =
+        (t.type === "income" || t.type === "transfer") &&
+        t.budget_type === "save"
+      if (t.type !== "expense" && !isSaveAllocation) continue
       spentByType.set(
         t.budget_type,
         (spentByType.get(t.budget_type) || 0) + Number(t.amount),

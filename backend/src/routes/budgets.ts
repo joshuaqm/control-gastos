@@ -143,7 +143,27 @@ router.get('/summary', async (req, res, next) => {
       .andWhere('t.date >= :start', { start })
       .andWhere('t.date < :end', { end })
       .getRawOne();
-    const totalSpent = toNum(totalRow?.total);
+
+    // Savings contributions: movements classified as "Ahorro" that are not
+    // expenses (money set aside as an income, or moved into savings/accounts
+    // as a transfer, e.g. goal deposits to a linked account). They are not
+    // spending but still count toward the Ahorro bucket of the 50/30/20 rule.
+    const saveContribRaw = await transactionRepo
+      .createQueryBuilder('t')
+      .select('t.category', 'category')
+      .addSelect('COALESCE(SUM(t.amount), 0)', 'sum')
+      .where('t.userId = :userId', { userId })
+      .andWhere('t.type IN (:...saveTypes)', { saveTypes: ['income', 'transfer'] })
+      .andWhere('t.budget_type = :bt', { bt: 'save' })
+      .andWhere('t.date >= :start', { start })
+      .andWhere('t.date < :end', { end })
+      .groupBy('t.category')
+      .getRawMany();
+    const saveContribTotal = saveContribRaw.reduce(
+      (acc, r) => acc + toNum(r.sum),
+      0,
+    );
+    const totalSpent = toNum(totalRow?.total) + saveContribTotal;
 
     const budgets = await budgetRepo.find({
       where: { userId, month: new Date(monthKey) },
@@ -157,6 +177,7 @@ router.get('/summary', async (req, res, next) => {
 
     const typeSpent = new Map<string, number>();
     for (const r of typeSpentRaw) typeSpent.set(String(r.budget_type), toNum(r.spent));
+    typeSpent.set('save', (typeSpent.get('save') || 0) + saveContribTotal);
 
     const budgetByType = new Map<string, Budget>();
     for (const b of budgets) {
@@ -192,6 +213,11 @@ router.get('/summary', async (req, res, next) => {
       if (!catSpentByGroup.has(groupKey)) catSpentByGroup.set(groupKey, new Map());
       const map = catSpentByGroup.get(groupKey)!;
       map.set(String(r.category), (map.get(String(r.category)) || 0) + toNum(r.spent));
+    }
+    for (const r of saveContribRaw) {
+      const map = catSpentByGroup.get('save')!;
+      const category = String(r.category || 'Sin categoría');
+      map.set(category, (map.get(category) || 0) + toNum(r.sum));
     }
 
     const share = (n: number): number => (totalSpent > 0 ? round1((n / totalSpent) * 100) : 0);

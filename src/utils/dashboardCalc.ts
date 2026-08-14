@@ -118,8 +118,17 @@ export const addMonths = (m: MonthRef, delta: number): MonthRef => {
 }
 
 const toDay = (date: string | Date): Date => {
-  const d = new Date(date)
-  return new Date(d.getFullYear(), d.getMonth(), d.getDate())
+  if (typeof date === "string") {
+    // Date-only strings (e.g. "2026-08-17") are parsed by `new Date(...)` as
+    // UTC midnight, which shifts a day in timezones behind UTC. Parse the
+    // components as a LOCAL date so `daysUntil` and reminders behave the same
+    // regardless of the machine's timezone.
+    const m = /^(\d{4})-(\d{1,2})-(\d{1,2})/.exec(date)
+    if (m) return new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]))
+    const d = new Date(date)
+    return new Date(d.getFullYear(), d.getMonth(), d.getDate())
+  }
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate())
 }
 
 const dayOfMonthDate = (year: number, month: number, day: number): Date => {

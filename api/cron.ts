@@ -2,6 +2,9 @@ import "reflect-metadata";
 import type { Request, Response } from "express";
 import { ensureDb } from "../backend/src/config/database";
 
+// Vercel functions run in UTC by default; align with Ciudad de México time.
+process.env.TZ = process.env.TZ || "America/Mexico_City";
+
 export default async function handler(_req: Request, res: Response): Promise<void> {
   try {
     const dataSource = await ensureDb();

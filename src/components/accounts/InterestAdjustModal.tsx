@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { X } from 'lucide-react'
 import type { ApiAccount } from '@/api/accounts'
+import { fmt, fmtSigned } from '@/utils/format'
 
 const today = () => {
   const d = new Date()
@@ -10,31 +11,44 @@ const today = () => {
 export default function InterestAdjustModal({
   open,
   account,
+  currentBalance,
   onClose,
   onSubmit,
 }: {
   open: boolean
   account: ApiAccount | null
+  currentBalance: number
   onClose: () => void
   onSubmit: (data: { amount: number; month: string }) => Promise<void>
 }) {
-  const [amount, setAmount] = useState('')
+  const [newBalance, setNewBalance] = useState('')
   const [month, setMonth] = useState(today().slice(0, 7))
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
 
   if (!open) return null
 
+  const parsed = Number(newBalance)
+  const validBalance = newBalance !== '' && Number.isFinite(parsed) && parsed >= 0
+  const diff = validBalance
+    ? Math.round((parsed - currentBalance) * 100) / 100
+    : null
+
   const handleSave = async () => {
-    const amt = Number(amount)
-    if (!Number.isFinite(amt) || amt <= 0) {
-      setError('Ingresa un monto válido')
+    if (!validBalance) {
+      setError('Ingresa un saldo válido')
+      return
+    }
+    if (diff == null || diff <= 0) {
+      setError(
+        'El saldo actualizado debe ser mayor al saldo actual para registrar un rendimiento',
+      )
       return
     }
     setSaving(true)
     setError('')
     try {
-      await onSubmit({ amount: amt, month: `${month}-01` })
+      await onSubmit({ amount: diff, month: `${month}-01` })
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Ocurrió un error')
     } finally {
@@ -51,23 +65,36 @@ export default function InterestAdjustModal({
         </div>
 
         <p className="text-xs mb-4 px-3 py-2 rounded-lg" style={{ background: 'rgba(124,58,237,0.1)', border: '1px solid rgba(124,58,237,0.25)', color: '#C4B5FD' }}>
-          {account?.name ?? ''} · tasa {account?.interest_rate ?? 0}%. Registra el
-          rendimiento real que la institución te pagó este mes.
+          {account?.name ?? ''} · tasa {account?.interest_rate ?? 0}%. Ingresa el
+          saldo actualizado de la cuenta y la app calculará el rendimiento del mes.
         </p>
 
         <div className="flex flex-col gap-3">
+          <div className="px-3 py-2 rounded-lg text-sm flex items-center justify-between" style={{ background: 'rgba(255,255,255,0.05)' }}>
+            <span style={{ color: '#6B6B85' }}>Saldo actual</span>
+            <span className="font-mono font-semibold" style={{ color: '#fff' }}>{fmt(currentBalance)}</span>
+          </div>
           <div>
-            <label className="block text-xs font-medium mb-1" style={{ color: '#A0A0B8' }}>Monto real recibido en el mes</label>
+            <label className="block text-xs font-medium mb-1" style={{ color: '#A0A0B8' }}>
+              Saldo actualizado
+            </label>
             <input
-              value={amount}
-              onChange={e => setAmount(e.target.value)}
+              value={newBalance}
+              onChange={e => setNewBalance(e.target.value)}
               type="number"
               step="0.01"
               min="0"
               autoFocus
+              placeholder="Ej. 12045.30"
               className="w-full px-4 py-3 rounded-xl text-sm font-mono"
               style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff' }}
             />
+          </div>
+          <div className="px-3 py-2 rounded-lg text-sm flex items-center justify-between" style={{ background: 'rgba(6,214,160,0.08)', border: '1px solid rgba(6,214,160,0.15)' }}>
+            <span style={{ color: '#6B6B85' }}>Rendimiento total del mes</span>
+            <span className="font-mono font-semibold" style={{ color: diff != null && diff > 0 ? '#34D399' : '#F87171' }}>
+              {diff != null ? fmtSigned(diff) : '—'}
+            </span>
           </div>
           <div>
             <label className="block text-xs font-medium mb-1" style={{ color: '#A0A0B8' }}>Mes del rendimiento</label>

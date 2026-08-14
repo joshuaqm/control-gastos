@@ -304,14 +304,14 @@ export default function BudgetsScreen() {
       <div className="glass rounded-2xl p-5" style={{ border: '1px solid rgba(255,255,255,0.08)' }}>
         <h3 className="text-base font-semibold mb-1">Por Categoría</h3>
         <p className="text-xs mb-4" style={{ color: '#6B6B85' }}>
-          Gasto del mes ({summary.monthLabel}): <span className="font-mono" style={{ color: '#fff' }}>{fmt(summary.totalSpent)}</span>, clasificado por Necesidad, Deseo, Ahorro o No aplica.
+          Movimientos del mes ({summary.monthLabel}): <span className="font-mono" style={{ color: '#fff' }}>{fmt(summary.totalSpent)}</span>, clasificado por Necesidad, Deseo, Ahorro o No aplica.
         </p>
         {summary.categories.map(g => (
           <CategoryGroup key={g.budgetType ?? 'none'} group={g} />
         ))}
         {summary.totalSpent <= 0 && (
           <p className="text-xs" style={{ color: '#6B6B85' }}>
-            No hay gastos este mes. Al registrar movimientos clasifícalos como necesidad, deseo, ahorro o ninguno.
+            No hay movimientos este mes. Al registrar movimientos clasifícalos como necesidad, deseo, ahorro o ninguno.
           </p>
         )}
       </div>

@@ -335,6 +335,9 @@ export default function AccountsScreen({
       <InterestAdjustModal
         open={interestAdjust !== null}
         account={interestAdjust}
+        currentBalance={
+          interestAdjust != null ? accountBalance(interestAdjust, txns) : 0
+        }
         onClose={() => setInterestAdjust(null)}
         onSubmit={handleInterestAdjust}
       />

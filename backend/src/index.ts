@@ -1,5 +1,10 @@
 import 'reflect-metadata';
 import dotenv from 'dotenv';
+
+// Align server-side date calculations (month boundaries, reminders) with
+// Ciudad de México time even when TZ isn't set at the OS level.
+process.env.TZ = process.env.TZ || 'America/Mexico_City';
+
 import app from './app';
 import { ensureDb } from './config/database';
 import { logger } from './utils/logger';
