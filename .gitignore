@@ -17,4 +17,6 @@ logs/
 .tmp-*
 DEPLOYMENT.md
 backend/sql/
-supabase/
+.vercel/
+.next/
+FEATURES_V1.md
