@@ -3,25 +3,14 @@ import type { ApiTransaction } from "@/api/transactions"
 import type { ApiInstallment } from "@/api/installments"
 
 /**
- * Computes the current balance of a non-credit account from its initial
- * balance plus all movements: incomes add, everything else on the account
- * (expenses, transfers out, debt/lending payments) subtracts, and incoming
- * transfers (destination_account_id) add.
+ * Returns the stored balance of a non-credit account. The balance column
+ * is kept in sync by the backend after every transaction mutation.
  */
 export function accountBalance(
-  account: Pick<ApiAccount, "id" | "initial_balance">,
-  txns: ApiTransaction[],
+  account: Pick<ApiAccount, "id" | "balance">,
+  _txns?: ApiTransaction[],
 ): number {
-  let balance = Number(account.initial_balance) || 0
-  for (const t of txns) {
-    if (t.account_id === account.id) {
-      if (t.type === "income") balance += Number(t.amount)
-      else balance -= Number(t.amount)
-    } else if (t.destination_account_id === account.id) {
-      balance += Number(t.amount)
-    }
-  }
-  return Math.round(balance * 100) / 100
+  return Number(account.balance) || 0
 }
 
 /** Credit card usage (saldo utilizado) derived from transactions. */

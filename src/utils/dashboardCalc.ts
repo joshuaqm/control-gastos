@@ -222,14 +222,14 @@ export function computeTotals(input: DashboardInput): Totals {
   const cashAccounts = accounts.filter((a) => a.type !== "credit")
 
   const cashAssets = cashAccounts.reduce(
-    (s, a) => s + accountBalance(a, txns),
+    (s, a) => s + accountBalance(a),
     0,
   )
   const liquidity = accounts
     .filter(
       (a) => a.type === "debit" || a.type === "cash" || a.type === "savings",
     )
-    .reduce((s, a) => s + accountBalance(a, txns), 0) -
+    .reduce((s, a) => s + accountBalance(a), 0) -
     receivables.reduce(
       (s, r) => s + Math.max(0, Number(r.original_amount) - Number(r.collected_amount)),
       0,
@@ -432,13 +432,13 @@ export function assetDistribution(
     .filter(
       (a) => a.type === "debit" || a.type === "cash" || a.type === "savings",
     )
-    .reduce((s, a) => s + accountBalance(a, input.txns), 0)
+    .reduce((s, a) => s + accountBalance(a), 0)
   if (liquid > 0)
     result.push({ name: "Líquido", value: liquid, color: "#06D6A0" })
 
   const investAccounts = input.accounts
     .filter((a) => a.type === "investment")
-    .reduce((s, a) => s + accountBalance(a, input.txns), 0)
+    .reduce((s, a) => s + accountBalance(a), 0)
   if (investAccounts > 0)
     result.push({
       name: "Cuentas inversión",

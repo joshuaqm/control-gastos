@@ -3,6 +3,7 @@ import type { DeepPartial } from 'typeorm';
 import { AppDataSource } from '../config/database';
 import { Account } from '../models/Account';
 import { Transaction } from '../models/Transaction';
+import { recalcTwoAccountBalances } from '../services/recalcBalance';
 import { logger } from '../utils/logger';
 import { authenticate } from '../middleware/auth';
 import { AppError } from '../middleware/errorHandler';
@@ -12,38 +13,16 @@ const router = Router();
 router.use(authenticate);
 
 /**
- * Effective balance of an account derived from its initial balance plus every
- * movement that touches it: incomes on the account add; outbound movements on
- * the account (expenses, transfers out, debt payments) subtract; transfers that
- * land on the account via destination_account_id add.
+ * Returns the stored balance of an account. The balance column is kept in
+ * sync by `recalcAccountBalance` after every transaction mutation.
  */
-async function accountEffectiveBalance(
+async function getStoredBalance(
   userId: number,
   accountId: number,
-  excludeTransactionId?: number,
 ): Promise<number> {
   const accountRepo = AppDataSource.getRepository(Account);
-  const transactionRepo = AppDataSource.getRepository(Transaction);
   const account = await accountRepo.findOne({ where: { id: accountId, userId } });
-  if (!account) {
-    return 0;
-  }
-  const txns = await transactionRepo.find({
-    where: [
-      { account_id: accountId, userId },
-      { destination_account_id: accountId, userId },
-    ],
-  });
-  let balance = Number(account.initial_balance) || 0;
-  for (const t of txns) {
-    if (excludeTransactionId != null && t.id === excludeTransactionId) continue;
-    if (t.account_id === accountId) {
-      balance += Number(t.amount) * (t.type === 'income' ? 1 : -1);
-    } else if (t.destination_account_id === accountId) {
-      balance += Number(t.amount);
-    }
-  }
-  return Math.round(balance * 100) / 100;
+  return account ? Number(account.initial_balance) || 0 : 0;
 }
 
 /** Validates a transfer: source must exist, not be a credit card, and have funds. */
@@ -70,7 +49,23 @@ async function assertTransferAllowed(
   if (source.type === 'credit') {
     throw new AppError('No puedes transferir desde una tarjeta de crédito', 400);
   }
-  const balance = await accountEffectiveBalance(userId, sourceAccountId, excludeTransactionId);
+
+  // When editing a transfer, we need to account for the fact that the old
+  // transaction's effect is already baked into the stored balance. We
+  // temporarily reverse it to compute the "real" available funds.
+  let balance = await getStoredBalance(userId, sourceAccountId);
+  if (excludeTransactionId != null) {
+    const transactionRepo = AppDataSource.getRepository(Transaction);
+    const oldTxn = await transactionRepo.findOne({ where: { id: excludeTransactionId, userId } });
+    if (oldTxn && oldTxn.account_id === sourceAccountId) {
+      if (oldTxn.type === 'income') {
+        balance -= Number(oldTxn.amount);
+      } else {
+        balance += Number(oldTxn.amount);
+      }
+    }
+  }
+
   if (balance + 0.005 < amount) {
     throw new AppError(
       `Saldo insuficiente: la cuenta "${source.name}" solo tiene ${balance.toFixed(2)}`,
@@ -118,6 +113,15 @@ router.post('/', async (req, res, next) => {
       userId: req.user!.id,
     });
     await transactionRepo.save(transaction);
+
+    // Update affected account balances
+    if (transaction.account_id != null) {
+      await recalcTwoAccountBalances(
+        req.user!.id,
+        transaction.account_id,
+        transaction.destination_account_id,
+      );
+    }
 
     logger.info(`Transaction created: ${transaction.id} (user ${req.user!.id})`);
     res.status(201).json(transaction);
@@ -173,10 +177,27 @@ router.put('/:id', async (req, res, next) => {
       );
     }
 
+    // Track old accounts before the update
+    const oldAccountId = transaction.account_id;
+    const oldDestId = transaction.destination_account_id;
+
     Object.assign(transaction, req.body as DeepPartial<Transaction>, {
       userId: req.user!.id,
     });
     await transactionRepo.save(transaction);
+
+    // Update affected account balances (old + new accounts)
+    const accountsToRecalc = new Set<number | null>([
+      oldAccountId,
+      oldDestId,
+      transaction.account_id,
+      transaction.destination_account_id,
+    ]);
+    for (const accId of accountsToRecalc) {
+      if (accId != null) {
+        await recalcTwoAccountBalances(req.user!.id, accId);
+      }
+    }
 
     logger.info(`Transaction updated: ${transaction.id} (user ${req.user!.id})`);
     res.json(transaction);
@@ -198,7 +219,13 @@ router.delete('/:id', async (req, res, next) => {
       return next(new AppError('Transaction not found', 404));
     }
 
+    const accId = transaction.account_id;
+    const destId = transaction.destination_account_id;
+
     await transactionRepo.remove(transaction);
+
+    // Update affected account balances
+    if (accId != null) await recalcTwoAccountBalances(req.user!.id, accId, destId);
 
     logger.info(`Transaction deleted: ${id} (user ${req.user!.id})`);
     res.status(204).send();

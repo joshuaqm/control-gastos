@@ -92,7 +92,7 @@ export default function DepositModal({
             >
               <option value="">Selecciona una cuenta</option>
               {sourceAccounts.map(a => (
-                <option key={a.id} value={a.id}>{a.name} · {new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(a.initial_balance)}</option>
+                <option key={a.id} value={a.id}>{a.name} · {new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(a.balance ?? a.initial_balance)}</option>
               ))}
             </select>
           </div>

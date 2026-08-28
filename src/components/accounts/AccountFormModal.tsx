@@ -25,7 +25,7 @@ export default function AccountFormModal({
 }) {
   const [name, setName] = useState(account?.name ?? '')
   const [type, setType] = useState<AccountType>(account?.type ?? 'debit')
-  const [initialBalance, setInitialBalance] = useState(account?.initial_balance?.toString() ?? '0')
+  const [balance, setBalance] = useState(account?.balance?.toString() ?? account?.initial_balance?.toString() ?? '0')
   const [creditLimit, setCreditLimit] = useState(account?.credit_limit?.toString() ?? '')
   const [interestRate, setInterestRate] = useState(account?.interest_rate?.toString() ?? '')
   const [cutoffDay, setCutoffDay] = useState(account?.cutoff_day?.toString() ?? '')
@@ -64,7 +64,7 @@ export default function AccountFormModal({
       await onSave({
         name: name.trim(),
         type,
-        initial_balance: Number(initialBalance) || 0,
+        initial_balance: Number(balance) || 0,
         credit_limit: isCredit && creditLimit ? Number(creditLimit) : null,
         interest_rate: interestRate ? Number(interestRate) : null,
         cutoff_day: cutoff,
@@ -113,10 +113,10 @@ export default function AccountFormModal({
           </div>
 
           <div>
-            <label className="block text-xs font-medium mb-1" style={{ color: '#A0A0B8' }}>Saldo inicial</label>
+            <label className="block text-xs font-medium mb-1" style={{ color: '#A0A0B8' }}>Saldo</label>
             <input
-              value={initialBalance}
-              onChange={e => setInitialBalance(e.target.value)}
+              value={balance}
+              onChange={e => setBalance(e.target.value)}
               type="number"
               step="0.01"
               className="w-full px-4 py-3 rounded-xl text-sm font-mono"

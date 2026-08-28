@@ -243,7 +243,7 @@ export default function AccountsScreen({
                     className="text-3xl font-bold font-mono"
                     style={{ color: "#fff" }}
                   >
-                    {fmt(accountBalance(a, txns))}
+                    {fmt(accountBalance(a))}
                   </p>
                 )}
 
@@ -336,7 +336,7 @@ export default function AccountsScreen({
         open={interestAdjust !== null}
         account={interestAdjust}
         currentBalance={
-          interestAdjust != null ? accountBalance(interestAdjust, txns) : 0
+          interestAdjust != null ? accountBalance(interestAdjust) : 0
         }
         onClose={() => setInterestAdjust(null)}
         onSubmit={handleInterestAdjust}

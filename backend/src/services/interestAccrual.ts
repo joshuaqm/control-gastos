@@ -1,6 +1,7 @@
 import { AppDataSource } from '../config/database';
 import { Account } from '../models/Account';
 import { Transaction } from '../models/Transaction';
+import { recalcAccountBalance } from './recalcBalance';
 import { logger } from '../utils/logger';
 
 export const THEORETICAL_NOTE = 'Rendimiento teórico semanal';
@@ -43,19 +44,15 @@ export async function adjustRealInterest(
   const monthRef = month ?? new Date();
   const monthEnd = endOfMonth(monthRef);
 
-  // Clean up any legacy theoretical income transactions. The old weekly
-  // accrual also inflated `initial_balance`, so we un-inflate it by the same
-  // amount to guarantee the real interest is counted exactly once.
+  // Clean up any legacy theoretical income transactions. Removing them and
+  // recalculating the balance is sufficient — no manual initial_balance
+  // adjustment needed since recalcAccountBalance derives from transactions.
   const allIncome = await transactionRepo.find({
     where: { account_id: accountId, userId, type: 'income' },
   });
   const theoreticalToRemove = allIncome.filter(t => t.notes === THEORETICAL_NOTE);
-  const theoreticalSum = round2(theoreticalToRemove.reduce((s, t) => s + Number(t.amount), 0));
   if (theoreticalToRemove.length > 0) {
     await transactionRepo.remove(theoreticalToRemove);
-  }
-  if (theoreticalSum > 0) {
-    account.initial_balance = round2(Number(account.initial_balance) - theoreticalSum);
   }
 
   account.last_interest_at = new Date(monthEnd.getFullYear(), monthEnd.getMonth(), monthEnd.getDate());
@@ -74,11 +71,15 @@ export async function adjustRealInterest(
   });
   await transactionRepo.save(transaction);
 
+  // Recalculate balance to include the new interest income
+  await recalcAccountBalance(accountId, userId);
+  const updated = await accountRepo.findOne({ where: { id: accountId, userId } });
+
   logger.info(`Real interest adjusted for account ${accountId}: +${amount} (removed ${theoreticalToRemove.length} theoretical)`);
 
   return {
     transaction,
-    account,
+    account: updated ?? account,
     theoreticalRemoved: theoreticalToRemove.length,
     balanceDelta: round2(amount),
   };

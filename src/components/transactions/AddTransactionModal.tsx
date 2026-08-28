@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { X } from 'lucide-react'
 import { createTransaction, fetchTransactions, updateTransaction, type ApiTransaction } from '@/api/transactions'
 import { fetchAccounts, type ApiAccount } from '@/api/accounts'
@@ -89,19 +89,6 @@ export default function AddTransactionModal({ open, onClose, onAdd, transaction 
   const effectiveType: string = isStandard ? type : (transaction?.type ?? 'expense')
   const catOptions = CATEGORIES.includes(cat) ? CATEGORIES : [cat, ...CATEGORIES]
 
-  const displayTxns = useMemo(() => {
-    if (!editing || !transaction) return txns
-    return [
-      ...txns.filter(t => t.id !== transaction.id),
-      {
-        ...transaction,
-        amount: Number(amount) || 0,
-        account_id: accountId,
-        type: effectiveType,
-      },
-    ]
-  }, [txns, editing, transaction, amount, accountId, effectiveType])
-
   const handleSave = async () => {
     if (!amount || Number(amount) <= 0) return
     if (!isTransfer && !desc) return
@@ -119,12 +106,18 @@ export default function AddTransactionModal({ open, onClose, onAdd, transaction 
         setError('No puedes transferir desde una tarjeta de crédito')
         return
       }
-      const balanceTxns = editing && transaction
-        ? txns.filter(t => t.id !== transaction.id)
-        : txns
-      const balance = accountBalance(sourceAccount!, balanceTxns)
-      if (balance + 0.005 < Number(amount)) {
-        setError(`Saldo insuficiente en ${sourceAccount!.name}: solo tienes ${fmt(balance)}`)
+      // The stored balance already includes the old transaction's effect.
+      // When editing, reverse the old amount to get the real available funds.
+      let available = accountBalance(sourceAccount!, txns)
+      if (editing && transaction && transaction.account_id === accountId) {
+        if (transaction.type === 'income') {
+          available -= Number(transaction.amount)
+        } else {
+          available += Number(transaction.amount)
+        }
+      }
+      if (available + 0.005 < Number(amount)) {
+        setError(`Saldo insuficiente en ${sourceAccount!.name}: solo tienes ${fmt(available)}`)
         return
       }
     }
@@ -264,7 +257,7 @@ export default function AddTransactionModal({ open, onClose, onAdd, transaction 
             >
               {accounts.length === 0 && <option value="">Sin cuentas</option>}
               {accounts.map(a => (
-                <option key={a.id} value={a.id}>{a.name} · {fmt(accountBalance(a, displayTxns))}</option>
+                <option key={a.id} value={a.id}>{a.name} · {fmt(accountBalance(a))}</option>
               ))}
             </select>
           </div>
@@ -282,7 +275,7 @@ export default function AddTransactionModal({ open, onClose, onAdd, transaction 
               >
                 {accounts.length === 0 && <option value="">Sin cuentas</option>}
                 {accounts.map(a => (
-                  <option key={a.id} value={a.id}>{a.name} · {fmt(accountBalance(a, displayTxns))}</option>
+                  <option key={a.id} value={a.id}>{a.name} · {fmt(accountBalance(a))}</option>
                 ))}
               </select>
             </div>

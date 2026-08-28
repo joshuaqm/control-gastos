@@ -32,6 +32,7 @@ const account = (partial: Partial<ApiAccount> = {}): ApiAccount =>
     id: 1,
     name: "Cuenta",
     type: "debit",
+    balance: 0,
     initial_balance: 0,
     credit_limit: null,
     interest_rate: null,
@@ -63,9 +64,9 @@ const txn = (partial: Partial<ApiTransaction>): ApiTransaction =>
 describe("computeTotals", () => {
   const input = {
     accounts: [
-      account({ id: 1, type: "debit", initial_balance: 1000 }),
-      account({ id: 2, type: "savings", initial_balance: 500 }),
-      account({ id: 3, type: "credit", initial_balance: 0 }),
+      account({ id: 1, type: "debit", balance: 800 }),
+      account({ id: 2, type: "savings", balance: 500 }),
+      account({ id: 3, type: "credit", balance: 0 }),
     ],
     txns: [
       txn({ type: "expense", amount: 200, account_id: 1 }),
@@ -329,8 +330,8 @@ describe("interestChartDataRange", () => {
 describe("totalCardDebtFor", () => {
   it("sums card usage across credit accounts and floors at zero", () => {
     const accounts = [
-      account({ id: 1, type: "credit", initial_balance: 0 }),
-      account({ id: 2, type: "credit", initial_balance: 0 }),
+      account({ id: 1, type: "credit", balance: 0 }),
+      account({ id: 2, type: "credit", balance: 0 }),
     ]
     const txns = [
       txn({ type: "expense", amount: 300, account_id: 1 }),
@@ -407,8 +408,8 @@ describe("assetDistribution", () => {
   it("only includes slices with positive values", () => {
     const result = assetDistribution({
       accounts: [
-        account({ id: 1, type: "debit", initial_balance: 100 }),
-        account({ id: 2, type: "investment", initial_balance: 0 }),
+        account({ id: 1, type: "debit", balance: 100 }),
+        account({ id: 2, type: "investment", balance: 0 }),
       ],
       txns: [],
       investments: [

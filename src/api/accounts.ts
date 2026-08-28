@@ -4,6 +4,7 @@ export interface ApiAccount {
   id: number
   name: string
   type: 'debit' | 'credit' | 'cash' | 'savings' | 'investment'
+  balance: number
   initial_balance: number
   credit_limit: number | null
   interest_rate: number | null
