@@ -34,6 +34,10 @@ router.get('/', async (req, res, next) => {
       notifications_enabled: user.notifications_enabled,
       monthly_income: user.monthly_income != null ? Number(user.monthly_income) : null,
       is_active: user.is_active,
+      accepted_terms: user.accepted_terms,
+      terms_version: user.terms_version,
+      accepted_at: user.accepted_at,
+      ai_consent: user.ai_consent,
     });
   } catch (error) {
     next(error);
@@ -50,7 +54,7 @@ router.put('/', async (req, res, next) => {
       return next(new AppError('User not found', 404));
     }
 
-    const { username, email, currency, notifications_enabled, monthly_income } = req.body ?? {};
+    const { username, email, currency, notifications_enabled, monthly_income, ai_consent } = req.body ?? {};
 
     if (username !== undefined) {
       const name = String(username).trim();
@@ -88,6 +92,10 @@ router.put('/', async (req, res, next) => {
       user.monthly_income = round2(value);
     }
 
+    if (ai_consent !== undefined) {
+      user.ai_consent = !!ai_consent;
+    }
+
     await userRepo.save(user);
 
     logger.info(`Settings updated (user ${user.id})`);
@@ -98,6 +106,10 @@ router.put('/', async (req, res, next) => {
       notifications_enabled: user.notifications_enabled,
       monthly_income: user.monthly_income != null ? Number(user.monthly_income) : null,
       is_active: user.is_active,
+      accepted_terms: user.accepted_terms,
+      terms_version: user.terms_version,
+      accepted_at: user.accepted_at,
+      ai_consent: user.ai_consent,
     });
   } catch (error) {
     next(error);
@@ -131,6 +143,37 @@ router.put('/password', async (req, res, next) => {
 
     logger.info(`Password changed (user ${user.id})`);
     res.json({ message: 'Contraseña actualizada' });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// POST /api/v1/settings/accept-terms — accept terms and conditions
+router.post('/accept-terms', async (req, res, next) => {
+  try {
+    const { terms_version } = req.body ?? {};
+    if (!terms_version || typeof terms_version !== 'string') {
+      throw new AppError('terms_version is required', 400);
+    }
+
+    const userRepo = AppDataSource.getRepository(User);
+    const user = await userRepo.findOne({ where: { id: req.user!.id } });
+
+    if (!user) {
+      return next(new AppError('User not found', 404));
+    }
+
+    user.accepted_terms = true;
+    user.terms_version = terms_version;
+    user.accepted_at = new Date();
+    await userRepo.save(user);
+
+    logger.info(`Terms accepted (user ${user.id}, version ${terms_version})`);
+    res.json({
+      accepted_terms: true,
+      terms_version: user.terms_version,
+      accepted_at: user.accepted_at,
+    });
   } catch (error) {
     next(error);
   }

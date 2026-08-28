@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { Eye, EyeOff, TrendingUp } from 'lucide-react'
 import StarField from '@/components/ui/StarField'
+import LegalModal from '@/components/ui/LegalModal'
+import { TERMS_VERSION, LOGIN_DISCLAIMER, TERMS_AND_CONDITIONS, PRIVACY_POLICY } from '@/data/legalTexts'
 import { login, type AuthResponse } from '@/api/auth'
 
 export default function LoginScreen({
@@ -13,6 +15,8 @@ export default function LoginScreen({
   const [pass, setPass] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [acceptedTerms, setAcceptedTerms] = useState(false)
+  const [legalDoc, setLegalDoc] = useState<'terms' | 'privacy' | null>(null)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -83,17 +87,54 @@ export default function LoginScreen({
             ¿Olvidaste tu contraseña?
           </button>
 
+          <label className="flex items-start gap-2.5 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={acceptedTerms}
+              onChange={e => setAcceptedTerms(e.target.checked)}
+              className="mt-0.5 w-4 h-4 rounded accent-[#7C3AED]"
+            />
+            <span className="text-xs" style={{ color: '#A0A0B8' }}>
+              Acepto los{' '}
+              <button type="button" onClick={() => setLegalDoc('terms')} className="underline font-medium" style={{ color: '#7C3AED' }}>
+                Términos y Condiciones
+              </button>
+              {' '}y la{' '}
+              <button type="button" onClick={() => setLegalDoc('privacy')} className="underline font-medium" style={{ color: '#7C3AED' }}>
+                Política de Privacidad
+              </button>
+              {' '}y Tratamiento de Datos.
+            </span>
+          </label>
+
           <button
             type="submit"
-            disabled={loading}
-            className="btn-primary w-full py-3 rounded-xl font-semibold text-sm mt-2 flex items-center justify-center gap-2"
+            disabled={loading || !acceptedTerms}
+            className="btn-primary w-full py-3 rounded-xl font-semibold text-sm mt-2 flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
           >
             {loading ? (
               <div className="w-5 h-5 rounded-full border-2 border-white/30 border-t-white animate-spin" />
             ) : 'Iniciar Sesión'}
           </button>
         </form>
+
+        <p className="text-[11px] leading-relaxed mt-5" style={{ color: '#6B6B85' }}>
+          {LOGIN_DISCLAIMER}
+        </p>
       </div>
+
+      <LegalModal
+        open={legalDoc === 'terms'}
+        title="Términos y Condiciones"
+        content={TERMS_AND_CONDITIONS}
+        onClose={() => setLegalDoc(null)}
+      />
+      <LegalModal
+        open={legalDoc === 'privacy'}
+        title="Política de Privacidad"
+        content={PRIVACY_POLICY}
+        onClose={() => setLegalDoc(null)}
+      />
     </div>
   )
 }

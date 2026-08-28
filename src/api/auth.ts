@@ -2,6 +2,10 @@ export interface ApiUser {
   id: number
   username: string
   email: string
+  accepted_terms?: boolean
+  terms_version?: string | null
+  accepted_at?: string | null
+  ai_consent?: boolean
 }
 
 export interface AuthResponse {

@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react'
-import { Bell, Download, Save, Sun, User, Wallet } from 'lucide-react'
+import { Bell, Bot, Download, FileText, Save, Shield, Sun, User, Wallet } from 'lucide-react'
 import { changePassword, fetchSettings, updateSettings } from '@/api/settings'
 import { fetchTransactions } from '@/api/transactions'
+import LegalModal from '@/components/ui/LegalModal'
+import { TERMS_VERSION, TERMS_AND_CONDITIONS, PRIVACY_POLICY } from '@/data/legalTexts'
 import type { ShowToast } from '@/types'
 
 const CURRENCIES = [
@@ -35,6 +37,12 @@ export default function SettingsScreen({
 
   const [exporting, setExporting] = useState(false)
 
+  const [aiConsent, setAiConsent] = useState(true)
+  const [acceptedTerms, setAcceptedTerms] = useState(false)
+  const [termsVersion, setTermsVersion] = useState<string | null>(null)
+  const [acceptedAt, setAcceptedAt] = useState<string | null>(null)
+  const [legalDoc, setLegalDoc] = useState<'terms' | 'privacy' | null>(null)
+
   const load = async () => {
     setLoading(true)
     try {
@@ -44,6 +52,10 @@ export default function SettingsScreen({
       setMonthlyIncome(s.monthly_income != null ? s.monthly_income.toString() : '')
       setCurrency(s.currency || 'MXN')
       setNotifications(s.notifications_enabled)
+      setAiConsent(s.ai_consent)
+      setAcceptedTerms(s.accepted_terms)
+      setTermsVersion(s.terms_version)
+      setAcceptedAt(s.accepted_at)
     } catch (err) {
       showToast(err instanceof Error ? err.message : 'Error al cargar configuración', 'error')
     } finally {
@@ -108,6 +120,17 @@ export default function SettingsScreen({
       await updateSettings({ currency: value })
     } catch (err) {
       showToast(err instanceof Error ? err.message : 'Error al actualizar moneda', 'error')
+    }
+  }
+
+  const handleAiConsent = async (value: boolean) => {
+    setAiConsent(value)
+    try {
+      await updateSettings({ ai_consent: value })
+      showToast(value ? 'Procesamiento de IA activado' : 'Procesamiento de IA desactivado', 'success')
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : 'Error al actualizar consentimiento', 'error')
+      setAiConsent(!value)
     }
   }
 
@@ -268,6 +291,71 @@ export default function SettingsScreen({
           </button>
         </div>
       </div>
+
+      {/* Privacidad y Consentimiento */}
+      <div className="glass rounded-2xl p-5" style={{ border: '1px solid rgba(255,255,255,0.08)' }}>
+        <div className="flex items-center gap-3 mb-4">
+          <Shield size={16} style={{ color: '#06D6A0' }} />
+          <h3 className="text-sm font-semibold">Privacidad y Consentimiento</h3>
+        </div>
+
+        {/* Estado de aceptación */}
+        <div className="rounded-xl p-3 mb-4" style={{ background: 'rgba(6,214,160,0.08)', border: '1px solid rgba(6,214,160,0.2)' }}>
+          <div className="flex items-center gap-2 mb-1">
+            <div className="w-2 h-2 rounded-full" style={{ background: acceptedTerms ? '#06D6A0' : '#F87171' }} />
+            <p className="text-xs font-medium" style={{ color: acceptedTerms ? '#06D6A0' : '#F87171' }}>
+              {acceptedTerms ? 'Términos aceptados' : 'Términos no aceptados'}
+            </p>
+          </div>
+          {acceptedTerms && (
+            <div className="text-[11px] mt-1" style={{ color: '#6B6B85' }}>
+              {termsVersion && <p>Versión: {termsVersion}</p>}
+              {acceptedAt && <p>Aceptado el: {new Date(acceptedAt).toLocaleString('es-MX')}</p>}
+            </div>
+          )}
+        </div>
+
+        {/* Consentimiento de IA */}
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <Bot size={16} style={{ color: '#7C3AED' }} />
+            <div>
+              <p className="text-sm font-medium">Procesamiento de datos con IA</p>
+              <p className="text-xs" style={{ color: '#6B6B85' }}>
+                Si desactivas esta opción, las funciones analíticas basadas en IA se pausarán o limitarán su precisión.
+              </p>
+            </div>
+          </div>
+          <button onClick={() => handleAiConsent(!aiConsent)} className="w-10 h-6 rounded-full relative transition-all flex-shrink-0" style={{ background: aiConsent ? '#7C3AED' : 'rgba(255,255,255,0.2)' }}>
+            <div className="absolute top-1 w-4 h-4 bg-white rounded-full transition-all" style={{ left: aiConsent ? 22 : 2 }} />
+          </button>
+        </div>
+
+        {/* Enlaces a documentos legales */}
+        <div className="flex flex-wrap gap-2">
+          <button onClick={() => setLegalDoc('terms')} className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium" style={{ background: 'rgba(255,255,255,0.06)', color: '#A0A0B8', border: '1px solid rgba(255,255,255,0.1)' }}>
+            <FileText size={12} />
+            Términos y Condiciones
+          </button>
+          <button onClick={() => setLegalDoc('privacy')} className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium" style={{ background: 'rgba(255,255,255,0.06)', color: '#A0A0B8', border: '1px solid rgba(255,255,255,0.1)' }}>
+            <FileText size={12} />
+            Política de Privacidad
+          </button>
+        </div>
+      </div>
+
+      <LegalModal
+        open={legalDoc === 'terms'}
+        title="Términos y Condiciones"
+        content={TERMS_AND_CONDITIONS}
+        onClose={() => setLegalDoc(null)}
+      />
+      <LegalModal
+        open={legalDoc === 'privacy'}
+        title="Política de Privacidad"
+        content={PRIVACY_POLICY}
+        onClose={() => setLegalDoc(null)}
+      />
 
       {/* Seguridad */}
       <div className="glass rounded-2xl p-5" style={{ border: '1px solid rgba(255,255,255,0.08)' }}>

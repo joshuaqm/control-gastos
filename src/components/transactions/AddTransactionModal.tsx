@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { X } from 'lucide-react'
 import { createTransaction, fetchTransactions, updateTransaction, type ApiTransaction } from '@/api/transactions'
 import { fetchAccounts, type ApiAccount } from '@/api/accounts'
@@ -88,6 +88,19 @@ export default function AddTransactionModal({ open, onClose, onAdd, transaction 
   const isTransfer = type === 'transfer'
   const effectiveType: string = isStandard ? type : (transaction?.type ?? 'expense')
   const catOptions = CATEGORIES.includes(cat) ? CATEGORIES : [cat, ...CATEGORIES]
+
+  const displayTxns = useMemo(() => {
+    if (!editing || !transaction) return txns
+    return [
+      ...txns.filter(t => t.id !== transaction.id),
+      {
+        ...transaction,
+        amount: Number(amount) || 0,
+        account_id: accountId,
+        type: effectiveType,
+      },
+    ]
+  }, [txns, editing, transaction, amount, accountId, effectiveType])
 
   const handleSave = async () => {
     if (!amount || Number(amount) <= 0) return
@@ -251,7 +264,7 @@ export default function AddTransactionModal({ open, onClose, onAdd, transaction 
             >
               {accounts.length === 0 && <option value="">Sin cuentas</option>}
               {accounts.map(a => (
-                <option key={a.id} value={a.id}>{a.name} · {fmt(accountBalance(a, txns))}</option>
+                <option key={a.id} value={a.id}>{a.name} · {fmt(accountBalance(a, displayTxns))}</option>
               ))}
             </select>
           </div>
@@ -269,7 +282,7 @@ export default function AddTransactionModal({ open, onClose, onAdd, transaction 
               >
                 {accounts.length === 0 && <option value="">Sin cuentas</option>}
                 {accounts.map(a => (
-                  <option key={a.id} value={a.id}>{a.name} · {fmt(accountBalance(a, txns))}</option>
+                  <option key={a.id} value={a.id}>{a.name} · {fmt(accountBalance(a, displayTxns))}</option>
                 ))}
               </select>
             </div>
