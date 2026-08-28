@@ -56,6 +56,8 @@ export default function TransactionsScreen({ showToast }: { showToast: ShowToast
 
   const [filter, setFilter] = useState<TxFilter>('all')
   const [catFilter, setCatFilter] = useState('')
+  const [accountFilter, setAccountFilter] = useState<number | ''>('')
+  const [budgetFilter, setBudgetFilter] = useState('')
   const [search, setSearch] = useState('')
   const [fromDate, setFromDate] = useState('')
   const [toDate, setToDate] = useState('')
@@ -90,6 +92,8 @@ export default function TransactionsScreen({ showToast }: { showToast: ShowToast
     let list = txs
     if (filter !== 'all') list = list.filter(t => t.type === filter)
     if (catFilter) list = list.filter(t => t.category === catFilter)
+    if (accountFilter !== '') list = list.filter(t => t.account_id === accountFilter || t.destination_account_id === accountFilter)
+    if (budgetFilter) list = list.filter(t => t.budget_type === budgetFilter || (!t.budget_type && budgetFilter === 'none'))
     if (fromDate) list = list.filter(t => (t.date ?? '') >= fromDate)
     if (toDate) list = list.filter(t => (t.date ?? '') <= toDate)
     const q = search.trim().toLowerCase()
@@ -98,9 +102,9 @@ export default function TransactionsScreen({ showToast }: { showToast: ShowToast
       (a, b) =>
         (b.date || '').localeCompare(a.date || '') || (b.id ?? 0) - (a.id ?? 0),
     )
-  }, [txs, filter, catFilter, search, fromDate, toDate])
+  }, [txs, filter, catFilter, accountFilter, budgetFilter, search, fromDate, toDate])
 
-  useEffect(() => { setPage(1) }, [filter, catFilter, search, fromDate, toDate])
+  useEffect(() => { setPage(1) }, [filter, catFilter, accountFilter, budgetFilter, search, fromDate, toDate])
 
   const pages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
   const curPage = Math.min(page, pages)
@@ -200,6 +204,27 @@ export default function TransactionsScreen({ showToast }: { showToast: ShowToast
           <option value="">Todas las categorías</option>
           {categories.map(c => <option key={c} value={c}>{c}</option>)}
         </select>
+        <select
+          value={accountFilter}
+          onChange={e => setAccountFilter(e.target.value ? Number(e.target.value) : '')}
+          className="px-3 py-2 rounded-xl text-xs"
+          style={{ background: 'rgba(26,26,46,0.9)', border: '1px solid rgba(255,255,255,0.1)', color: '#A0A0B8' }}
+        >
+          <option value="">Todas las cuentas</option>
+          {accs.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
+        </select>
+        <select
+          value={budgetFilter}
+          onChange={e => setBudgetFilter(e.target.value)}
+          className="px-3 py-2 rounded-xl text-xs"
+          style={{ background: 'rgba(26,26,46,0.9)', border: '1px solid rgba(255,255,255,0.1)', color: '#A0A0B8' }}
+        >
+          <option value="">Toda clasificación</option>
+          <option value="need">Necesidad</option>
+          <option value="want">Deseo</option>
+          <option value="save">Ahorro</option>
+          <option value="none">Sin clasificación</option>
+        </select>
         <div className="flex items-center gap-1.5 px-3 py-2 rounded-xl" style={{ background: 'rgba(255,255,255,0.06)' }}>
           <span className="text-xs" style={{ color: '#6B6B85' }}>Del</span>
           <input
@@ -228,9 +253,9 @@ export default function TransactionsScreen({ showToast }: { showToast: ShowToast
             style={{ color: '#fff' }}
           />
         </div>
-        {(filter !== 'all' || catFilter || fromDate || toDate || search) && (
+        {(filter !== 'all' || catFilter || accountFilter !== '' || budgetFilter || fromDate || toDate || search) && (
           <button
-            onClick={() => { setFilter('all'); setCatFilter(''); setFromDate(''); setToDate(''); setSearch('') }}
+            onClick={() => { setFilter('all'); setCatFilter(''); setAccountFilter(''); setBudgetFilter(''); setFromDate(''); setToDate(''); setSearch('') }}
             className="px-3 py-2 rounded-xl text-xs font-medium"
             style={{ background: 'rgba(239,68,68,0.08)', color: '#F87171', border: '1px solid rgba(239,68,68,0.2)' }}
           >
