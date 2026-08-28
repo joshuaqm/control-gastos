@@ -42,6 +42,7 @@ export const AppDataSource = new DataSource(
           process.env.NODE_ENV === 'development' ||
           process.env.TYPEORM_LOGGING === 'true',
         entities,
+        migrations: ['src/migrations/*.ts'],
       }
     : {
         type: 'postgres',
