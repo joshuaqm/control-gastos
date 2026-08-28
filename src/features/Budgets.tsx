@@ -96,8 +96,9 @@ function RuleRow({ row, saving, onSavePct }: {
   saving: boolean
   onSavePct: (row: BudgetRuleRow, pct: number) => void
 }) {
+  const isSave = row.budgetType === 'save'
   const pctUsed = row.target > 0 ? Math.round((row.spent / row.target) * 100) : 0
-  const over = row.target > 0 && row.spent > row.target
+  const over = !isSave && row.target > 0 && row.spent > row.target
   return (
     <div className="mb-4 last:mb-0">
       <div className="flex items-center justify-between gap-2 mb-2">
@@ -118,7 +119,7 @@ function RuleRow({ row, saving, onSavePct }: {
       <ProgressBar pct={pctUsed} color={row.color} over={over} />
       <div className="flex justify-between mt-1 text-xs">
         <span style={{ color: over ? '#EF4444' : '#6B6B85' }}>
-          {over ? 'Sobregasto: ' : 'Restante: '}{fmtSigned(row.remaining)}
+          {over ? 'Sobregasto: ' : isSave && row.spent > 0 ? 'Ahorrado: ' : 'Restante: '}{fmtSigned(row.remaining)}
         </span>
         <span style={{ color: over ? '#EF4444' : row.color }}>{pctUsed}%</span>
       </div>

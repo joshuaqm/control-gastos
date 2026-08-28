@@ -253,7 +253,7 @@ export default function Dashboard({
       const isSaveAllocation =
         (t.type === "income" || t.type === "transfer") &&
         t.budget_type === "save"
-      if (t.type !== "expense" && !isSaveAllocation) continue
+      if (t.type !== "expense" && t.type !== "debt_payment" && !isSaveAllocation) continue
       spentByType.set(
         t.budget_type,
         (spentByType.get(t.budget_type) || 0) + Number(t.amount),

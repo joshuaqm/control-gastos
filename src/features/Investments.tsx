@@ -71,14 +71,16 @@ function buildEvolution(investments: ApiInvestment[]): SeriesPoint[] {
     let costo = 0
     let valor = 0
     for (const d of dated) {
-      if (d.base <= cursor) {
+      // Compare by year+month instead of exact date, since cursor is always
+      // the 1st of the month. This ensures an investment purchased on e.g.
+      // Aug 15 is counted starting from August, not September.
+      const baseYM = d.base.getFullYear() * 12 + d.base.getMonth()
+      const cursorYM = cursor.getFullYear() * 12 + cursor.getMonth()
+      if (baseYM <= cursorYM) {
         costo += d.costo
         if (isCurrentMonth) {
-          // El mes en curso siempre refleja el valor real (units × current_price),
-          // idéntico al total de la card del portafolio.
           valor += d.valor
         } else {
-          // Interpolación lineal entre costo (fecha de compra) y valor actual (hoy)
           const span = Math.max(1, end.getTime() - d.base.getTime())
           const frac = Math.min(1, Math.max(0, (cursor.getTime() - d.base.getTime()) / span))
           valor += d.costo + (d.valor - d.costo) * frac

@@ -430,7 +430,7 @@ export default function SettingsScreen({
 
       <div className="glass rounded-2xl p-5" style={{ border: '1px solid rgba(255,255,255,0.08)' }}>
         <p className="text-xs font-semibold mb-1" style={{ color: '#A0A0B8' }}>VERSIÓN</p>
-        <p className="text-sm">FinanceAI v1.0.0</p>
+        <p className="text-sm">XOXO Finanzas v1.1</p>
         <p className="text-xs mt-1" style={{ color: '#6B6B85' }}>Todos los derechos reservados © 2026</p>
       </div>
     </div>
