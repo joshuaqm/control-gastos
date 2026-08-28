@@ -2,13 +2,17 @@ import { useState } from 'react'
 import { Eye, EyeOff, TrendingUp } from 'lucide-react'
 import StarField from '@/components/ui/StarField'
 import LegalModal from '@/components/ui/LegalModal'
+import ForgotPasswordModal from '@/components/auth/ForgotPasswordModal'
 import { TERMS_VERSION, LOGIN_DISCLAIMER, TERMS_AND_CONDITIONS, PRIVACY_POLICY } from '@/data/legalTexts'
 import { login, type AuthResponse } from '@/api/auth'
+import type { ShowToast } from '@/types'
 
 export default function LoginScreen({
   onLogin,
+  showToast,
 }: {
   onLogin: (res: AuthResponse) => void
+  showToast: ShowToast
 }) {
   const [showPass, setShowPass] = useState(false)
   const [email, setEmail] = useState('')
@@ -17,6 +21,7 @@ export default function LoginScreen({
   const [loading, setLoading] = useState(false)
   const [acceptedTerms, setAcceptedTerms] = useState(false)
   const [legalDoc, setLegalDoc] = useState<'terms' | 'privacy' | null>(null)
+  const [forgotOpen, setForgotOpen] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -83,7 +88,7 @@ export default function LoginScreen({
             </div>
           )}
 
-          <button type="button" className="text-xs text-right transition-colors" style={{ color: '#7C3AED' }}>
+          <button type="button" onClick={() => setForgotOpen(true)} className="text-xs text-right transition-colors" style={{ color: '#7C3AED' }}>
             ¿Olvidaste tu contraseña?
           </button>
 
@@ -134,6 +139,11 @@ export default function LoginScreen({
         title="Política de Privacidad"
         content={PRIVACY_POLICY}
         onClose={() => setLegalDoc(null)}
+      />
+      <ForgotPasswordModal
+        open={forgotOpen}
+        onClose={() => setForgotOpen(false)}
+        showToast={showToast}
       />
     </div>
   )

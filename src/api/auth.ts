@@ -30,6 +30,14 @@ export async function login(email: string, password: string): Promise<AuthRespon
   return request<AuthResponse>('/auth/login', { email, password })
 }
 
+export async function forgotPassword(email: string): Promise<{ message: string }> {
+  return request<{ message: string }>('/auth/forgot-password', { email })
+}
+
+export async function resetPassword(token: string, newPassword: string): Promise<{ message: string }> {
+  return request<{ message: string }>('/auth/reset-password', { token, newPassword })
+}
+
 async function request<T>(path: string, body: unknown): Promise<T> {
   const res = await fetch(`${API_URL}${path}`, {
     method: 'POST',

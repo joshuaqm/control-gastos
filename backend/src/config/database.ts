@@ -9,6 +9,7 @@ import { Budget } from '../models/Budget';
 import { Goal } from '../models/Goal';
 import { Investment } from '../models/Investment';
 import { RecurringTransaction } from '../models/RecurringTransaction';
+import { PasswordResetToken } from '../models/PasswordResetToken';
 
 const entities = [
   Account,
@@ -21,6 +22,7 @@ const entities = [
   Goal,
   Investment,
   RecurringTransaction,
+  PasswordResetToken,
 ];
 
 const databaseUrl = process.env.DATABASE_URL;

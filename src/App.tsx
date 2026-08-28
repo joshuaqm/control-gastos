@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import AIChat from '@/components/ai/AIChat'
 import LoginScreen from '@/components/auth/LoginScreen'
+import ResetPasswordScreen from '@/components/auth/ResetPasswordScreen'
 import Header from '@/components/layout/Header'
 import MobileMenu from '@/components/layout/MobileMenu'
 import MobileNav from '@/components/layout/MobileNav'
@@ -76,6 +77,16 @@ export default function App() {
   const [showTermsModal, setShowTermsModal] = useState(false)
   const { toasts, showToast, dismiss } = useToasts()
   const notifs = useNotifications()
+
+  // Handle /reset-password route — show reset password screen before any auth check
+  if (window.location.pathname === '/reset-password' && new URLSearchParams(window.location.search).has('token')) {
+    return (
+      <>
+        <ResetPasswordScreen />
+        <Toast toasts={toasts} dismiss={dismiss} />
+      </>
+    )
+  }
 
   const navigate = (next: ScreenId) => {
     setScreen(next)
@@ -195,7 +206,7 @@ export default function App() {
     return () => window.removeEventListener('resize', check)
   }, [])
 
-  if (!user) return <LoginScreen onLogin={handleLogin} />
+  if (!user) return <LoginScreen onLogin={handleLogin} showToast={showToast} />
 
   const needsTermsAcceptance = !user.accepted_terms
 
