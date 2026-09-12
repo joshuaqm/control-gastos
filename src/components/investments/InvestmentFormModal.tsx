@@ -86,55 +86,55 @@ export default function InvestmentFormModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)' }}>
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4" style={{ background: 'var(--modal-backdrop)', backdropFilter: 'blur(8px)' }}>
       <div className="glass animate-slide-up rounded-2xl p-6 w-full max-w-md" style={{ border: '1px solid rgba(124,58,237,0.2)' }}>
         <div className="flex items-center justify-between mb-5">
           <h3 className="text-lg font-semibold">{investment ? 'Editar Inversión' : 'Registrar Inversión'}</h3>
-          <button onClick={onClose} style={{ color: '#6B6B85' }}><X size={20} /></button>
+          <button onClick={onClose} style={{ color: 'var(--text-3)' }}><X size={20} /></button>
         </div>
 
         <div className="flex flex-col gap-3">
           <div>
-            <label className="block text-xs font-medium mb-1" style={{ color: '#A0A0B8' }}>Nombre</label>
+            <label className="block text-xs font-medium mb-1" style={{ color: 'var(--text-2)' }}>Nombre</label>
             <input
               value={name}
               onChange={e => setName(e.target.value)}
               placeholder="Ej. S&P 500 ETF"
               className="w-full px-4 py-3 rounded-xl text-sm"
-              style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff' }}
+              style={{ background: 'var(--input-bg)', border: '1px solid var(--input-border)', color: 'var(--text-1)' }}
             />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-medium mb-1" style={{ color: '#A0A0B8' }}>Ticker</label>
+              <label className="block text-xs font-medium mb-1" style={{ color: 'var(--text-2)' }}>Ticker</label>
               <input
                 value={ticker}
                 onChange={e => setTicker(e.target.value)}
                 placeholder="Ej. VOO"
                 className="w-full px-4 py-3 rounded-xl text-sm font-mono uppercase"
-                style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff' }}
+                style={{ background: 'var(--input-bg)', border: '1px solid var(--input-border)', color: 'var(--text-1)' }}
               />
             </div>
             <div>
-              <label className="block text-xs font-medium mb-1" style={{ color: '#A0A0B8' }}>Casa de bolsa</label>
+              <label className="block text-xs font-medium mb-1" style={{ color: 'var(--text-2)' }}>Casa de bolsa</label>
               <input
                 value={broker}
                 onChange={e => setBroker(e.target.value)}
                 placeholder="Ej. GBM"
                 className="w-full px-4 py-3 rounded-xl text-sm"
-                style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff' }}
+                style={{ background: 'var(--input-bg)', border: '1px solid var(--input-border)', color: 'var(--text-1)' }}
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-xs font-medium mb-1" style={{ color: '#A0A0B8' }}>Tipo</label>
+            <label className="block text-xs font-medium mb-1" style={{ color: 'var(--text-2)' }}>Tipo</label>
             <select
               value={type}
               onChange={e => setType(e.target.value)}
               className="w-full px-4 py-3 rounded-xl text-sm"
-              style={{ background: 'rgba(26,26,46,0.9)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff' }}
+              style={{ background: 'var(--input-bg-select)', border: '1px solid var(--input-border)', color: 'var(--text-1)' }}
             >
               {INVESTMENT_TYPES.map(t => (
                 <option key={t.value} value={t.value}>{t.label}</option>
@@ -144,7 +144,7 @@ export default function InvestmentFormModal({
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-medium mb-1" style={{ color: '#A0A0B8' }}>Unidades</label>
+              <label className="block text-xs font-medium mb-1" style={{ color: 'var(--text-2)' }}>Unidades</label>
               <input
                 value={units}
                 onChange={e => setUnits(e.target.value)}
@@ -152,11 +152,11 @@ export default function InvestmentFormModal({
                 step="any"
                 min="0"
                 className="w-full px-4 py-3 rounded-xl text-sm font-mono"
-                style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff' }}
+                style={{ background: 'var(--input-bg)', border: '1px solid var(--input-border)', color: 'var(--text-1)' }}
               />
             </div>
             <div>
-              <label className="block text-xs font-medium mb-1" style={{ color: '#A0A0B8' }}>Costo de adquisición (c/u)</label>
+              <label className="block text-xs font-medium mb-1" style={{ color: 'var(--text-2)' }}>Costo de adquisición (c/u)</label>
               <input
                 value={averageCost}
                 onChange={e => setAverageCost(e.target.value)}
@@ -164,14 +164,14 @@ export default function InvestmentFormModal({
                 step="0.01"
                 min="0"
                 className="w-full px-4 py-3 rounded-xl text-sm font-mono"
-                style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff' }}
+                style={{ background: 'var(--input-bg)', border: '1px solid var(--input-border)', color: 'var(--text-1)' }}
               />
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-medium mb-1" style={{ color: '#A0A0B8' }}>Precio actual (opcional)</label>
+              <label className="block text-xs font-medium mb-1" style={{ color: 'var(--text-2)' }}>Precio actual (opcional)</label>
               <input
                 value={currentPrice}
                 onChange={e => setCurrentPrice(e.target.value)}
@@ -180,41 +180,41 @@ export default function InvestmentFormModal({
                 min="0"
                 placeholder="Opcional"
                 className="w-full px-4 py-3 rounded-xl text-sm font-mono"
-                style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff' }}
+                style={{ background: 'var(--input-bg)', border: '1px solid var(--input-border)', color: 'var(--text-1)' }}
               />
             </div>
             <div>
-              <label className="block text-xs font-medium mb-1" style={{ color: '#A0A0B8' }}>Fecha de compra</label>
+              <label className="block text-xs font-medium mb-1" style={{ color: 'var(--text-2)' }}>Fecha de compra</label>
               <input
                 value={purchaseDate}
                 onChange={e => setPurchaseDate(e.target.value)}
                 type="date"
                 className="w-full px-4 py-3 rounded-xl text-sm"
-                style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff' }}
+                style={{ background: 'var(--input-bg)', border: '1px solid var(--input-border)', color: 'var(--text-1)' }}
               />
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-medium mb-1" style={{ color: '#A0A0B8' }}>Última actualización</label>
+              <label className="block text-xs font-medium mb-1" style={{ color: 'var(--text-2)' }}>Última actualización</label>
               <input
                 value={lastUpdated}
                 onChange={e => setLastUpdated(e.target.value)}
                 type="date"
                 className="w-full px-4 py-3 rounded-xl text-sm"
-                style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff' }}
+                style={{ background: 'var(--input-bg)', border: '1px solid var(--input-border)', color: 'var(--text-1)' }}
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-xs font-medium mb-1" style={{ color: '#A0A0B8' }}>Notas (opcional)</label>
+            <label className="block text-xs font-medium mb-1" style={{ color: 'var(--text-2)' }}>Notas (opcional)</label>
             <input
               value={notes}
               onChange={e => setNotes(e.target.value)}
               className="w-full px-4 py-3 rounded-xl text-sm"
-              style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff' }}
+              style={{ background: 'var(--input-bg)', border: '1px solid var(--input-border)', color: 'var(--text-1)' }}
             />
           </div>
         </div>
@@ -226,7 +226,7 @@ export default function InvestmentFormModal({
         )}
 
         <div className="flex gap-3 mt-5">
-          <button onClick={onClose} className="flex-1 py-3 rounded-xl text-sm font-medium" style={{ background: 'rgba(255,255,255,0.06)', color: '#A0A0B8' }}>
+          <button onClick={onClose} className="flex-1 py-3 rounded-xl text-sm font-medium" style={{ background: 'var(--input-bg)', color: 'var(--text-2)' }}>
             Cancelar
           </button>
           <button

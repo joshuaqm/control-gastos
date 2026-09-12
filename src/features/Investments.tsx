@@ -293,7 +293,7 @@ export default function InvestmentsScreen({ showToast }: { showToast: ShowToast 
             onClick={handleRefreshAll}
             disabled={refreshing}
             className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-semibold"
-            style={{ background: 'rgba(255,255,255,0.06)', color: refreshing ? '#6B6B85' : '#A0A0B8', border: '1px solid rgba(255,255,255,0.1)' }}
+            style={{ background: 'var(--input-bg)', color: refreshing ? 'var(--text-3)' : 'var(--text-2)', border: '1px solid var(--input-border)' }}
           >
             <RefreshCw size={14} className={refreshing ? 'animate-spin' : ''} />
             Actualizar precios
@@ -308,7 +308,7 @@ export default function InvestmentsScreen({ showToast }: { showToast: ShowToast 
       </div>
 
       <div className="glass rounded-2xl p-5" style={{ border: '1px solid rgba(6,214,160,0.2)' }}>
-        <p className="text-sm" style={{ color: '#A0A0B8' }}>Valor del Portafolio</p>
+        <p className="text-sm" style={{ color: 'var(--text-2)' }}>Valor del Portafolio</p>
         <p className="text-4xl font-bold font-mono mt-1">{fmt(totalValue)}</p>
         <div className="flex items-center gap-2 mt-2">
           {totalGain >= 0
@@ -317,32 +317,32 @@ export default function InvestmentsScreen({ showToast }: { showToast: ShowToast 
           <span className="text-sm font-semibold" style={{ color: totalGain >= 0 ? '#06D6A0' : '#EF4444' }}>
             {totalGain >= 0 ? '+' : ''}{fmt(totalGain)} ({gainPct}%)
           </span>
-          <span className="text-xs" style={{ color: '#6B6B85' }}>vs costo de adquisición</span>
+          <span className="text-xs" style={{ color: 'var(--text-3)' }}>vs costo de adquisición</span>
         </div>
       </div>
 
-      <div className="glass rounded-2xl p-5" style={{ border: '1px solid rgba(255,255,255,0.08)' }}>
+      <div className="glass rounded-2xl p-5" style={{ border: '1px solid var(--border)' }}>
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-sm font-semibold">Evolución del Portafolio</h3>
-          <div className="flex items-center gap-4 text-[11px]" style={{ color: '#6B6B85' }}>
+          <div className="flex items-center gap-4 text-[11px]" style={{ color: 'var(--text-3)' }}>
             <span className="flex items-center gap-1.5"><span className="w-3 h-0.5 rounded" style={{ background: '#06D6A0' }} /> Valor actual</span>
             <span className="flex items-center gap-1.5"><span className="w-3 h-0.5 rounded" style={{ background: '#7C3AED', borderTop: '2px dashed #7C3AED', height: 0 }} /> Costo</span>
           </div>
         </div>
 
         <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-          <div className="flex items-center gap-1 rounded-full" style={{ background: 'rgba(255,255,255,0.06)' }}>
+          <div className="flex items-center gap-1 rounded-full" style={{ background: 'var(--input-bg)' }}>
             <button
               onClick={goPrev}
               className="p-1.5 rounded-full hover:bg-white/10 transition-colors"
-              style={{ color: '#A0A0B8' }}
+              style={{ color: 'var(--text-2)' }}
               aria-label="Periodo anterior"
             >
               <ChevronLeft size={16} />
             </button>
             <span
               className="text-xs px-1 font-medium min-w-[130px] text-center capitalize"
-              style={{ color: '#A0A0B8' }}
+              style={{ color: 'var(--text-2)' }}
             >
               {windowLabel}
             </span>
@@ -350,7 +350,7 @@ export default function InvestmentsScreen({ showToast }: { showToast: ShowToast 
               onClick={goNext}
               disabled={isCurrent}
               className="p-1.5 rounded-full hover:bg-white/10 transition-colors disabled:opacity-30 disabled:hover:bg-transparent"
-              style={{ color: '#A0A0B8' }}
+              style={{ color: 'var(--text-2)' }}
               aria-label="Periodo siguiente"
             >
               <ChevronRight size={16} />
@@ -371,7 +371,7 @@ export default function InvestmentsScreen({ showToast }: { showToast: ShowToast 
                 style={
                   range === o.key
                     ? { background: 'rgba(124,58,237,0.25)', color: '#C4B5FD' }
-                    : { background: 'rgba(255,255,255,0.06)', color: '#A0A0B8' }
+                    : { background: 'var(--input-bg)', color: 'var(--text-2)' }
                 }
               >
                 {o.label}
@@ -388,7 +388,7 @@ export default function InvestmentsScreen({ showToast }: { showToast: ShowToast 
           <div className="w-8 h-8 rounded-full border-2 border-white/20 border-t-purple-600 animate-spin" />
         </div>
       ) : investments.length === 0 ? (
-        <div className="py-16 text-center text-sm rounded-2xl" style={{ background: 'rgba(255,255,255,0.03)', color: '#6B6B85' }}>
+        <div className="py-16 text-center text-sm rounded-2xl" style={{ background: 'var(--card)', color: 'var(--text-3)' }}>
           No hay inversiones registradas. Agrega una con el botón "Agregar".
         </div>
       ) : (
@@ -403,7 +403,7 @@ export default function InvestmentsScreen({ showToast }: { showToast: ShowToast 
             const ticker = (inv.ticker || inv.name).slice(0, 4).toUpperCase()
             const isRefreshingThis = refreshingIds.includes(inv.id)
             return (
-              <div key={inv.id} className="glass card-hover rounded-2xl p-4" style={{ border: '1px solid rgba(255,255,255,0.08)' }}>
+              <div key={inv.id} className="glass card-hover rounded-2xl p-4" style={{ border: '1px solid var(--border)' }}>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-xl flex items-center justify-center font-bold text-xs" style={{ background: `${color}22`, color }}>
@@ -411,12 +411,12 @@ export default function InvestmentsScreen({ showToast }: { showToast: ShowToast 
                     </div>
                     <div>
                       <p className="text-sm font-semibold">{inv.name}</p>
-                      <p className="text-xs" style={{ color: '#6B6B85' }}>
+                      <p className="text-xs" style={{ color: 'var(--text-3)' }}>
                         {inv.units} unidades · {fmt(inv.average_cost)} c/u · {typeLabel(inv.type)}
                         {inv.broker ? ` · ${inv.broker}` : ''}
                       </p>
                       {inv.purchase_date && (
-                        <p className="text-[11px] mt-0.5" style={{ color: '#A0A0B8' }}>Comprada: {formatPurchase(inv)}</p>
+                        <p className="text-[11px] mt-0.5" style={{ color: 'var(--text-2)' }}>Comprada: {formatPurchase(inv)}</p>
                       )}
                     </div>
                   </div>
@@ -431,10 +431,10 @@ export default function InvestmentsScreen({ showToast }: { showToast: ShowToast 
                       </span>
                     </div>
                     <div className="flex flex-col gap-1">
-                      <button onClick={() => handleRefresh(inv)} disabled={isRefreshingThis} className="p-2 rounded-lg hover:bg-white/10" style={{ color: '#A0A0B8' }} title="Actualizar precio">
+                      <button onClick={() => handleRefresh(inv)} disabled={isRefreshingThis} className="p-2 rounded-lg hover:bg-white/10" style={{ color: 'var(--text-2)' }} title="Actualizar precio">
                         <RefreshCw size={15} className={isRefreshingThis ? 'animate-spin' : ''} />
                       </button>
-                      <button onClick={() => openEdit(inv)} className="p-2 rounded-lg hover:bg-white/10" style={{ color: '#A0A0B8' }}>
+                      <button onClick={() => openEdit(inv)} className="p-2 rounded-lg hover:bg-white/10" style={{ color: 'var(--text-2)' }}>
                         <Pencil size={15} />
                       </button>
                       <button onClick={() => handleDelete(inv)} className="p-2 rounded-lg hover:bg-white/10" style={{ color: '#F87171' }}>

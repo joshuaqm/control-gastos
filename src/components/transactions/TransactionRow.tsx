@@ -31,18 +31,18 @@ export default function TransactionRow({ transaction, table = false }: {
     return (
       <div
         className="flex sm:grid sm:grid-cols-5 items-center gap-3 px-4 py-3.5 hover:bg-white/5 transition-colors cursor-pointer"
-        style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}
+        style={{ borderBottom: '1px solid var(--border)' }}
       >
-        <span className="hidden sm:block text-xs" style={{ color: '#6B6B85' }}>{t.date}</span>
+        <span className="hidden sm:block text-xs" style={{ color: 'var(--text-3)' }}>{t.date}</span>
         <div className="flex items-center gap-3">
           {iconBox}
           <div className="min-w-0">
             <p className="text-sm font-medium truncate">{t.desc}</p>
-            <p className="text-xs sm:hidden" style={{ color: '#6B6B85' }}>{t.date}</p>
+            <p className="text-xs sm:hidden" style={{ color: 'var(--text-3)' }}>{t.date}</p>
           </div>
         </div>
-        <span className="hidden sm:block text-xs" style={{ color: '#A0A0B8' }}>{t.cat}</span>
-        <span className="hidden sm:block text-xs" style={{ color: '#A0A0B8' }}>{t.account}</span>
+        <span className="hidden sm:block text-xs" style={{ color: 'var(--text-2)' }}>{t.cat}</span>
+        <span className="hidden sm:block text-xs" style={{ color: 'var(--text-2)' }}>{t.account}</span>
         <span className="ml-auto text-sm font-mono font-semibold" style={{ color: amountColor }}>
           {sign}{fmt(t.amount)}
         </span>
@@ -55,11 +55,11 @@ export default function TransactionRow({ transaction, table = false }: {
       {iconBox}
       <div className="flex-1 min-w-0">
         <p className="text-sm font-medium truncate">{t.desc}</p>
-        <p className="text-xs" style={{ color: '#6B6B85' }}>{t.cat} · {t.account}</p>
+        <p className="text-xs" style={{ color: 'var(--text-3)' }}>{t.cat} · {t.account}</p>
       </div>
       <div className="text-right flex-shrink-0">
         <p className="text-sm font-mono font-semibold" style={{ color: amountColor }}>{sign}{fmt(t.amount)}</p>
-        <p className="text-xs" style={{ color: '#6B6B85' }}>{t.date}</p>
+        <p className="text-xs" style={{ color: 'var(--text-3)' }}>{t.date}</p>
       </div>
     </div>
   )

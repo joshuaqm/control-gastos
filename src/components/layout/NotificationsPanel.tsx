@@ -41,15 +41,15 @@ export default function NotificationsPanel({
     <div
       className="absolute right-0 top-12 w-[min(92vw,380px)] glass rounded-2xl shadow-2xl z-50 flex flex-col"
       style={{
-        border: "1px solid rgba(255,255,255,0.1)",
-        background: "rgba(18,18,28,0.97)",
+        border: "1px solid var(--glass-border)",
+        background: "var(--glass-bg)",
         backdropFilter: "blur(20px)",
         maxHeight: "min(480px, 80vh)",
       }}
     >
-      <div className="flex items-center justify-between px-4 py-3 border-b" style={{ borderColor: "rgba(255,255,255,0.06)" }}>
+      <div className="flex items-center justify-between px-4 py-3 border-b" style={{ borderColor: "var(--border)" }}>
         <div className="flex items-center gap-2">
-          <p className="text-sm font-semibold">Notificaciones</p>
+          <p className="text-sm font-semibold" style={{ color: "var(--text-1)" }}>Notificaciones</p>
           {reminders.length > 0 && (
             <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: "#7C3AED", color: "#fff" }}>
               {reminders.length}
@@ -60,7 +60,7 @@ export default function NotificationsPanel({
           onClick={onMarkAllRead}
           disabled={reminders.length === 0}
           className="flex items-center gap-1.5 text-xs font-medium px-2.5 py-1.5 rounded-lg transition-colors hover:bg-white/10 disabled:opacity-40 disabled:cursor-not-allowed"
-          style={{ color: "#A0A0B8" }}
+          style={{ color: "var(--text-2)" }}
         >
           <CheckCheck size={14} />
           Marcar leídas
@@ -69,8 +69,8 @@ export default function NotificationsPanel({
 
       {!enabled ? (
         <div className="p-6 flex flex-col items-center gap-2 text-center">
-          <BellOff size={20} style={{ color: "#6B6B85" }} />
-          <p className="text-sm" style={{ color: "#6B6B85" }}>
+          <BellOff size={20} style={{ color: "var(--text-3)" }} />
+          <p className="text-sm" style={{ color: "var(--text-3)" }}>
             Las notificaciones están desactivadas.
           </p>
           <button
@@ -87,7 +87,7 @@ export default function NotificationsPanel({
         </div>
       ) : reminders.length === 0 ? (
         <div className="p-6 flex flex-col items-center gap-2 text-center">
-          <p className="text-sm" style={{ color: "#6B6B85" }}>
+          <p className="text-sm" style={{ color: "var(--text-3)" }}>
             No hay notificaciones pendientes.
           </p>
         </div>
@@ -129,13 +129,13 @@ export default function NotificationsPanel({
                   <Icon size={16} style={{ color }} />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium truncate">{r.title}</p>
-                  <p className="text-xs truncate" style={{ color: "#6B6B85" }}>
+                  <p className="text-sm font-medium truncate" style={{ color: "var(--text-1)" }}>{r.title}</p>
+                  <p className="text-xs truncate" style={{ color: "var(--text-3)" }}>
                     {r.subtitle}
                   </p>
                 </div>
                 <div className="text-right flex-shrink-0">
-                  <p className="text-sm font-mono font-semibold">{fmt(r.amount)}</p>
+                  <p className="text-sm font-mono font-semibold" style={{ color: "var(--text-1)" }}>{fmt(r.amount)}</p>
                   <p className="text-xs" style={{ color: r.days <= 1 ? "#F87171" : "#FBBF24" }}>
                     {daysLabel(r.days)}
                   </p>

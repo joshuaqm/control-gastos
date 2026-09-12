@@ -165,15 +165,15 @@ export default function AddTransactionModal({ open, onClose, onAdd, transaction 
 
   if (!open) return null
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)' }}>
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4" style={{ background: 'var(--modal-backdrop)', backdropFilter: 'blur(8px)' }}>
       <div className="glass animate-slide-up rounded-2xl p-6 w-full max-w-md" style={{ border: '1px solid rgba(124,58,237,0.2)' }}>
         <div className="flex items-center justify-between mb-5">
-          <h3 className="text-lg font-semibold">{editing ? 'Editar Movimiento' : 'Registrar Movimiento'}</h3>
-          <button onClick={onClose} style={{ color: '#6B6B85' }}><X size={20} /></button>
+          <h3 className="text-lg font-semibold" style={{ color: 'var(--text-1)' }}>{editing ? 'Editar Movimiento' : 'Registrar Movimiento'}</h3>
+          <button onClick={onClose} style={{ color: 'var(--text-3)' }}><X size={20} /></button>
         </div>
 
         {isStandard ? (
-          <div className="flex rounded-xl p-1 mb-4" style={{ background: 'rgba(255,255,255,0.05)' }}>
+          <div className="flex rounded-xl p-1 mb-4" style={{ background: 'var(--badge-bg)' }}>
             {(['expense', 'income', 'transfer'] as const).map(t => (
               <button
                 key={t}
@@ -181,14 +181,14 @@ export default function AddTransactionModal({ open, onClose, onAdd, transaction 
                 className="flex-1 py-2 rounded-lg text-sm font-medium transition-all"
                 style={type === t
                   ? { background: t === 'expense' ? '#EF4444' : t === 'income' ? '#06D6A0' : '#3B82F6', color: '#fff' }
-                  : { color: '#A0A0B8' }}
+                  : { color: 'var(--text-2)' }}
               >
                 {t === 'expense' ? '↑ Gasto' : t === 'income' ? '↓ Ingreso' : '⇄ Transferencia'}
               </button>
             ))}
           </div>
         ) : (
-          <div className="mb-4 px-3 py-2 rounded-xl text-xs font-medium" style={{ background: 'rgba(255,255,255,0.05)', color: '#A0A0B8' }}>
+          <div className="mb-4 px-3 py-2 rounded-xl text-xs font-medium" style={{ background: 'var(--badge-bg)', color: 'var(--text-2)' }}>
             Tipo: {TYPE_LABELS[type] ?? type}
           </div>
         )}
@@ -199,7 +199,7 @@ export default function AddTransactionModal({ open, onClose, onAdd, transaction 
             onChange={e => setDesc(e.target.value)}
             placeholder="Descripción"
             className="w-full px-4 py-3 rounded-xl text-sm"
-            style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff' }}
+            style={{ background: 'var(--input-bg)', border: '1px solid var(--input-border)', color: 'var(--text-1)' }}
           />
           <div className="flex gap-3">
             <input
@@ -208,27 +208,27 @@ export default function AddTransactionModal({ open, onClose, onAdd, transaction 
               placeholder="Monto $0.00"
               type="number"
               className="flex-1 px-4 py-3 rounded-xl text-sm font-mono"
-              style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff' }}
+              style={{ background: 'var(--input-bg)', border: '1px solid var(--input-border)', color: 'var(--text-1)' }}
             />
             <input
               value={date}
               onChange={e => setDate(e.target.value)}
               type="date"
               className="px-3 py-3 rounded-xl text-sm"
-              style={{ background: 'rgba(26,26,46,0.9)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff' }}
+              style={{ background: 'var(--input-bg-select)', border: '1px solid var(--input-border)', color: 'var(--text-1)' }}
             />
           </div>
 
           {!isTransfer && (
           <div>
-            <p className="text-xs mb-1" style={{ color: '#6B6B85' }}>
+            <p className="text-xs mb-1" style={{ color: 'var(--text-3)' }}>
               Categoría específica
             </p>
             <select
               value={cat}
               onChange={e => setCat(e.target.value)}
               className="w-full px-4 py-3 rounded-xl text-sm"
-              style={{ background: 'rgba(26,26,46,0.9)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff' }}
+              style={{ background: 'var(--input-bg-select)', border: '1px solid var(--input-border)', color: 'var(--text-1)' }}
             >
               {catOptions.map(c => (
                 <option key={c}>{c}</option>
@@ -239,34 +239,34 @@ export default function AddTransactionModal({ open, onClose, onAdd, transaction 
 
           {!isTransfer && (
             <div>
-              <p className="text-xs mb-1" style={{ color: '#6B6B85' }}>
+              <p className="text-xs mb-1" style={{ color: 'var(--text-3)' }}>
                 Clasificación 50/30/20
               </p>
               <select
                 value={budgetType}
                 onChange={e => setBudgetType(e.target.value)}
                 className="w-full px-4 py-3 rounded-xl text-sm"
-                style={{ background: 'rgba(26,26,46,0.9)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff' }}
+                style={{ background: 'var(--input-bg-select)', border: '1px solid var(--input-border)', color: 'var(--text-1)' }}
               >
                 {TYPE_OPTIONS.map(o => (
                   <option key={o.value || 'none'} value={o.value}>{o.label}</option>
                 ))}
               </select>
-              <p className="text-xs mt-1" style={{ color: '#6B6B85' }}>
+              <p className="text-xs mt-1" style={{ color: 'var(--text-3)' }}>
                 Ej. despensa va en “Necesidad”; un restaurante en “Deseo”.
               </p>
             </div>
           )}
 
           <div>
-            <p className="text-xs mb-1" style={{ color: '#6B6B85' }}>
+            <p className="text-xs mb-1" style={{ color: 'var(--text-3)' }}>
               Cuenta {isTransfer ? 'de origen' : ''}
             </p>
             <select
               value={accountId ?? ''}
               onChange={e => setAccountId(e.target.value ? Number(e.target.value) : null)}
               className="w-full px-4 py-3 rounded-xl text-sm"
-              style={{ background: 'rgba(26,26,46,0.9)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff' }}
+              style={{ background: 'var(--input-bg-select)', border: '1px solid var(--input-border)', color: 'var(--text-1)' }}
             >
               {accounts.length === 0 && <option value="">Sin cuentas</option>}
               {accounts.map(a => (
@@ -277,14 +277,14 @@ export default function AddTransactionModal({ open, onClose, onAdd, transaction 
 
           {isTransfer && (
             <div>
-              <p className="text-xs mb-1" style={{ color: '#6B6B85' }}>
+              <p className="text-xs mb-1" style={{ color: 'var(--text-3)' }}>
                 Cuenta de destino
               </p>
               <select
                 value={destAccountId ?? ''}
                 onChange={e => setDestAccountId(e.target.value ? Number(e.target.value) : null)}
                 className="w-full px-4 py-3 rounded-xl text-sm"
-                style={{ background: 'rgba(26,26,46,0.9)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff' }}
+                style={{ background: 'var(--input-bg-select)', border: '1px solid var(--input-border)', color: 'var(--text-1)' }}
               >
                 {accounts.length === 0 && <option value="">Sin cuentas</option>}
                 {accounts.map(a => (
@@ -300,7 +300,7 @@ export default function AddTransactionModal({ open, onClose, onAdd, transaction 
         )}
 
         <div className="flex gap-3 mt-5">
-          <button onClick={onClose} className="flex-1 py-3 rounded-xl text-sm font-medium" style={{ background: 'rgba(255,255,255,0.06)', color: '#A0A0B8' }}>
+          <button onClick={onClose} className="flex-1 py-3 rounded-xl text-sm font-medium" style={{ background: 'var(--input-bg)', color: 'var(--text-2)' }}>
             Cancelar
           </button>
           <button

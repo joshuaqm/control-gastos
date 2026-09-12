@@ -20,14 +20,14 @@ export default function SummaryCard({
   return (
     <div
       className="glass card-hover rounded-2xl p-5 flex flex-col gap-3 relative overflow-hidden"
-      style={{ border: "1px solid rgba(255,255,255,0.08)" }}
+      style={{ border: "1px solid var(--border)" }}
     >
       <div
         className="absolute -top-6 -right-6 w-20 h-20 rounded-full opacity-10"
         style={{ background: color }}
       />
       <div className="flex items-center justify-between">
-        <span className="text-xs font-medium" style={{ color: "#A0A0B8" }}>
+        <span className="text-xs font-medium" style={{ color: "var(--text-2)" }}>
           {title}
         </span>
         <div
@@ -39,7 +39,7 @@ export default function SummaryCard({
       </div>
       <div>
         <p className="text-2xl font-bold font-mono tracking-tight">{value}</p>
-        <p className="text-xs mt-1" style={{ color: "#6B6B85" }}>
+        <p className="text-xs mt-1" style={{ color: "var(--text-3)" }}>
           {sub}
         </p>
       </div>

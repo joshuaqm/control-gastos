@@ -69,7 +69,13 @@ export default function App() {
   })
   const [screen, setScreen] = useState<ScreenId>(screenFromPath)
   const [sidebarOpen, setSidebarOpen] = useState(true)
-  const [darkMode, setDarkMode] = useState(true)
+  const [darkMode, setDarkMode] = useState(() => {
+    try {
+      const stored = localStorage.getItem('financeai.darkMode')
+      if (stored !== null) return stored === 'true'
+    } catch { /* ignore */ }
+    return true
+  })
   const [chatMsg, setChatMsg] = useState('')
   const [reveal, setReveal] = useState<'idle' | 'expanding' | 'revealing'>('idle')
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
@@ -111,6 +117,20 @@ export default function App() {
     setMobileMenuOpen(false)
     navigate(id)
   }
+
+  useEffect(() => {
+    const root = document.documentElement
+    if (darkMode) {
+      root.classList.add('dark')
+      root.classList.remove('light')
+    } else {
+      root.classList.add('light')
+      root.classList.remove('dark')
+    }
+    try {
+      localStorage.setItem('financeai.darkMode', String(darkMode))
+    } catch { /* ignore */ }
+  }, [darkMode])
 
   const handleLogout = () => {
     localStorage.removeItem(SESSION_KEY)
@@ -213,21 +233,21 @@ export default function App() {
 
   if (needsTermsAcceptance) {
     return (
-      <div className="min-h-screen flex items-center justify-center relative overflow-hidden" style={{ background: '#0A0A0F' }}>
-        <div className="nebula" style={{ width: 500, height: 500, top: '-100px', left: '-100px', background: 'rgba(124,58,237,0.12)' }} />
-        <div className="nebula" style={{ width: 400, height: 400, bottom: '-80px', right: '-80px', background: 'rgba(6,214,160,0.08)' }} />
+      <div className="min-h-screen flex items-center justify-center relative overflow-hidden" style={{ background: 'var(--bg)' }}>
+        <div className="nebula" style={{ width: 500, height: 500, top: '-100px', left: '-100px', background: 'var(--nebula-1)' }} />
+        <div className="nebula" style={{ width: 400, height: 400, bottom: '-80px', right: '-80px', background: 'var(--nebula-2)' }} />
 
         <div className="glass-light rounded-2xl p-8 w-full max-w-lg relative z-10 animate-slide-up max-h-[90vh] flex flex-col" style={{ border: '1px solid rgba(124,58,237,0.2)' }}>
           <h2 className="text-xl font-bold mb-2">Aceptación de Términos</h2>
-          <p className="text-sm mb-4" style={{ color: '#A0A0B8' }}>
+          <p className="text-sm mb-4" style={{ color: 'var(--text-2)' }}>
             Para continuar, debes aceptar nuestros Términos y Condiciones y Política de Privacidad.
           </p>
 
-          <div className="flex-1 overflow-y-auto rounded-xl p-4 mb-4 text-xs leading-relaxed whitespace-pre-wrap" style={{ background: 'rgba(255,255,255,0.04)', color: '#A0A0B8', maxHeight: '50vh' }}>
+          <div className="flex-1 overflow-y-auto rounded-xl p-4 mb-4 text-xs leading-relaxed whitespace-pre-wrap" style={{ background: 'var(--card-subtle)', color: 'var(--text-2)', maxHeight: '50vh' }}>
             {TERMS_AND_CONDITIONS}
           </div>
 
-          <p className="text-[11px] mb-4" style={{ color: '#6B6B85' }}>
+          <p className="text-[11px] mb-4" style={{ color: 'var(--text-3)' }}>
             Al presionar "Acepto", confirms que has leído y aceptas los{' '}
             <button onClick={() => setShowTermsModal(true)} className="underline" style={{ color: '#7C3AED' }}>Términos y Condiciones</button>
             {' '}completos y la{' '}
@@ -247,7 +267,7 @@ export default function App() {
           <button
             onClick={handleLogout}
             className="w-full py-2 mt-2 rounded-xl text-xs font-medium"
-            style={{ color: '#6B6B85' }}
+            style={{ color: 'var(--text-3)' }}
           >
             Cerrar sesión
           </button>
@@ -268,10 +288,10 @@ export default function App() {
   const sidebarWidth = sidebarOpen ? 220 : 0
 
   return (
-    <div style={{ background: '#0A0A0F', minHeight: '100vh' }}>
+    <div style={{ background: 'var(--bg)', minHeight: '100vh' }}>
       {/* Nebula decorations */}
-      <div className="nebula" style={{ width: 600, height: 600, top: -200, left: -200, background: 'rgba(124,58,237,0.05)' }} />
-      <div className="nebula" style={{ width: 400, height: 400, bottom: 100, right: -100, background: 'rgba(6,214,160,0.04)' }} />
+      <div className="nebula" style={{ width: 600, height: 600, top: -200, left: -200, background: 'var(--nebula-1)' }} />
+      <div className="nebula" style={{ width: 400, height: 400, bottom: 100, right: -100, background: 'var(--nebula-2)' }} />
 
       <div className="flex flex-col" style={{ minHeight: '100vh' }}>
         {/* Header - se mueve con el sidebar */}

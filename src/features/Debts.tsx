@@ -364,57 +364,57 @@ export default function DebtsScreen({ showToast }: { showToast: ShowToast }) {
 
       <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
         <div
-          className="glass rounded-2xl p-5"
+          className="glass rounded-2xl p-5 overflow-hidden"
           style={{ border: "1px solid rgba(239,68,68,0.2)" }}
         >
-          <p className="text-sm" style={{ color: "#A0A0B8" }}>
+          <p className="text-sm" style={{ color: "var(--text-2)" }}>
             Deuda total
           </p>
           <p
-            className="text-3xl font-bold font-mono mt-1"
+            className="text-xl sm:text-2xl lg:text-3xl font-bold font-mono mt-1 truncate"
             style={{ color: "#EF4444" }}
           >
             {fmt(totalCardDebt + totalOtherDebt)}
           </p>
           <div
             className="flex flex-col gap-1 mt-2 text-xs"
-            style={{ color: "#6B6B85" }}
+            style={{ color: "var(--text-3)" }}
           >
-            <span>Tarjetas: {fmt(totalCardDebt)}</span>
-            <span>Otras deudas: {fmt(totalOtherDebt)}</span>
+            <span className="truncate">Tarjetas: {fmt(totalCardDebt)}</span>
+            <span className="truncate">Otras deudas: {fmt(totalOtherDebt)}</span>
           </div>
         </div>
         <div
-          className="glass rounded-2xl p-5"
+          className="glass rounded-2xl p-5 overflow-hidden"
           style={{ border: "1px solid rgba(6,214,160,0.2)" }}
         >
-          <p className="text-sm" style={{ color: "#A0A0B8" }}>
+          <p className="text-sm" style={{ color: "var(--text-2)" }}>
             Total por cobrar
           </p>
           <p
-            className="text-3xl font-bold font-mono mt-1"
+            className="text-xl sm:text-2xl lg:text-3xl font-bold font-mono mt-1 truncate"
             style={{ color: "#06D6A0" }}
           >
             {fmt(totalReceivable)}
           </p>
-          <p className="text-xs mt-2" style={{ color: "#6B6B85" }}>
+          <p className="text-xs mt-2 truncate" style={{ color: "var(--text-3)" }}>
             {receivables.length} préstamo(s) registrado(s)
           </p>
         </div>
         <div
-          className="glass rounded-2xl p-5 col-span-2 lg:col-span-1"
+          className="glass rounded-2xl p-5 col-span-2 lg:col-span-1 overflow-hidden"
           style={{ border: "1px solid rgba(139,92,246,0.2)" }}
         >
-          <p className="text-sm" style={{ color: "#A0A0B8" }}>
+          <p className="text-sm" style={{ color: "var(--text-2)" }}>
             Crédito a meses
           </p>
           <p
-            className="text-3xl font-bold font-mono mt-1"
+            className="text-xl sm:text-2xl lg:text-3xl font-bold font-mono mt-1 truncate"
             style={{ color: "#A78BFA" }}
           >
             {fmt(creditAccounts.reduce((s, a) => s + cardMsiUsed(a.id), 0))}
           </p>
-          <p className="text-xs mt-2" style={{ color: "#6B6B85" }}>
+          <p className="text-xs mt-2 truncate" style={{ color: "var(--text-3)" }}>
             Crédito ocupado por MSI
           </p>
         </div>
@@ -493,12 +493,12 @@ export default function DebtsScreen({ showToast }: { showToast: ShowToast }) {
                       >
                         {fmt(available)}
                       </p>
-                      <p className="text-xs mt-1" style={{ color: "#6B6B85" }}>
+                      <p className="text-xs mt-1 truncate" style={{ color: "var(--text-3)" }}>
                         Crédito disponible
                       </p>
                     </div>
                     <span
-                      className="text-xs px-2 py-1 rounded-full"
+                      className="text-xs px-2 py-1 rounded-full flex-shrink-0"
                       style={{
                         background: "rgba(239,68,68,0.15)",
                         color: "#F87171",
@@ -509,15 +509,15 @@ export default function DebtsScreen({ showToast }: { showToast: ShowToast }) {
                   </div>
 
                   <div className="mt-3">
-                    <div className="flex justify-between text-xs mb-1">
-                      <span style={{ color: "#6B6B85" }}>
+                    <div className="flex justify-between text-xs mb-1 gap-2">
+                      <span className="truncate min-w-0" style={{ color: "var(--text-3)" }}>
                         Usado en cortes: {fmt(used)}
                       </span>
-                      <span style={{ color: "#A78BFA" }}>MSI: {fmt(msi)}</span>
+                      <span className="flex-shrink-0" style={{ color: "#A78BFA" }}>MSI: {fmt(msi)}</span>
                     </div>
                     <div
                       className="h-2 rounded-full overflow-hidden"
-                      style={{ background: "rgba(255,255,255,0.08)" }}
+                      style={{ background: "var(--border)" }}
                     >
                       <div
                         className="h-full rounded-full"
@@ -527,7 +527,7 @@ export default function DebtsScreen({ showToast }: { showToast: ShowToast }) {
                         }}
                       />
                     </div>
-                    <p className="text-xs mt-1" style={{ color: "#6B6B85" }}>
+                    <p className="text-xs mt-1" style={{ color: "var(--text-3)" }}>
                       Límite: {fmt(limit)}
                     </p>
                   </div>
@@ -559,7 +559,7 @@ export default function DebtsScreen({ showToast }: { showToast: ShowToast }) {
                               </p>
                               <p
                                 className="text-xs"
-                                style={{ color: "#6B6B85" }}
+                                style={{ color: "var(--text-3)" }}
                               >
                                 {fmt(Number(inst.monthly_amount))}/mes ·{" "}
                                 {inst.months_paid}/{inst.months_total} meses ·
@@ -576,7 +576,7 @@ export default function DebtsScreen({ showToast }: { showToast: ShowToast }) {
                                   })
                                 }
                                 className="p-1 rounded-lg hover:bg-white/10"
-                                style={{ color: "#A0A0B8" }}
+                                style={{ color: "var(--text-2)" }}
                                 title="Editar"
                               >
                                 <Pencil size={14} />
@@ -661,7 +661,7 @@ export default function DebtsScreen({ showToast }: { showToast: ShowToast }) {
         {debts.length === 0 || otherDebts.length === 0 ? (
           <div
             className="py-10 text-center text-sm rounded-2xl"
-            style={{ background: "rgba(255,255,255,0.03)", color: "#6B6B85" }}
+            style={{ background: "var(--card)", color: "var(--text-3)" }}
           >
             {debts.length === 0
               ? "No hay deudas registradas más allá de las tarjetas."
@@ -688,41 +688,41 @@ export default function DebtsScreen({ showToast }: { showToast: ShowToast }) {
               return (
                 <div
                   key={d.id}
-                  className="glass card-hover rounded-2xl p-5"
+                  className="glass card-hover rounded-2xl p-5 overflow-hidden"
                   style={{
-                    border: "1px solid rgba(255,255,255,0.08)",
+                    border: "1px solid var(--glass-border)",
                     opacity: settled ? 0.6 : 1,
                   }}
                 >
-                  <div className="flex items-start justify-between mb-3">
-                    <div>
-                      <p className="text-base font-semibold">{d.name}</p>
-                      <p className="text-xs" style={{ color: "#6B6B85" }}>
+                  <div className="flex items-start justify-between mb-3 gap-2">
+                    <div className="min-w-0">
+                      <p className="text-base font-semibold truncate">{d.name}</p>
+                      <p className="text-xs truncate" style={{ color: "var(--text-3)" }}>
                         {d.creditor} · Vence {fmtDate(d.due_date)}
                       </p>
                     </div>
-                    <div className="text-right">
+                    <div className="text-right flex-shrink-0">
                       <p
                         className="text-lg font-bold font-mono"
                         style={{ color: settled ? "#06D6A0" : "#EF4444" }}
                       >
                         {fmt(pending)}
                       </p>
-                      <p className="text-xs" style={{ color: "#6B6B85" }}>
+                      <p className="text-xs" style={{ color: "var(--text-3)" }}>
                         de {fmt(d.original_amount)}
                       </p>
                     </div>
                   </div>
                   <div className="mb-3">
                     <div className="flex justify-between text-xs mb-1">
-                      <span style={{ color: "#6B6B85" }}>Progreso de pago</span>
+                      <span style={{ color: "var(--text-3)" }}>Progreso de pago</span>
                       <span style={{ color: settled ? "#06D6A0" : "#F59E0B" }}>
                         {paidPct}% pagado
                       </span>
                     </div>
                     <div
                       className="h-2 rounded-full overflow-hidden"
-                      style={{ background: "rgba(255,255,255,0.08)" }}
+                      style={{ background: "var(--border)" }}
                     >
                       <div
                         className="h-full rounded-full"
@@ -751,8 +751,8 @@ export default function DebtsScreen({ showToast }: { showToast: ShowToast }) {
                       }}
                       className="flex-1 py-2 rounded-xl text-xs font-medium flex items-center justify-center gap-2 transition-colors hover:bg-white/10"
                       style={{
-                        background: "rgba(255,255,255,0.06)",
-                        color: "#A0A0B8",
+                        background: "var(--input-bg)",
+                        color: "var(--text-2)",
                       }}
                     >
                       <Pencil size={14} /> Editar
@@ -795,7 +795,7 @@ export default function DebtsScreen({ showToast }: { showToast: ShowToast }) {
         {receivables.length === 0 ? (
           <div
             className="py-10 text-center text-sm rounded-2xl"
-            style={{ background: "rgba(255,255,255,0.03)", color: "#6B6B85" }}
+            style={{ background: "var(--card)", color: "var(--text-3)" }}
           >
             No hay préstamos por cobrar.
           </div>
@@ -810,69 +810,73 @@ export default function DebtsScreen({ showToast }: { showToast: ShowToast }) {
               return (
                 <div
                   key={r.id}
-                  className="glass rounded-2xl p-4 flex items-center justify-between gap-3"
+                  className="glass rounded-2xl p-4 overflow-hidden"
                   style={{
-                    border: "1px solid rgba(255,255,255,0.08)",
+                    border: "1px solid var(--glass-border)",
                     opacity: settled ? 0.6 : 1,
                   }}
                 >
-                  <div className="min-w-0">
-                    <p className="text-sm font-semibold truncate">{r.person}</p>
-                    <p
-                      className="text-xs truncate"
-                      style={{ color: "#6B6B85" }}
-                    >
-                      {r.description || "Sin concepto"} · Vence{" "}
-                      {fmtDate(r.due_date)}
+                  <div className="flex items-start justify-between gap-3 mb-2">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-semibold truncate">{r.person}</p>
+                      <p
+                        className="text-xs truncate"
+                        style={{ color: "var(--text-3)" }}
+                      >
+                        {r.description || "Sin concepto"} · Vence{" "}
+                        {fmtDate(r.due_date)}
+                      </p>
                       {r.account_id != null && (
-                        <span> · Cuenta: {accountName(r.account_id)}</span>
+                        <p className="text-xs truncate" style={{ color: "var(--text-3)" }}>
+                          Cuenta: {accountName(r.account_id)}
+                        </p>
                       )}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-3 flex-shrink-0">
-                    <span
-                      className="text-xs px-2 py-1 rounded-full"
-                      style={{
-                        background: settled
-                          ? "rgba(6,214,160,0.15)"
-                          : "rgba(245,158,11,0.15)",
-                        color: settled ? "#06D6A0" : "#F59E0B",
-                      }}
-                    >
-                      {settled ? "Pagado" : "Pendiente"}
-                    </span>
-                    <div className="text-right">
+                    </div>
+                    <div className="text-right flex-shrink-0">
+                      <span
+                        className="text-xs px-2 py-1 rounded-full inline-block mb-1"
+                        style={{
+                          background: settled
+                            ? "rgba(6,214,160,0.15)"
+                            : "rgba(245,158,11,0.15)",
+                          color: settled ? "#06D6A0" : "#F59E0B",
+                        }}
+                      >
+                        {settled ? "Pagado" : "Pendiente"}
+                      </span>
                       <p
                         className="text-base font-bold font-mono"
-                        style={{ color: settled ? "#06D6A0" : "#06D6A0" }}
+                        style={{ color: "#06D6A0" }}
                       >
                         {fmt(pending)}
                       </p>
-                      <p className="text-xs" style={{ color: "#6B6B85" }}>
+                      <p className="text-xs" style={{ color: "var(--text-3)" }}>
                         de {fmt(r.original_amount)}
                       </p>
                     </div>
-                    <div className="flex items-center gap-1">
-                      {!settled && (
-                        <button
-                          onClick={() => setCollectTarget(r)}
-                          disabled={!sourceAccounts.length}
-                          className="text-xs px-3 py-1 rounded-lg"
-                          style={{
-                            background: "rgba(6,214,160,0.12)",
-                            color: "#06D6A0",
-                          }}
-                        >
-                          Cobrar
-                        </button>
-                      )}
+                  </div>
+                  <div className="flex items-center gap-2 pt-2" style={{ borderTop: '1px solid var(--input-bg)' }}>
+                    {!settled && (
+                      <button
+                        onClick={() => setCollectTarget(r)}
+                        disabled={!sourceAccounts.length}
+                        className="text-xs px-3 py-1.5 rounded-lg font-medium"
+                        style={{
+                          background: "rgba(6,214,160,0.12)",
+                          color: "#06D6A0",
+                        }}
+                      >
+                        Cobrar
+                      </button>
+                    )}
+                    <div className="flex items-center gap-1 ml-auto">
                       <button
                         onClick={() => {
                           setReceivableTarget(r)
                           setReceivableFormOpen(true)
                         }}
                         className="p-1.5 rounded-lg hover:bg-white/10"
-                        style={{ color: "#A0A0B8" }}
+                        style={{ color: "var(--text-2)" }}
                       >
                         <Pencil size={14} />
                       </button>
@@ -895,7 +899,7 @@ export default function DebtsScreen({ showToast }: { showToast: ShowToast }) {
       {loading && (
         <div
           className="fixed inset-0 z-40 flex items-center justify-center"
-          style={{ background: "rgba(10,10,15,0.6)" }}
+          style={{ background: "var(--modal-backdrop)" }}
         >
           <div className="w-8 h-8 rounded-full border-2 border-white/20 border-t-purple-600 animate-spin" />
         </div>

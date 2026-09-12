@@ -38,35 +38,35 @@ export default function LoginScreen({
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center relative overflow-hidden" style={{ background: '#0A0A0F' }}>
+    <div className="min-h-screen flex items-center justify-center relative overflow-hidden" style={{ background: 'var(--bg)' }}>
       <StarField count={120} />
-      <div className="nebula" style={{ width: 500, height: 500, top: '-100px', left: '-100px', background: 'rgba(124,58,237,0.12)' }} />
-      <div className="nebula" style={{ width: 400, height: 400, bottom: '-80px', right: '-80px', background: 'rgba(6,214,160,0.08)' }} />
-      <div className="nebula" style={{ width: 300, height: 300, top: '40%', left: '60%', background: 'rgba(124,58,237,0.08)' }} />
+      <div className="nebula" style={{ width: 500, height: 500, top: '-100px', left: '-100px', background: 'var(--nebula-1)' }} />
+      <div className="nebula" style={{ width: 400, height: 400, bottom: '-80px', right: '-80px', background: 'var(--nebula-2)' }} />
+      <div className="nebula" style={{ width: 300, height: 300, top: '40%', left: '60%', background: 'var(--nebula-3)' }} />
 
       <div className="glass-light rounded-2xl p-8 w-full max-w-md relative z-10 animate-slide-up" style={{ border: '1px solid rgba(124,58,237,0.2)' }}>
         <div className="flex flex-col items-center mb-8">
           <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-3 animate-pulse-glow" style={{ background: 'linear-gradient(135deg, #7C3AED, #5B21B6)' }}>
             <TrendingUp size={28} color="white" />
           </div>
-          <h1 className="text-2xl font-bold tracking-tight">XOXO Finanzas</h1>
-          <p className="text-sm mt-1" style={{ color: '#A0A0B8' }}>Finanzas inteligentes</p>
+          <h1 className="text-2xl font-bold tracking-tight" style={{ color: 'var(--text-1)' }}>XOXO Finanzas</h1>
+          <p className="text-sm mt-1" style={{ color: 'var(--text-2)' }}>Finanzas inteligentes</p>
         </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div>
-            <label className="block text-xs font-medium mb-1" style={{ color: '#A0A0B8' }}>Correo electrónico</label>
+            <label className="block text-xs font-medium mb-1" style={{ color: 'var(--text-2)' }}>Correo electrónico</label>
             <input
               type="email"
               value={email}
               onChange={e => setEmail(e.target.value)}
               placeholder="ana@ejemplo.com"
               className="w-full px-4 py-3 rounded-xl text-sm transition-all"
-              style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff' }}
+              style={{ background: 'var(--input-bg)', border: '1px solid var(--input-border)', color: 'var(--text-1)' }}
             />
           </div>
           <div>
-            <label className="block text-xs font-medium mb-1" style={{ color: '#A0A0B8' }}>Contraseña</label>
+            <label className="block text-xs font-medium mb-1" style={{ color: 'var(--text-2)' }}>Contraseña</label>
             <div className="relative">
               <input
                 type={showPass ? 'text' : 'password'}
@@ -74,9 +74,9 @@ export default function LoginScreen({
                 onChange={e => setPass(e.target.value)}
                 placeholder="••••••••"
                 className="w-full px-4 py-3 pr-12 rounded-xl text-sm"
-                style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff' }}
+                style={{ background: 'var(--input-bg)', border: '1px solid var(--input-border)', color: 'var(--text-1)' }}
               />
-              <button type="button" onClick={() => setShowPass(v => !v)} className="absolute right-3 top-1/2 -translate-y-1/2" style={{ color: '#6B6B85' }}>
+              <button type="button" onClick={() => setShowPass(v => !v)} className="absolute right-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--text-3)' }}>
                 {showPass ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
             </div>
@@ -99,7 +99,7 @@ export default function LoginScreen({
               onChange={e => setAcceptedTerms(e.target.checked)}
               className="mt-0.5 w-4 h-4 rounded accent-[#7C3AED]"
             />
-            <span className="text-xs" style={{ color: '#A0A0B8' }}>
+            <span className="text-xs" style={{ color: 'var(--text-2)' }}>
               Acepto los{' '}
               <button type="button" onClick={() => setLegalDoc('terms')} className="underline font-medium" style={{ color: '#7C3AED' }}>
                 Términos y Condiciones
@@ -123,7 +123,7 @@ export default function LoginScreen({
           </button>
         </form>
 
-        <p className="text-[11px] leading-relaxed mt-5" style={{ color: '#6B6B85' }}>
+        <p className="text-[11px] leading-relaxed mt-5" style={{ color: 'var(--text-3)' }}>
           {LOGIN_DISCLAIMER}
         </p>
       </div>

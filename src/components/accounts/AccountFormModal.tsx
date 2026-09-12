@@ -79,32 +79,32 @@ export default function AccountFormModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)' }}>
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4" style={{ background: 'var(--modal-backdrop)', backdropFilter: 'blur(8px)' }}>
       <div className="glass animate-slide-up rounded-2xl p-6 w-full max-w-md" style={{ border: '1px solid rgba(124,58,237,0.2)' }}>
         <div className="flex items-center justify-between mb-5">
-          <h3 className="text-lg font-semibold">{account ? 'Editar Cuenta' : 'Registrar Cuenta'}</h3>
-          <button onClick={onClose} style={{ color: '#6B6B85' }}><X size={20} /></button>
+          <h3 className="text-lg font-semibold" style={{ color: 'var(--text-1)' }}>{account ? 'Editar Cuenta' : 'Registrar Cuenta'}</h3>
+          <button onClick={onClose} style={{ color: 'var(--text-3)' }}><X size={20} /></button>
         </div>
 
         <div className="flex flex-col gap-3">
           <div>
-            <label className="block text-xs font-medium mb-1" style={{ color: '#A0A0B8' }}>Nombre</label>
+            <label className="block text-xs font-medium mb-1" style={{ color: 'var(--text-2)' }}>Nombre</label>
             <input
               value={name}
               onChange={e => setName(e.target.value)}
               placeholder="Nombre de la cuenta"
               className="w-full px-4 py-3 rounded-xl text-sm"
-              style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff' }}
+              style={{ background: 'var(--input-bg)', border: '1px solid var(--input-border)', color: 'var(--text-1)' }}
             />
           </div>
 
           <div>
-            <label className="block text-xs font-medium mb-1" style={{ color: '#A0A0B8' }}>Tipo</label>
+            <label className="block text-xs font-medium mb-1" style={{ color: 'var(--text-2)' }}>Tipo</label>
             <select
               value={type}
               onChange={e => setType(e.target.value as AccountType)}
               className="w-full px-4 py-3 rounded-xl text-sm"
-              style={{ background: 'rgba(26,26,46,0.9)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff' }}
+              style={{ background: 'var(--input-bg-select)', border: '1px solid var(--input-border)', color: 'var(--text-1)' }}
             >
               {ACCOUNT_TYPES.map(t => (
                 <option key={t.value} value={t.value}>{t.label}</option>
@@ -113,7 +113,7 @@ export default function AccountFormModal({
           </div>
 
           <div>
-            <label className="block text-xs font-medium mb-1" style={{ color: '#A0A0B8' }}>
+            <label className="block text-xs font-medium mb-1" style={{ color: 'var(--text-2)' }}>
               {isCredit ? 'Ajuste manual de saldo' : 'Saldo'}
             </label>
             <input
@@ -122,10 +122,10 @@ export default function AccountFormModal({
               type="number"
               step="0.01"
               className="w-full px-4 py-3 rounded-xl text-sm font-mono"
-              style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff' }}
+              style={{ background: 'var(--input-bg)', border: '1px solid var(--input-border)', color: 'var(--text-1)' }}
             />
             {isCredit && (
-              <p className="text-[11px] mt-1" style={{ color: '#6B6B85' }}>
+              <p className="text-[11px] mt-1" style={{ color: 'var(--text-3)' }}>
                 Ajuste al cálculo automático. Positivo = más deuda, negativo = menos deuda.
               </p>
             )}
@@ -133,14 +133,14 @@ export default function AccountFormModal({
 
           {isCredit && (
             <div>
-              <label className="block text-xs font-medium mb-1" style={{ color: '#A0A0B8' }}>Límite de crédito</label>
+              <label className="block text-xs font-medium mb-1" style={{ color: 'var(--text-2)' }}>Límite de crédito</label>
               <input
                 value={creditLimit}
                 onChange={e => setCreditLimit(e.target.value)}
                 type="number"
                 step="0.01"
                 className="w-full px-4 py-3 rounded-xl text-sm font-mono"
-                style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff' }}
+                style={{ background: 'var(--input-bg)', border: '1px solid var(--input-border)', color: 'var(--text-1)' }}
               />
             </div>
           )}
@@ -148,7 +148,7 @@ export default function AccountFormModal({
           {isCredit && (
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-medium mb-1" style={{ color: '#A0A0B8' }}>Fecha de corte (día)</label>
+                <label className="block text-xs font-medium mb-1" style={{ color: 'var(--text-2)' }}>Fecha de corte (día)</label>
                 <input
                   value={cutoffDay}
                   onChange={e => setCutoffDay(e.target.value)}
@@ -157,11 +157,11 @@ export default function AccountFormModal({
                   max="31"
                   placeholder="Ej. 20"
                   className="w-full px-4 py-3 rounded-xl text-sm font-mono"
-                  style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff' }}
+                  style={{ background: 'var(--input-bg)', border: '1px solid var(--input-border)', color: 'var(--text-1)' }}
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium mb-1" style={{ color: '#A0A0B8' }}>Límite de pago (día)</label>
+                <label className="block text-xs font-medium mb-1" style={{ color: 'var(--text-2)' }}>Límite de pago (día)</label>
                 <input
                   value={paymentDueDay}
                   onChange={e => setPaymentDueDay(e.target.value)}
@@ -170,25 +170,25 @@ export default function AccountFormModal({
                   max="31"
                   placeholder="Ej. 25"
                   className="w-full px-4 py-3 rounded-xl text-sm font-mono"
-                  style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff' }}
+                  style={{ background: 'var(--input-bg)', border: '1px solid var(--input-border)', color: 'var(--text-1)' }}
                 />
               </div>
             </div>
           )}
 
           <div>
-            <label className="block text-xs font-medium mb-1" style={{ color: '#A0A0B8' }}>Tasa de interés (%)</label>
+            <label className="block text-xs font-medium mb-1" style={{ color: 'var(--text-2)' }}>Tasa de interés (%)</label>
             <input
               value={interestRate}
               onChange={e => setInterestRate(e.target.value)}
               type="number"
               step="0.01"
               className="w-full px-4 py-3 rounded-xl text-sm font-mono"
-              style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff' }}
+              style={{ background: 'var(--input-bg)', border: '1px solid var(--input-border)', color: 'var(--text-1)' }}
             />
           </div>
 
-          <label className="flex items-center gap-3 text-sm cursor-pointer" style={{ color: '#A0A0B8' }}>
+          <label className="flex items-center gap-3 text-sm cursor-pointer" style={{ color: 'var(--text-2)' }}>
             <input
               type="checkbox"
               checked={isActive}
@@ -206,7 +206,7 @@ export default function AccountFormModal({
         )}
 
         <div className="flex gap-3 mt-5">
-          <button onClick={onClose} className="flex-1 py-3 rounded-xl text-sm font-medium" style={{ background: 'rgba(255,255,255,0.06)', color: '#A0A0B8' }}>
+          <button onClick={onClose} className="flex-1 py-3 rounded-xl text-sm font-medium" style={{ background: 'var(--input-bg)', color: 'var(--text-2)' }}>
             Cancelar
           </button>
           <button

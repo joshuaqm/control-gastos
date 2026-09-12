@@ -71,28 +71,28 @@ export default function GoalFormModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)' }}>
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4" style={{ background: 'var(--modal-backdrop)', backdropFilter: 'blur(8px)' }}>
       <div className="glass animate-slide-up rounded-2xl p-6 w-full max-w-md" style={{ border: '1px solid rgba(124,58,237,0.2)' }}>
         <div className="flex items-center justify-between mb-5">
           <h3 className="text-lg font-semibold">{goal ? 'Editar meta de ahorro' : 'Nueva meta de ahorro'}</h3>
-          <button onClick={onClose} style={{ color: '#6B6B85' }}><X size={20} /></button>
+          <button onClick={onClose} style={{ color: 'var(--text-3)' }}><X size={20} /></button>
         </div>
 
         <div className="flex flex-col gap-3">
           <div>
-            <label className="block text-xs font-medium mb-1" style={{ color: '#A0A0B8' }}>Nombre</label>
+            <label className="block text-xs font-medium mb-1" style={{ color: 'var(--text-2)' }}>Nombre</label>
             <input
               value={name}
               onChange={e => setName(e.target.value)}
               placeholder="Ej. Fondo de emergencia, Viaje, Computadora…"
               className="w-full px-4 py-3 rounded-xl text-sm"
-              style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff' }}
+              style={{ background: 'var(--input-bg)', border: '1px solid var(--input-border)', color: 'var(--text-1)' }}
             />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-medium mb-1" style={{ color: '#A0A0B8' }}>Meta ($)</label>
+              <label className="block text-xs font-medium mb-1" style={{ color: 'var(--text-2)' }}>Meta ($)</label>
               <input
                 value={targetAmount}
                 onChange={e => setTargetAmount(e.target.value)}
@@ -100,11 +100,11 @@ export default function GoalFormModal({
                 step="0.01"
                 min="0"
                 className="w-full px-4 py-3 rounded-xl text-sm font-mono"
-                style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff' }}
+                style={{ background: 'var(--input-bg)', border: '1px solid var(--input-border)', color: 'var(--text-1)' }}
               />
             </div>
             <div>
-              <label className="block text-xs font-medium mb-1" style={{ color: '#A0A0B8' }}>Ahorrado ($)</label>
+              <label className="block text-xs font-medium mb-1" style={{ color: 'var(--text-2)' }}>Ahorrado ($)</label>
               <input
                 value={currentAmount}
                 onChange={e => setCurrentAmount(e.target.value)}
@@ -112,47 +112,47 @@ export default function GoalFormModal({
                 step="0.01"
                 min="0"
                 className="w-full px-4 py-3 rounded-xl text-sm font-mono"
-                style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff' }}
+                style={{ background: 'var(--input-bg)', border: '1px solid var(--input-border)', color: 'var(--text-1)' }}
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-xs font-medium mb-1" style={{ color: '#A0A0B8' }}>Cuenta de destino (donde vive el ahorro)</label>
+            <label className="block text-xs font-medium mb-1" style={{ color: 'var(--text-2)' }}>Cuenta de destino (donde vive el ahorro)</label>
             <select
               value={accountId}
               onChange={e => setAccountId(e.target.value)}
               className="w-full px-4 py-3 rounded-xl text-sm"
-              style={{ background: 'rgba(26,26,46,0.9)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff' }}
+              style={{ background: 'var(--input-bg-select)', border: '1px solid var(--input-border)', color: 'var(--text-1)' }}
             >
               <option value="">Sin cuenta asignada</option>
               {accounts.filter(a => a.type !== 'credit').map(a => (
                 <option key={a.id} value={a.id}>{a.name}</option>
               ))}
             </select>
-            <p className="text-xs mt-1" style={{ color: '#6B6B85' }}>
+            <p className="text-xs mt-1" style={{ color: 'var(--text-3)' }}>
               Al abonar desde otra cuenta, el dinero se transfiere aquí.
             </p>
           </div>
 
           <div>
-            <label className="block text-xs font-medium mb-1" style={{ color: '#A0A0B8' }}>Fecha objetivo (opcional)</label>
+            <label className="block text-xs font-medium mb-1" style={{ color: 'var(--text-2)' }}>Fecha objetivo (opcional)</label>
             <input
               value={targetDate}
               onChange={e => setTargetDate(e.target.value)}
               type="date"
               className="w-full px-4 py-3 rounded-xl text-sm"
-              style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff' }}
+              style={{ background: 'var(--input-bg)', border: '1px solid var(--input-border)', color: 'var(--text-1)' }}
             />
           </div>
 
           <div>
-            <label className="block text-xs font-medium mb-1" style={{ color: '#A0A0B8' }}>Notas (opcional)</label>
+            <label className="block text-xs font-medium mb-1" style={{ color: 'var(--text-2)' }}>Notas (opcional)</label>
             <input
               value={notes}
               onChange={e => setNotes(e.target.value)}
               className="w-full px-4 py-3 rounded-xl text-sm"
-              style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff' }}
+              style={{ background: 'var(--input-bg)', border: '1px solid var(--input-border)', color: 'var(--text-1)' }}
             />
           </div>
         </div>
@@ -164,7 +164,7 @@ export default function GoalFormModal({
         )}
 
         <div className="flex gap-3 mt-5">
-          <button onClick={onClose} className="flex-1 py-3 rounded-xl text-sm font-medium" style={{ background: 'rgba(255,255,255,0.06)', color: '#A0A0B8' }}>
+          <button onClick={onClose} className="flex-1 py-3 rounded-xl text-sm font-medium" style={{ background: 'var(--input-bg)', color: 'var(--text-2)' }}>
             Cancelar
           </button>
           <button

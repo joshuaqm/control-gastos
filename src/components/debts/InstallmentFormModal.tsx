@@ -82,7 +82,7 @@ export default function InstallmentFormModal({
   return (
     <div
       className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4"
-      style={{ background: "rgba(0,0,0,0.7)", backdropFilter: "blur(8px)" }}
+      style={{ background: "var(--modal-backdrop)", backdropFilter: "blur(8px)" }}
     >
       <div
         className="glass animate-slide-up rounded-2xl p-6 w-full max-w-md"
@@ -92,7 +92,7 @@ export default function InstallmentFormModal({
           <h3 className="text-lg font-semibold">
             {installment ? "Editar crédito a meses" : "Nuevo crédito a meses"}
           </h3>
-          <button onClick={onClose} style={{ color: "#6B6B85" }}>
+          <button onClick={onClose} style={{ color: "var(--text-3)" }}>
             <X size={20} />
           </button>
         </div>
@@ -101,7 +101,7 @@ export default function InstallmentFormModal({
           <div>
             <label
               className="block text-xs font-medium mb-1"
-              style={{ color: "#A0A0B8" }}
+              style={{ color: "var(--text-2)" }}
             >
               Descripción
             </label>
@@ -111,9 +111,9 @@ export default function InstallmentFormModal({
               placeholder="Ej. Laptop 12 MSI"
               className="w-full px-4 py-3 rounded-xl text-sm"
               style={{
-                background: "rgba(255,255,255,0.06)",
-                border: "1px solid rgba(255,255,255,0.1)",
-                color: "#fff",
+                background: "var(--input-bg)",
+                border: "1px solid var(--input-border)",
+                color: "var(--text-1)",
               }}
             />
           </div>
@@ -122,7 +122,7 @@ export default function InstallmentFormModal({
             <div>
               <label
                 className="block text-xs font-medium mb-1"
-                style={{ color: "#A0A0B8" }}
+                style={{ color: "var(--text-2)" }}
               >
                 Mensualidad
               </label>
@@ -134,16 +134,16 @@ export default function InstallmentFormModal({
                 min="0"
                 className="w-full px-4 py-3 rounded-xl text-sm font-mono"
                 style={{
-                  background: "rgba(255,255,255,0.06)",
-                  border: "1px solid rgba(255,255,255,0.1)",
-                  color: "#fff",
+                  background: "var(--input-bg)",
+                  border: "1px solid var(--input-border)",
+                  color: "var(--text-1)",
                 }}
               />
             </div>
             <div>
               <label
                 className="block text-xs font-medium mb-1"
-                style={{ color: "#A0A0B8" }}
+                style={{ color: "var(--text-2)" }}
               >
                 Meses totales
               </label>
@@ -154,9 +154,9 @@ export default function InstallmentFormModal({
                 min="1"
                 className="w-full px-4 py-3 rounded-xl text-sm font-mono"
                 style={{
-                  background: "rgba(255,255,255,0.06)",
-                  border: "1px solid rgba(255,255,255,0.1)",
-                  color: "#fff",
+                  background: "var(--input-bg)",
+                  border: "1px solid var(--input-border)",
+                  color: "var(--text-1)",
                 }}
               />
             </div>
@@ -166,7 +166,7 @@ export default function InstallmentFormModal({
             <div>
               <label
                 className="block text-xs font-medium mb-1"
-                style={{ color: "#A0A0B8" }}
+                style={{ color: "var(--text-2)" }}
               >
                 Meses pagados
               </label>
@@ -177,9 +177,9 @@ export default function InstallmentFormModal({
                 min="0"
                 className="w-full px-4 py-3 rounded-xl text-sm font-mono"
                 style={{
-                  background: "rgba(255,255,255,0.06)",
-                  border: "1px solid rgba(255,255,255,0.1)",
-                  color: "#fff",
+                  background: "var(--input-bg)",
+                  border: "1px solid var(--input-border)",
+                  color: "var(--text-1)",
                 }}
               />
             </div>
@@ -188,7 +188,7 @@ export default function InstallmentFormModal({
           <div>
             <label
               className="block text-xs font-medium mb-1"
-              style={{ color: "#A0A0B8" }}
+              style={{ color: "var(--text-2)" }}
             >
               Fecha de compra
             </label>
@@ -198,9 +198,9 @@ export default function InstallmentFormModal({
               type="date"
               className="w-full px-4 py-3 rounded-xl text-sm"
               style={{
-                background: "rgba(255,255,255,0.06)",
-                border: "1px solid rgba(255,255,255,0.1)",
-                color: "#fff",
+                background: "var(--input-bg)",
+                border: "1px solid var(--input-border)",
+                color: "var(--text-1)",
               }}
             />
           </div>
@@ -233,7 +233,7 @@ export default function InstallmentFormModal({
           <div>
             <label
               className="block text-xs font-medium mb-1"
-              style={{ color: "#A0A0B8" }}
+              style={{ color: "var(--text-2)" }}
             >
               Notas (opcional)
             </label>
@@ -242,9 +242,9 @@ export default function InstallmentFormModal({
               onChange={(e) => setNotes(e.target.value)}
               className="w-full px-4 py-3 rounded-xl text-sm"
               style={{
-                background: "rgba(255,255,255,0.06)",
-                border: "1px solid rgba(255,255,255,0.1)",
-                color: "#fff",
+                background: "var(--input-bg)",
+                border: "1px solid var(--input-border)",
+                color: "var(--text-1)",
               }}
             />
           </div>
@@ -267,7 +267,7 @@ export default function InstallmentFormModal({
           <button
             onClick={onClose}
             className="flex-1 py-3 rounded-xl text-sm font-medium"
-            style={{ background: "rgba(255,255,255,0.06)", color: "#A0A0B8" }}
+            style={{ background: "var(--input-bg)", color: "var(--text-2)" }}
           >
             Cancelar
           </button>

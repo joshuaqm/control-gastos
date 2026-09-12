@@ -215,34 +215,34 @@ export default function SettingsScreen({
   }
 
   const inputStyle = {
-    background: 'rgba(255,255,255,0.06)',
-    border: '1px solid rgba(255,255,255,0.1)',
-    color: '#fff',
+    background: 'var(--input-bg)',
+    border: '1px solid var(--input-border)',
+    color: 'var(--text-1)',
   }
-  const labelStyle = { color: '#A0A0B8' }
+  const labelStyle = { color: 'var(--text-2)' }
 
   return (
     <div className="flex flex-col gap-5 pb-6">
       <h2 className="text-xl font-bold">Configuración</h2>
 
       {/* Modo oscuro */}
-      <div className="glass rounded-2xl p-5" style={{ border: '1px solid rgba(255,255,255,0.08)' }}>
+      <div className="glass rounded-2xl p-5" style={{ border: '1px solid var(--border)' }}>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Sun size={16} style={{ color: '#F59E0B' }} />
             <div>
               <p className="text-sm font-medium">Modo Oscuro</p>
-              <p className="text-xs" style={{ color: '#6B6B85' }}>Cambiar apariencia de la app</p>
+              <p className="text-xs" style={{ color: 'var(--text-3)' }}>Cambiar apariencia de la app</p>
             </div>
           </div>
-          <button onClick={onToggleDark} className="w-10 h-6 rounded-full relative transition-all" style={{ background: darkMode ? '#7C3AED' : 'rgba(255,255,255,0.2)' }}>
+          <button onClick={onToggleDark} className="w-10 h-6 rounded-full relative transition-all" style={{ background: darkMode ? '#7C3AED' : 'var(--toggle-off)' }}>
             <div className="absolute top-1 w-4 h-4 bg-white rounded-full transition-all" style={{ left: darkMode ? 22 : 2 }} />
           </button>
         </div>
       </div>
 
       {/* Perfil */}
-      <div className="glass rounded-2xl p-5" style={{ border: '1px solid rgba(255,255,255,0.08)' }}>
+      <div className="glass rounded-2xl p-5" style={{ border: '1px solid var(--border)' }}>
         <div className="flex items-center gap-3 mb-4">
           <User size={16} style={{ color: '#A78BFA' }} />
           <h3 className="text-sm font-semibold">Perfil</h3>
@@ -280,7 +280,7 @@ export default function SettingsScreen({
               className="w-full px-4 py-3 rounded-xl text-sm font-mono"
               style={inputStyle}
             />
-            <p className="text-[11px] mt-1" style={{ color: '#6B6B85' }}>Base para calcular los presupuestos 50/30/20</p>
+            <p className="text-[11px] mt-1" style={{ color: 'var(--text-3)' }}>Base para calcular los presupuestos 50/30/20</p>
           </div>
           <div>
             <label className="block text-xs font-medium mb-1" style={labelStyle}>Moneda</label>
@@ -288,7 +288,7 @@ export default function SettingsScreen({
               value={currency}
               onChange={e => handleCurrency(e.target.value)}
               className="w-full px-4 py-3 rounded-xl text-sm"
-              style={{ background: 'rgba(26,26,46,0.9)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff' }}
+              style={{ background: 'var(--input-bg-select)', border: '1px solid var(--input-border)', color: 'var(--text-1)' }}
             >
               {CURRENCIES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
             </select>
@@ -298,7 +298,7 @@ export default function SettingsScreen({
           onClick={handleSaveProfile}
           disabled={saving}
           className="mt-4 flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold"
-          style={{ background: 'linear-gradient(135deg,#7C3AED,#5B21B6)', color: '#fff' }}
+          style={{ background: 'linear-gradient(135deg,#7C3AED,#5B21B6)', color: 'var(--text-1)' }}
         >
           <Save size={14} />
           {saving ? 'Guardando…' : 'Guardar cambios'}
@@ -306,23 +306,23 @@ export default function SettingsScreen({
       </div>
 
       {/* Notificaciones */}
-      <div className="glass rounded-2xl p-5" style={{ border: '1px solid rgba(255,255,255,0.08)' }}>
+      <div className="glass rounded-2xl p-5" style={{ border: '1px solid var(--border)' }}>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Bell size={16} style={{ color: '#06D6A0' }} />
             <div>
               <p className="text-sm font-medium">Notificaciones</p>
-              <p className="text-xs" style={{ color: '#6B6B85' }}>Recordatorios de cobros, metas y rendimientos</p>
+              <p className="text-xs" style={{ color: 'var(--text-3)' }}>Recordatorios de cobros, metas y rendimientos</p>
             </div>
           </div>
-          <button onClick={() => handleNotifications(!notifications)} className="w-10 h-6 rounded-full relative transition-all" style={{ background: notifications ? '#06D6A0' : 'rgba(255,255,255,0.2)' }}>
+          <button onClick={() => handleNotifications(!notifications)} className="w-10 h-6 rounded-full relative transition-all" style={{ background: notifications ? '#06D6A0' : 'var(--toggle-off)' }}>
             <div className="absolute top-1 w-4 h-4 bg-white rounded-full transition-all" style={{ left: notifications ? 22 : 2 }} />
           </button>
         </div>
       </div>
 
       {/* Privacidad y Consentimiento */}
-      <div className="glass rounded-2xl p-5" style={{ border: '1px solid rgba(255,255,255,0.08)' }}>
+      <div className="glass rounded-2xl p-5" style={{ border: '1px solid var(--border)' }}>
         <div className="flex items-center gap-3 mb-4">
           <Shield size={16} style={{ color: '#06D6A0' }} />
           <h3 className="text-sm font-semibold">Privacidad y Consentimiento</h3>
@@ -337,7 +337,7 @@ export default function SettingsScreen({
             </p>
           </div>
           {acceptedTerms && (
-            <div className="text-[11px] mt-1" style={{ color: '#6B6B85' }}>
+            <div className="text-[11px] mt-1" style={{ color: 'var(--text-3)' }}>
               {termsVersion && <p>Versión: {termsVersion}</p>}
               {acceptedAt && <p>Aceptado el: {new Date(acceptedAt).toLocaleString('es-MX')}</p>}
             </div>
@@ -350,23 +350,23 @@ export default function SettingsScreen({
             <Bot size={16} style={{ color: '#7C3AED' }} />
             <div>
               <p className="text-sm font-medium">Procesamiento de datos con IA</p>
-              <p className="text-xs" style={{ color: '#6B6B85' }}>
+              <p className="text-xs" style={{ color: 'var(--text-3)' }}>
                 Si desactivas esta opción, las funciones analíticas basadas en IA se pausarán o limitarán su precisión.
               </p>
             </div>
           </div>
-          <button onClick={() => handleAiConsent(!aiConsent)} className="w-10 h-6 rounded-full relative transition-all flex-shrink-0" style={{ background: aiConsent ? '#7C3AED' : 'rgba(255,255,255,0.2)' }}>
+          <button onClick={() => handleAiConsent(!aiConsent)} className="w-10 h-6 rounded-full relative transition-all flex-shrink-0" style={{ background: aiConsent ? '#7C3AED' : 'var(--toggle-off)' }}>
             <div className="absolute top-1 w-4 h-4 bg-white rounded-full transition-all" style={{ left: aiConsent ? 22 : 2 }} />
           </button>
         </div>
 
         {/* Enlaces a documentos legales */}
         <div className="flex flex-wrap gap-2">
-          <button onClick={() => setLegalDoc('terms')} className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium" style={{ background: 'rgba(255,255,255,0.06)', color: '#A0A0B8', border: '1px solid rgba(255,255,255,0.1)' }}>
+          <button onClick={() => setLegalDoc('terms')} className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium" style={{ background: 'var(--input-bg)', color: 'var(--text-2)', border: '1px solid var(--input-border)' }}>
             <FileText size={12} />
             Términos y Condiciones
           </button>
-          <button onClick={() => setLegalDoc('privacy')} className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium" style={{ background: 'rgba(255,255,255,0.06)', color: '#A0A0B8', border: '1px solid rgba(255,255,255,0.1)' }}>
+          <button onClick={() => setLegalDoc('privacy')} className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium" style={{ background: 'var(--input-bg)', color: 'var(--text-2)', border: '1px solid var(--input-border)' }}>
             <FileText size={12} />
             Política de Privacidad
           </button>
@@ -387,7 +387,7 @@ export default function SettingsScreen({
       />
 
       {/* Seguridad */}
-      <div className="glass rounded-2xl p-5" style={{ border: '1px solid rgba(255,255,255,0.08)' }}>
+      <div className="glass rounded-2xl p-5" style={{ border: '1px solid var(--border)' }}>
         <div className="flex items-center gap-3 mb-4">
           <Wallet size={16} style={{ color: '#F59E0B' }} />
           <h3 className="text-sm font-semibold">Seguridad</h3>
@@ -436,20 +436,20 @@ export default function SettingsScreen({
       </div>
 
       {/* Exportar */}
-      <div className="glass rounded-2xl p-5" style={{ border: '1px solid rgba(255,255,255,0.08)' }}>
+      <div className="glass rounded-2xl p-5" style={{ border: '1px solid var(--border)' }}>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Download size={16} style={{ color: '#A0A0B8' }} />
+            <Download size={16} style={{ color: 'var(--text-2)' }} />
             <div>
               <p className="text-sm font-medium">Exportar Datos</p>
-              <p className="text-xs" style={{ color: '#6B6B85' }}>Descarga tu historial de transacciones en CSV</p>
+              <p className="text-xs" style={{ color: 'var(--text-3)' }}>Descarga tu historial de transacciones en CSV</p>
             </div>
           </div>
           <button
             onClick={handleExport}
             disabled={exporting}
             className="px-4 py-2 rounded-xl text-sm font-medium flex items-center gap-2"
-            style={{ background: 'rgba(255,255,255,0.06)', color: '#A0A0B8', border: '1px solid rgba(255,255,255,0.1)' }}
+            style={{ background: 'var(--input-bg)', color: 'var(--text-2)', border: '1px solid var(--input-border)' }}
           >
             <Download size={14} />
             {exporting ? 'Exportando…' : 'Exportar'}
@@ -457,10 +457,10 @@ export default function SettingsScreen({
         </div>
       </div>
 
-      <div className="glass rounded-2xl p-5" style={{ border: '1px solid rgba(255,255,255,0.08)' }}>
-        <p className="text-xs font-semibold mb-1" style={{ color: '#A0A0B8' }}>VERSIÓN</p>
+      <div className="glass rounded-2xl p-5" style={{ border: '1px solid var(--border)' }}>
+        <p className="text-xs font-semibold mb-1" style={{ color: 'var(--text-2)' }}>VERSIÓN</p>
         <p className="text-sm">XOXO Finanzas v1.1</p>
-        <p className="text-xs mt-1" style={{ color: '#6B6B85' }}>Todos los derechos reservados © 2026</p>
+        <p className="text-xs mt-1" style={{ color: 'var(--text-3)' }}>Todos los derechos reservados © 2026</p>
       </div>
 
       {/* Zona de peligro */}
@@ -469,7 +469,7 @@ export default function SettingsScreen({
           <Trash2 size={16} style={{ color: '#EF4444' }} />
           <h3 className="text-sm font-semibold" style={{ color: '#EF4444' }}>Zona de peligro</h3>
         </div>
-        <p className="text-xs mb-4" style={{ color: '#6B6B85' }}>
+        <p className="text-xs mb-4" style={{ color: 'var(--text-3)' }}>
           Eliminar tu cuenta borrará permanentemente toda tu información: cuentas, transacciones, presupuestos, metas, deudas e inversiones. Esta acción no se puede deshacer.
         </p>
         <button
@@ -488,7 +488,7 @@ export default function SettingsScreen({
 
       {/* Modal de confirmación de eliminación */}
       {deleteModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)' }}>
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4" style={{ background: 'var(--modal-backdrop)', backdropFilter: 'blur(8px)' }}>
           <div className="glass animate-slide-up rounded-2xl p-6 w-full max-w-md" style={{ border: '1px solid rgba(239,68,68,0.25)' }}>
             <div className="flex items-center gap-3 mb-4">
               <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'rgba(239,68,68,0.15)' }}>
@@ -496,7 +496,7 @@ export default function SettingsScreen({
               </div>
               <div>
                 <h3 className="text-lg font-semibold">Eliminar cuenta</h3>
-                <p className="text-xs" style={{ color: '#6B6B85' }}>Esta acción es permanente e irreversible</p>
+                <p className="text-xs" style={{ color: 'var(--text-3)' }}>Esta acción es permanente e irreversible</p>
               </div>
             </div>
 
@@ -508,7 +508,7 @@ export default function SettingsScreen({
 
             <div className="flex flex-col gap-3">
               <div>
-                <label className="block text-xs font-medium mb-1" style={{ color: '#A0A0B8' }}>
+                <label className="block text-xs font-medium mb-1" style={{ color: 'var(--text-2)' }}>
                   Escribe tu correo para confirmar ({email})
                 </label>
                 <input
@@ -517,11 +517,11 @@ export default function SettingsScreen({
                   placeholder={email}
                   type="email"
                   className="w-full px-4 py-3 rounded-xl text-sm"
-                  style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff' }}
+                  style={{ background: 'var(--input-bg)', border: '1px solid var(--input-border)', color: 'var(--text-1)' }}
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium mb-1" style={{ color: '#A0A0B8' }}>
+                <label className="block text-xs font-medium mb-1" style={{ color: 'var(--text-2)' }}>
                   Contraseña actual
                 </label>
                 <input
@@ -530,7 +530,7 @@ export default function SettingsScreen({
                   type="password"
                   placeholder="Tu contraseña"
                   className="w-full px-4 py-3 rounded-xl text-sm"
-                  style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff' }}
+                  style={{ background: 'var(--input-bg)', border: '1px solid var(--input-border)', color: 'var(--text-1)' }}
                 />
               </div>
             </div>
@@ -539,7 +539,7 @@ export default function SettingsScreen({
               <button
                 onClick={() => setDeleteModalOpen(false)}
                 className="flex-1 py-3 rounded-xl text-sm font-medium"
-                style={{ background: 'rgba(255,255,255,0.06)', color: '#A0A0B8' }}
+                style={{ background: 'var(--input-bg)', color: 'var(--text-2)' }}
               >
                 Cancelar
               </button>

@@ -16,7 +16,7 @@ export default function LegalModal({
   return (
     <div
       className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4"
-      style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)' }}
+      style={{ background: 'var(--modal-backdrop)', backdropFilter: 'blur(8px)' }}
       onClick={onClose}
     >
       <div
@@ -26,13 +26,13 @@ export default function LegalModal({
       >
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold">{title}</h3>
-          <button onClick={onClose} style={{ color: '#6B6B85' }}>
+          <button onClick={onClose} style={{ color: 'var(--text-3)' }}>
             <X size={20} />
           </button>
         </div>
         <div
           className="flex-1 overflow-y-auto text-xs leading-relaxed whitespace-pre-wrap"
-          style={{ color: '#A0A0B8' }}
+          style={{ color: 'var(--text-2)' }}
         >
           {content}
         </div>
@@ -40,7 +40,7 @@ export default function LegalModal({
           <button
             onClick={onClose}
             className="px-4 py-2 rounded-xl text-sm font-medium"
-            style={{ background: 'rgba(255,255,255,0.06)', color: '#A0A0B8' }}
+            style={{ background: 'var(--input-bg)', color: 'var(--text-2)' }}
           >
             Cerrar
           </button>

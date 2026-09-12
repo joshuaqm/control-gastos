@@ -83,7 +83,7 @@ export default function ReceivableFormModal({
   return (
     <div
       className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4"
-      style={{ background: "rgba(0,0,0,0.7)", backdropFilter: "blur(8px)" }}
+      style={{ background: "var(--modal-backdrop)", backdropFilter: "blur(8px)" }}
     >
       <div
         className="glass animate-slide-up rounded-2xl p-6 w-full max-w-md"
@@ -93,7 +93,7 @@ export default function ReceivableFormModal({
           <h3 className="text-lg font-semibold">
             {receivable ? "Editar por cobrar" : "Nuevo por cobrar"}
           </h3>
-          <button onClick={onClose} style={{ color: "#6B6B85" }}>
+          <button onClick={onClose} style={{ color: "var(--text-3)" }}>
             <X size={20} />
           </button>
         </div>
@@ -102,7 +102,7 @@ export default function ReceivableFormModal({
           <div>
             <label
               className="block text-xs font-medium mb-1"
-              style={{ color: "#A0A0B8" }}
+              style={{ color: "var(--text-2)" }}
             >
               Persona
             </label>
@@ -112,9 +112,9 @@ export default function ReceivableFormModal({
               placeholder="Ej. Jelty Martínez"
               className="w-full px-4 py-3 rounded-xl text-sm"
               style={{
-                background: "rgba(255,255,255,0.06)",
-                border: "1px solid rgba(255,255,255,0.1)",
-                color: "#fff",
+                background: "var(--input-bg)",
+                border: "1px solid var(--input-border)",
+                color: "var(--text-1)",
               }}
             />
           </div>
@@ -122,7 +122,7 @@ export default function ReceivableFormModal({
           <div>
             <label
               className="block text-xs font-medium mb-1"
-              style={{ color: "#A0A0B8" }}
+              style={{ color: "var(--text-2)" }}
             >
               Concepto (opcional)
             </label>
@@ -132,9 +132,9 @@ export default function ReceivableFormModal({
               placeholder="Ej. Préstamo para curso"
               className="w-full px-4 py-3 rounded-xl text-sm"
               style={{
-                background: "rgba(255,255,255,0.06)",
-                border: "1px solid rgba(255,255,255,0.1)",
-                color: "#fff",
+                background: "var(--input-bg)",
+                border: "1px solid var(--input-border)",
+                color: "var(--text-1)",
               }}
             />
           </div>
@@ -143,7 +143,7 @@ export default function ReceivableFormModal({
             <div>
               <label
                 className="block text-xs font-medium mb-1"
-                style={{ color: "#A0A0B8" }}
+                style={{ color: "var(--text-2)" }}
               >
                 Monto
               </label>
@@ -155,16 +155,16 @@ export default function ReceivableFormModal({
                 min="0"
                 className="w-full px-4 py-3 rounded-xl text-sm font-mono"
                 style={{
-                  background: "rgba(255,255,255,0.06)",
-                  border: "1px solid rgba(255,255,255,0.1)",
-                  color: "#fff",
+                  background: "var(--input-bg)",
+                  border: "1px solid var(--input-border)",
+                  color: "var(--text-1)",
                 }}
               />
             </div>
             <div>
               <label
                 className="block text-xs font-medium mb-1"
-                style={{ color: "#A0A0B8" }}
+                style={{ color: "var(--text-2)" }}
               >
                 Fecha de préstamo
               </label>
@@ -174,9 +174,9 @@ export default function ReceivableFormModal({
                 type="date"
                 className="w-full px-4 py-3 rounded-xl text-sm"
                 style={{
-                  background: "rgba(255,255,255,0.06)",
-                  border: "1px solid rgba(255,255,255,0.1)",
-                  color: "#fff",
+                  background: "var(--input-bg)",
+                  border: "1px solid var(--input-border)",
+                  color: "var(--text-1)",
                 }}
               />
             </div>
@@ -185,7 +185,7 @@ export default function ReceivableFormModal({
           <div>
             <label
               className="block text-xs font-medium mb-1"
-              style={{ color: "#A0A0B8" }}
+              style={{ color: "var(--text-2)" }}
             >
               Cuenta de origen
             </label>
@@ -194,9 +194,9 @@ export default function ReceivableFormModal({
               onChange={(e) => setAccountId(e.target.value)}
               className="w-full px-4 py-3 rounded-xl text-sm"
               style={{
-                background: "rgba(26,26,46,0.9)",
-                border: "1px solid rgba(255,255,255,0.1)",
-                color: "#fff",
+                background: "var(--input-bg-select)",
+                border: "1px solid var(--input-border)",
+                color: "var(--text-1)",
               }}
             >
               <option value="">Selecciona una cuenta</option>
@@ -206,7 +206,7 @@ export default function ReceivableFormModal({
                 </option>
               ))}
             </select>
-            <p className="text-[11px] mt-1" style={{ color: "#6B6B85" }}>
+            <p className="text-[11px] mt-1" style={{ color: "var(--text-3)" }}>
               Se descuenta del saldo de la cuenta y se registra como gasto.
             </p>
           </div>
@@ -214,7 +214,7 @@ export default function ReceivableFormModal({
           <div>
             <label
               className="block text-xs font-medium mb-1"
-              style={{ color: "#A0A0B8" }}
+              style={{ color: "var(--text-2)" }}
             >
               Notas (opcional)
             </label>
@@ -223,9 +223,9 @@ export default function ReceivableFormModal({
               onChange={(e) => setNotes(e.target.value)}
               className="w-full px-4 py-3 rounded-xl text-sm"
               style={{
-                background: "rgba(255,255,255,0.06)",
-                border: "1px solid rgba(255,255,255,0.1)",
-                color: "#fff",
+                background: "var(--input-bg)",
+                border: "1px solid var(--input-border)",
+                color: "var(--text-1)",
               }}
             />
           </div>
@@ -248,7 +248,7 @@ export default function ReceivableFormModal({
           <button
             onClick={onClose}
             className="flex-1 py-3 rounded-xl text-sm font-medium"
-            style={{ background: "rgba(255,255,255,0.06)", color: "#A0A0B8" }}
+            style={{ background: "var(--input-bg)", color: "var(--text-2)" }}
           >
             Cancelar
           </button>
