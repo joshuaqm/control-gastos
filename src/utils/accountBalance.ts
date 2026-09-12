@@ -3,25 +3,14 @@ import type { ApiTransaction } from "@/api/transactions"
 import type { ApiInstallment } from "@/api/installments"
 
 /**
- * Computes the current balance of a non-credit account from its initial
- * balance plus all movements: incomes add, everything else on the account
- * (expenses, transfers out, debt/lending payments) subtracts, and incoming
- * transfers (destination_account_id) add.
+ * Returns the stored balance of a non-credit account. The balance column
+ * is kept in sync by the backend after every transaction mutation.
  */
 export function accountBalance(
-  account: Pick<ApiAccount, "id" | "initial_balance">,
-  txns: ApiTransaction[],
+  account: Pick<ApiAccount, "id" | "balance">,
+  _txns?: ApiTransaction[],
 ): number {
-  let balance = Number(account.initial_balance) || 0
-  for (const t of txns) {
-    if (t.account_id === account.id) {
-      if (t.type === "income") balance += Number(t.amount)
-      else balance -= Number(t.amount)
-    } else if (t.destination_account_id === account.id) {
-      balance += Number(t.amount)
-    }
-  }
-  return Math.round(balance * 100) / 100
+  return Number(account.balance) || 0
 }
 
 /** Credit card usage (saldo utilizado) derived from transactions. */
@@ -76,17 +65,22 @@ export function msiOutstanding(
 }
 
 /**
- * Saldo utilizado of a credit card, combining transaction usage with any MSI
- * outstanding. MSI is only added when the installment balance exceeds what the
- * MSI transactions already reflect (avoids double counting in the normal flow
- * where the backend charges the full purchase as a transaction).
+ * Saldo utilized of a credit card, combining transaction usage with any MSI
+ * outstanding and a manual adjustment stored in initial_balance.
+ *
+ * - MSI is only added when the installment balance exceeds what the MSI
+ *   transactions already reflect (avoids double counting).
+ * - initial_balance acts as a manual adjustment: positive values increase the
+ *   used balance (more debt), negative values decrease it.
  */
 export function cardUsed(
   txns: ApiTransaction[],
   installments: ApiInstallment[],
   accountId: number,
+  initialBalance: number,
 ): number {
   const fromTxns = Math.max(0, creditUsed(txns, accountId))
   const msiDiff = msiOutstanding(installments, accountId) - msiTxnsNet(txns, accountId)
-  return Math.round((fromTxns + Math.max(0, msiDiff)) * 100) / 100
+  const base = fromTxns + Math.max(0, msiDiff)
+  return Math.round((base + initialBalance) * 100) / 100
 }

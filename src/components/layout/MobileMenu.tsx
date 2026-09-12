@@ -13,19 +13,19 @@ export default function MobileMenu({ open, active, onSelect, onClose, onLogout, 
 
   return (
     <div className="fixed inset-0 z-50 sm:hidden">
-      <div className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} onClick={onClose} />
-      <div className="absolute left-0 top-0 bottom-0 w-72 glass animate-slide-left flex flex-col" style={{ background: '#14141E' }}>
-        <div className="p-5 flex items-center justify-between" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+      <div className="absolute inset-0" style={{ background: 'var(--modal-backdrop)', backdropFilter: 'blur(4px)' }} onClick={onClose} />
+      <div className="absolute left-0 top-0 bottom-0 w-72 glass animate-slide-left flex flex-col" style={{ background: 'var(--sidebar-bg)' }}>
+        <div className="p-5 flex items-center justify-between" style={{ borderBottom: '1px solid var(--border)' }}>
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'linear-gradient(135deg,#7C3AED,#5B21B6)' }}>
               <TrendingUp size={16} color="white" />
             </div>
             <div>
-              <p className="font-bold text-sm">FinanceAI</p>
-              <p className="text-xs" style={{ color: '#6B6B85' }}>{userName || 'Usuario'}</p>
+              <p className="font-bold text-sm" style={{ color: 'var(--text-1)' }}>FinanceAI</p>
+              <p className="text-xs" style={{ color: 'var(--text-3)' }}>{userName || 'Usuario'}</p>
             </div>
           </div>
-          <button onClick={onClose} className="p-2 rounded-lg hover:bg-white/10 transition-colors" style={{ color: '#A0A0B8' }} aria-label="Cerrar menú">
+          <button onClick={onClose} className="p-2 rounded-lg hover:bg-white/10 transition-colors" style={{ color: 'var(--text-2)' }} aria-label="Cerrar menú">
             <X size={18} />
           </button>
         </div>
@@ -40,7 +40,7 @@ export default function MobileMenu({ open, active, onSelect, onClose, onLogout, 
                 onClick={() => onSelect(item.id)}
                 disabled={item.disabled}
                 className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium transition-colors"
-                style={{ background: isActive ? 'rgba(124,58,237,0.2)' : 'transparent', color: isActive || !item.disabled ? '#A0A0B8' : '#4A4A5E', opacity: item.disabled ? 0.6 : 1 }}
+                style={{ background: isActive ? 'rgba(124,58,237,0.2)' : 'transparent', color: isActive ? '#A78BFA' : item.disabled ? 'var(--text-3)' : 'var(--text-2)', opacity: item.disabled ? 0.6 : 1 }}
               >
                 <Icon size={18} className="flex-shrink-0" />
                 {item.label}
@@ -49,7 +49,7 @@ export default function MobileMenu({ open, active, onSelect, onClose, onLogout, 
           })}
         </nav>
 
-        <div className="p-3" style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+        <div className="p-3" style={{ borderTop: '1px solid var(--border)' }}>
           <button
             onClick={onLogout}
             className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium transition-colors"

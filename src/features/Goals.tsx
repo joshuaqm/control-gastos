@@ -119,14 +119,14 @@ export default function GoalsScreen({ showToast }: { showToast: ShowToast }) {
 
       <div className="grid grid-cols-2 gap-4">
         <div className="glass rounded-2xl p-5" style={{ border: '1px solid rgba(124,58,237,0.2)' }}>
-          <p className="text-sm" style={{ color: '#A0A0B8' }}>Ahorrado en total</p>
+          <p className="text-sm" style={{ color: 'var(--text-2)' }}>Ahorrado en total</p>
           <p className="text-3xl font-bold font-mono mt-1" style={{ color: '#A78BFA' }}>{fmt(totalSaved)}</p>
-          <p className="text-xs mt-2" style={{ color: '#6B6B85' }}>de {fmt(totalTarget)} de metas</p>
+          <p className="text-xs mt-2" style={{ color: 'var(--text-3)' }}>de {fmt(totalTarget)} de metas</p>
         </div>
         <div className="glass rounded-2xl p-5" style={{ border: '1px solid rgba(6,214,160,0.2)' }}>
-          <p className="text-sm" style={{ color: '#A0A0B8' }}>Metas completadas</p>
+          <p className="text-sm" style={{ color: 'var(--text-2)' }}>Metas completadas</p>
           <p className="text-3xl font-bold font-mono mt-1" style={{ color: '#06D6A0' }}>{completed}/{goals.length || 0}</p>
-          <p className="text-xs mt-2" style={{ color: '#6B6B85' }}>{(goals.length > 0) ? `${Math.round((completed / goals.length) * 100)}% de avance` : 'Sin metas aún'}</p>
+          <p className="text-xs mt-2" style={{ color: 'var(--text-3)' }}>{(goals.length > 0) ? `${Math.round((completed / goals.length) * 100)}% de avance` : 'Sin metas aún'}</p>
         </div>
       </div>
 
@@ -135,7 +135,7 @@ export default function GoalsScreen({ showToast }: { showToast: ShowToast }) {
           <div className="w-8 h-8 rounded-full border-2 border-white/20 border-t-purple-600 animate-spin" />
         </div>
       ) : goals.length === 0 ? (
-        <div className="py-16 text-center text-sm rounded-2xl" style={{ background: 'rgba(255,255,255,0.03)', color: '#6B6B85' }}>
+        <div className="py-16 text-center text-sm rounded-2xl" style={{ background: 'var(--card)', color: 'var(--text-3)' }}>
           No hay metas de ahorro. Crea una con el botón "Nueva".
         </div>
       ) : (
@@ -150,9 +150,9 @@ export default function GoalsScreen({ showToast }: { showToast: ShowToast }) {
             const color = goalColor(g)
             const days = daysUntil(g.target_date)
             return (
-              <div key={g.id} className="glass card-hover rounded-2xl p-5 flex flex-col items-center gap-2" style={{ border: '1px solid rgba(255,255,255,0.08)' }}>
+              <div key={g.id} className="glass card-hover rounded-2xl p-5 flex flex-col items-center gap-2" style={{ border: '1px solid var(--glass-border)' }}>
                 <svg width={76} height={76} className="-rotate-90">
-                  <circle cx={38} cy={38} r={r} fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth={7} />
+                  <circle cx={38} cy={38} r={r} fill="none" stroke="var(--border)" strokeWidth={7} />
                   <circle
                     cx={38} cy={38} r={r} fill="none" stroke={done ? '#06D6A0' : color} strokeWidth={7}
                     strokeDasharray={circ} strokeDashoffset={circ * (1 - pct / 100)} strokeLinecap="round"
@@ -162,26 +162,26 @@ export default function GoalsScreen({ showToast }: { showToast: ShowToast }) {
                 <div className="text-center -mt-1">
                   <p className="text-xl font-bold font-mono" style={{ color: done ? '#06D6A0' : color }}>{pct}%</p>
                   <p className="text-sm font-semibold mt-0.5">{g.name}</p>
-                  <p className="text-xs mt-0.5 font-mono" style={{ color: '#A0A0B8' }}>{fmt(current)} <span style={{ color: '#6B6B85' }}>/ {fmt(target)}</span></p>
+                  <p className="text-xs mt-0.5 font-mono" style={{ color: 'var(--text-2)' }}>{fmt(current)} <span style={{ color: 'var(--text-3)' }}>/ {fmt(target)}</span></p>
                 </div>
 
-                <div className="w-full h-1.5 rounded-full overflow-hidden mt-1" style={{ background: 'rgba(255,255,255,0.08)' }}>
+                <div className="w-full h-1.5 rounded-full overflow-hidden mt-1" style={{ background: 'var(--border)' }}>
                   <div className="h-full rounded-full" style={{ width: `${pct}%`, background: done ? '#06D6A0' : color }} />
                 </div>
 
-                <div className="flex items-center justify-between w-full mt-2 text-[11px]" style={{ color: '#6B6B85' }}>
+                <div className="flex items-center justify-between w-full mt-2 text-[11px]" style={{ color: 'var(--text-3)' }}>
                   <span className="flex items-center gap-1"><Clock size={11} /> {fmtShortDate(g.target_date) ?? 'Sin plazo'}</span>
                   {days !== null && days >= 0 && <span>{days === 0 ? 'vence hoy' : `${days} días`}</span>}
                 </div>
 
                 {accountName(g.account_id) && (
-                  <p className="text-[11px] w-full flex items-center gap-1" style={{ color: '#A0A0B8' }}>
+                  <p className="text-[11px] w-full flex items-center gap-1" style={{ color: 'var(--text-2)' }}>
                     <Landmark size={11} /> Guardado en: {accountName(g.account_id)}
                   </p>
                 )}
 
                 {g.notes && (
-                  <p className="text-[11px] w-full" style={{ color: '#6B6B85' }}>{g.notes}</p>
+                  <p className="text-[11px] w-full" style={{ color: 'var(--text-3)' }}>{g.notes}</p>
                 )}
 
                 <div className="flex items-center gap-2 mt-2 w-full">
@@ -192,7 +192,7 @@ export default function GoalsScreen({ showToast }: { showToast: ShowToast }) {
                   >
                     <Wallet size={13} /> Abonar
                   </button>
-                  <button onClick={() => openEdit(g)} className="p-2 rounded-lg hover:bg-white/10" style={{ color: '#A0A0B8' }}>
+                  <button onClick={() => openEdit(g)} className="p-2 rounded-lg hover:bg-white/10" style={{ color: 'var(--text-2)' }}>
                     <Pencil size={15} />
                   </button>
                   <button onClick={() => handleDelete(g)} className="p-2 rounded-lg hover:bg-white/10" style={{ color: '#F87171' }}>

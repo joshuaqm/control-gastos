@@ -19,15 +19,15 @@ export default function CashFlowBarChart({
   return (
     <ResponsiveContainer width="100%" height={220}>
       <BarChart data={data} barGap={4}>
-        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+        <CartesianGrid strokeDasharray="3 3" stroke="var(--badge-bg)" />
         <XAxis
           dataKey="month"
-          tick={{ fill: "#6B6B85", fontSize: 11 }}
+          tick={{ fill: "var(--text-3)", fontSize: 11 }}
           axisLine={false}
           tickLine={false}
         />
         <YAxis
-          tick={{ fill: "#6B6B85", fontSize: 11 }}
+          tick={{ fill: "var(--text-3)", fontSize: 11 }}
           axisLine={false}
           tickLine={false}
           tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`}

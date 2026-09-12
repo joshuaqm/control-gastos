@@ -2,6 +2,10 @@ export interface ApiUser {
   id: number
   username: string
   email: string
+  accepted_terms?: boolean
+  terms_version?: string | null
+  accepted_at?: string | null
+  ai_consent?: boolean
 }
 
 export interface AuthResponse {
@@ -24,6 +28,14 @@ export function getToken(): string | null {
 
 export async function login(email: string, password: string): Promise<AuthResponse> {
   return request<AuthResponse>('/auth/login', { email, password })
+}
+
+export async function forgotPassword(email: string): Promise<{ message: string }> {
+  return request<{ message: string }>('/auth/forgot-password', { email })
+}
+
+export async function resetPassword(token: string, newPassword: string): Promise<{ message: string }> {
+  return request<{ message: string }>('/auth/reset-password', { token, newPassword })
 }
 
 async function request<T>(path: string, body: unknown): Promise<T> {

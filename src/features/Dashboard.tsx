@@ -253,7 +253,7 @@ export default function Dashboard({
       const isSaveAllocation =
         (t.type === "income" || t.type === "transfer") &&
         t.budget_type === "save"
-      if (t.type !== "expense" && !isSaveAllocation) continue
+      if (t.type !== "expense" && t.type !== "debt_payment" && !isSaveAllocation) continue
       spentByType.set(
         t.budget_type,
         (spentByType.get(t.budget_type) || 0) + Number(t.amount),
@@ -422,7 +422,7 @@ export default function Dashboard({
         style={{
           border: "1px solid rgba(250,204,21,0.15)",
           background:
-            "linear-gradient(135deg, rgba(250,204,21,0.05), rgba(255,255,255,0.02))",
+            "linear-gradient(135deg, rgba(250,204,21,0.05), var(--card-subtle))",
         }}
       >
         <div className="flex items-center gap-2 mb-3">
@@ -437,7 +437,7 @@ export default function Dashboard({
           </button>
         </div>
         {reminders.length === 0 ? (
-          <p className="text-sm" style={{ color: "#6B6B85" }}>
+          <p className="text-sm" style={{ color: "var(--text-3)" }}>
             No hay eventos próximos.
           </p>
         ) : (
@@ -473,7 +473,7 @@ export default function Dashboard({
                     )
                   }
                   className="flex items-center gap-3 p-3 rounded-xl text-left transition-colors hover:bg-white/5"
-                  style={{ background: "rgba(255,255,255,0.03)" }}
+                  style={{ background: "var(--card)" }}
                 >
                   <div
                     className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
@@ -483,7 +483,7 @@ export default function Dashboard({
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium truncate">{r.title}</p>
-                    <p className="text-xs" style={{ color: "#6B6B85" }}>
+                    <p className="text-xs" style={{ color: "var(--text-3)" }}>
                       {r.subtitle}
                     </p>
                   </div>
@@ -507,7 +507,7 @@ export default function Dashboard({
 
       <div
         className="glass rounded-2xl p-5"
-        style={{ border: "1px solid rgba(255,255,255,0.08)" }}
+        style={{ border: "1px solid var(--glass-border)" }}
       >
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-base font-semibold">
@@ -526,8 +526,8 @@ export default function Dashboard({
               onClick={() => onNavigate("budgets")}
               className="text-xs font-medium flex items-center gap-1 px-3 py-1.5 rounded-lg transition-colors hover:bg-white/10"
               style={{
-                background: "rgba(255,255,255,0.06)",
-                color: "#A0A0B8",
+                background: "var(--input-bg)",
+                color: "var(--text-2)",
               }}
             >
               Ver todo <ChevronRight size={14} />
@@ -535,7 +535,7 @@ export default function Dashboard({
           </div>
         </div>
         {budgetRows.length === 0 ? (
-          <p className="text-sm" style={{ color: "#6B6B85" }}>
+          <p className="text-sm" style={{ color: "var(--text-3)" }}>
             Sin presupuesto configurado para este periodo.
           </p>
         ) : (
@@ -549,8 +549,8 @@ export default function Dashboard({
                     <span
                       className="text-xs px-1.5 py-0.5 rounded font-mono"
                       style={{
-                        background: "rgba(255,255,255,0.06)",
-                        color: "#6B6B85",
+                        background: "var(--input-bg)",
+                        color: "var(--text-3)",
                       }}
                     >
                       {b.percentage}%
@@ -560,14 +560,14 @@ export default function Dashboard({
                     <span className="text-sm font-mono font-semibold">
                       {fmt(b.spent)}
                     </span>
-                    <span className="text-xs ml-1" style={{ color: "#6B6B85" }}>
+                    <span className="text-xs ml-1" style={{ color: "var(--text-3)" }}>
                       / {fmt(b.target)}
                     </span>
                   </div>
                 </div>
                 <div
                   className="h-2 rounded-full overflow-hidden"
-                  style={{ background: "rgba(255,255,255,0.08)" }}
+                  style={{ background: "var(--border)" }}
                 >
                   <div
                     className="h-full rounded-full progress-bar transition-all"
@@ -589,24 +589,24 @@ export default function Dashboard({
 
       <div
         className="glass rounded-2xl p-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
-        style={{ border: "1px solid rgba(255,255,255,0.08)" }}
+        style={{ border: "1px solid var(--glass-border)" }}
       >
         <div className="flex items-center justify-between sm:justify-start gap-2">
           <div
             className="flex items-center gap-1 rounded-full"
-            style={{ background: "rgba(255,255,255,0.06)" }}
+            style={{ background: "var(--input-bg)" }}
           >
             <button
               onClick={goPrev}
               className="p-1.5 rounded-full hover:bg-white/10 transition-colors"
-              style={{ color: "#A0A0B8" }}
+              style={{ color: "var(--text-2)" }}
               aria-label="Periodo anterior"
             >
               <ChevronLeft size={16} />
             </button>
             <span
               className="text-xs px-1 font-medium min-w-[130px] text-center capitalize"
-              style={{ color: "#A0A0B8" }}
+              style={{ color: "var(--text-2)" }}
             >
               {windowLabel}
             </span>
@@ -614,7 +614,7 @@ export default function Dashboard({
               onClick={goNext}
               disabled={isCurrent}
               className="p-1.5 rounded-full hover:bg-white/10 transition-colors disabled:opacity-30 disabled:hover:bg-transparent"
-              style={{ color: "#A0A0B8" }}
+              style={{ color: "var(--text-2)" }}
               aria-label="Periodo siguiente"
             >
               <ChevronRight size={16} />
@@ -636,7 +636,7 @@ export default function Dashboard({
               style={
                 range === o.key
                   ? { background: "rgba(124,58,237,0.25)", color: "#C4B5FD" }
-                  : { background: "rgba(255,255,255,0.06)", color: "#A0A0B8" }
+                  : { background: "var(--input-bg)", color: "var(--text-2)" }
               }
             >
               {o.label}
@@ -648,21 +648,21 @@ export default function Dashboard({
       <div className="charts-grid grid gap-4">
         <div
           className="glass rounded-2xl p-5"
-          style={{ border: "1px solid rgba(255,255,255,0.08)" }}
+          style={{ border: "1px solid var(--glass-border)" }}
         >
           <h3 className="text-sm font-semibold mb-4">Gastos por Categoría</h3>
           <CategoryDonutChart data={catData} />
         </div>
         <div
           className="glass rounded-2xl p-5"
-          style={{ border: "1px solid rgba(255,255,255,0.08)" }}
+          style={{ border: "1px solid var(--glass-border)" }}
         >
           <h3 className="text-sm font-semibold mb-4">Cash Flow Mensual</h3>
           <CashFlowBarChart data={flowData} />
         </div>
         <div
           className="glass rounded-2xl p-5"
-          style={{ border: "1px solid rgba(255,255,255,0.08)" }}
+          style={{ border: "1px solid var(--glass-border)" }}
         >
           <h3 className="text-sm font-semibold mb-4">
             Distribución de Activos
@@ -671,7 +671,7 @@ export default function Dashboard({
         </div>
         <div
           className="glass rounded-2xl p-5"
-          style={{ border: "1px solid rgba(255,255,255,0.08)" }}
+          style={{ border: "1px solid var(--glass-border)" }}
         >
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-sm font-semibold">Rendimiento Real</h3>
@@ -679,8 +679,8 @@ export default function Dashboard({
               <span
                 className="text-xs px-2 py-1 rounded-full font-medium"
                 style={{
-                  background: "rgba(255,255,255,0.06)",
-                  color: "#A0A0B8",
+                  background: "var(--input-bg)",
+                  color: "var(--text-2)",
                 }}
               >
                 {windowLabel}
@@ -697,7 +697,7 @@ export default function Dashboard({
             </div>
           </div>
           <TheoreticalInterestChart data={theoData} />
-          <p className="text-[11px] mt-2" style={{ color: "#6B6B85" }}>
+          <p className="text-[11px] mt-2" style={{ color: "var(--text-3)" }}>
             Rendimiento real registrado manualmente por cuenta.
           </p>
         </div>
@@ -705,21 +705,21 @@ export default function Dashboard({
 
       <div
         className="glass rounded-2xl p-5"
-        style={{ border: "1px solid rgba(255,255,255,0.08)" }}
+        style={{ border: "1px solid var(--glass-border)" }}
       >
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-base font-semibold">Transacciones Recientes</h3>
           <button
             onClick={() => onNavigate("transactions")}
             className="text-xs font-medium flex items-center gap-1 px-3 py-1.5 rounded-lg transition-colors hover:bg-white/10"
-            style={{ background: "rgba(255,255,255,0.06)", color: "#7C3AED" }}
+            style={{ background: "var(--input-bg)", color: "#7C3AED" }}
           >
             Ver todas <ChevronRight size={14} />
           </button>
         </div>
         <div className="flex flex-col gap-2">
           {recentTxs.length === 0 ? (
-            <p className="text-sm" style={{ color: "#6B6B85" }}>
+            <p className="text-sm" style={{ color: "var(--text-3)" }}>
               No hay movimientos registrados todavía.
             </p>
           ) : (
@@ -730,20 +730,20 @@ export default function Dashboard({
 
       <div
         className="glass rounded-2xl p-5"
-        style={{ border: "1px solid rgba(255,255,255,0.08)" }}
+        style={{ border: "1px solid var(--glass-border)" }}
       >
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-base font-semibold">Metas de Ahorro</h3>
           <button
             onClick={() => onNavigate("goals")}
             className="text-xs font-medium flex items-center gap-1 px-3 py-1.5 rounded-lg transition-colors hover:bg-white/10"
-            style={{ background: "rgba(255,255,255,0.06)", color: "#A0A0B8" }}
+            style={{ background: "var(--input-bg)", color: "var(--text-2)" }}
           >
             Ver metas <ChevronRight size={14} />
           </button>
         </div>
         {goalCards.length === 0 ? (
-          <p className="text-sm" style={{ color: "#6B6B85" }}>
+          <p className="text-sm" style={{ color: "var(--text-3)" }}>
             Sin metas de ahorro todavía.
           </p>
         ) : (

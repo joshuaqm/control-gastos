@@ -32,27 +32,27 @@ export default function Header({
         right: 0,
         zIndex: 40,
         paddingTop: 'env(safe-area-inset-top)',
-        borderBottom: '1px solid rgba(255,255,255,0.06)',
-        background: 'rgba(10,10,15,0.8)',
+        borderBottom: '1px solid var(--border)',
+        background: 'var(--header-bg)',
         backdropFilter: 'blur(20px)',
-        transition: 'left 0.3s ease',
+        transition: 'left 0.3s ease, background 0.3s ease',
       }}
     >
       <button onClick={onOpenMenu} className="p-2 rounded-lg transition-colors hover:bg-white/10 sm:hidden flex items-center justify-center" aria-label="Menú">
-        <Menu size={20} style={{ color: '#A0A0B8' }} />
+        <Menu size={20} style={{ color: 'var(--text-2)' }} />
       </button>
       <button onClick={onToggleSidebar} className="p-2 rounded-lg transition-colors hover:bg-white/10 hidden sm:flex items-center justify-center">
-        <Menu size={20} style={{ color: '#A0A0B8' }} />
+        <Menu size={20} style={{ color: 'var(--text-2)' }} />
       </button>
 
       <div className="flex-1 hidden md:flex">
         <div className="relative w-64">
-          <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: '#6B6B85' }} />
+          <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--text-3)' }} />
           <input
             type="text"
             placeholder="Buscar transacciones..."
             className="w-full pl-9 pr-4 py-2 rounded-xl text-sm"
-            style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)', color: '#fff' }}
+            style={{ background: 'var(--input-bg)', border: '1px solid var(--input-border)', color: 'var(--text-1)' }}
           />
         </div>
       </div>
@@ -60,8 +60,8 @@ export default function Header({
       <div className="flex-1 md:hidden" />
 
       <div className="flex items-center gap-2">
-        <button onClick={onToggleDark} className="p-2 rounded-lg hover:bg-white/10 transition-colors cursor-not-allowed" disabled>
-          {darkMode ? <Sun size={18} style={{ color: '#F59E0B' }} /> : <Moon size={18} style={{ color: '#A0A0B8' }} />}
+        <button onClick={onToggleDark} className="p-2 rounded-lg hover:bg-white/10 transition-colors">
+          {darkMode ? <Sun size={18} style={{ color: '#F59E0B' }} /> : <Moon size={18} style={{ color: 'var(--text-2)' }} />}
         </button>
         <div className="relative">
           {notifs.open && (

@@ -24,6 +24,11 @@ export class Account {
   @Column({ type: 'decimal', precision: 12, scale: 2, default: 0 })
   initial_balance!: number;
 
+  /** Virtual alias: exposes initial_balance as "balance" in API responses. */
+  get balance(): number {
+    return this.initial_balance;
+  }
+
   @Column({ type: 'decimal', precision: 12, scale: 2, nullable: true })
   credit_limit!: number | null;
 

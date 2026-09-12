@@ -44,7 +44,7 @@ function MessageCard({ card }: { card?: ChatCard }) {
           </div>
           {Object.entries(card.data).map(([k, v]) => (
             <div key={k} className="flex justify-between text-xs">
-              <span className="capitalize" style={{ color: '#A0A0B8' }}>{k}</span>
+              <span className="capitalize" style={{ color: 'var(--text-2)' }}>{k}</span>
               <span className="font-mono font-medium">{String(v)}</span>
             </div>
           ))}
@@ -61,7 +61,7 @@ function MessageCard({ card }: { card?: ChatCard }) {
             <span style={{ color: '#EF4444' }}>Gastos</span>
             <span className="font-mono">{fmt(Number(card.data.gastos))}</span>
           </div>
-          <div className="flex justify-between text-xs font-semibold mt-1 pt-1" style={{ borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+            <div className="flex justify-between text-xs font-semibold mt-1 pt-1" style={{ borderTop: '1px solid var(--input-border)' }}>
             <span>Ahorro neto</span>
             <span className="font-mono" style={{ color: '#06D6A0' }}>{String(card.data.balance)}</span>
           </div>
@@ -76,7 +76,7 @@ function MessageCard({ card }: { card?: ChatCard }) {
                 <span>{label}</span>
                 <span style={{ color }} className="font-mono">{String(card.data[key])}</span>
               </div>
-              <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.1)' }}>
+              <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'var(--input-border)' }}>
                 <div className="h-full rounded-full" style={{ width: String(card.data[key]), background: color }} />
               </div>
             </div>
@@ -92,7 +92,7 @@ export default function AIChat({ initialMsg = '', visible = true }: {
   visible?: boolean
 }) {
   const [messages, setMessages] = useState<ChatMsg[]>([
-    { id: 0, from: 'ai', text: '¡Hola Ana! Soy tu asistente financiero. Puedo ayudarte a registrar gastos, revisar tu presupuesto, consultar tus deudas y mucho más. ¿En qué te ayudo hoy?' },
+    { id: 0, from: 'ai', text: '¡Hola usuario! Soy tu asistente financiero. Puedo ayudarte a registrar gastos, revisar tu presupuesto, consultar tus deudas y mucho más. ¿En qué te ayudo hoy?' },
   ])
   const [input, setInput] = useState('')
   const [typing, setTyping] = useState(false)
@@ -137,7 +137,7 @@ export default function AIChat({ initialMsg = '', visible = true }: {
         border: '1px solid rgba(124,58,237,0.3)',
       }}
     >
-      <div className="flex items-center gap-3 p-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+      <div className="flex items-center gap-3 p-4" style={{ borderBottom: '1px solid var(--border)' }}>
         <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg,#7C3AED,#5B21B6)' }}>
           <Bot size={18} color="white" />
         </div>
@@ -159,8 +159,8 @@ export default function AIChat({ initialMsg = '', visible = true }: {
                 <div
                   className="px-3 py-2.5 rounded-2xl text-sm"
                   style={msg.from === 'user'
-                    ? { background: 'linear-gradient(135deg,#7C3AED,#5B21B6)', color: '#fff', borderBottomRightRadius: 4 }
-                    : { background: 'rgba(255,255,255,0.06)', color: '#E0E0F0', borderBottomLeftRadius: 4 }
+                    ? { background: 'linear-gradient(135deg,#7C3AED,#5B21B6)', color: 'var(--text-1)', borderBottomRightRadius: 4 }
+                    : { background: 'var(--input-bg)', color: '#E0E0F0', borderBottomLeftRadius: 4 }
                   }
                 >
                   {msg.text}
@@ -174,7 +174,7 @@ export default function AIChat({ initialMsg = '', visible = true }: {
               <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: 'linear-gradient(135deg,#7C3AED,#5B21B6)' }}>
                 <Bot size={14} color="white" />
               </div>
-              <div className="px-3 py-3 rounded-2xl" style={{ background: 'rgba(255,255,255,0.06)' }}>
+              <div className="px-3 py-3 rounded-2xl" style={{ background: 'var(--input-bg)' }}>
                 <div className="flex gap-1">
                   {[0, 1, 2].map(i => (
                     <div key={i} className="w-1.5 h-1.5 rounded-full animate-bounce" style={{ background: '#7C3AED', animationDelay: `${i * 0.15}s` }} />
@@ -186,7 +186,7 @@ export default function AIChat({ initialMsg = '', visible = true }: {
           <div ref={bottomRef} />
         </div>
 
-        <div className="p-3" style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+        <div className="p-3" style={{ borderTop: '1px solid var(--border)' }}>
           <div className="flex items-center gap-2">
             <input
               value={input}
@@ -194,7 +194,7 @@ export default function AIChat({ initialMsg = '', visible = true }: {
               onKeyDown={e => { if (e.key === 'Enter' && input.trim()) sendMessage(input) }}
               placeholder="Escribe un mensaje..."
               className="flex-1 px-3 py-2 rounded-xl text-sm"
-              style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff' }}
+              style={{ background: 'var(--input-bg)', border: '1px solid var(--input-border)', color: 'var(--text-1)' }}
             />
             <button
               onClick={() => input.trim() && sendMessage(input)}

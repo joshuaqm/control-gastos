@@ -2,6 +2,15 @@ import { Router } from 'express';
 import * as bcrypt from 'bcryptjs';
 import { AppDataSource } from '../config/database';
 import { User } from '../models/User';
+import { Account } from '../models/Account';
+import { Transaction } from '../models/Transaction';
+import { Budget } from '../models/Budget';
+import { Debt } from '../models/Debt';
+import { Goal } from '../models/Goal';
+import { Investment } from '../models/Investment';
+import { RecurringTransaction } from '../models/RecurringTransaction';
+import { Receivable } from '../models/Receivable';
+import { CreditInstallment } from '../models/CreditInstallment';
 import { authenticate } from '../middleware/auth';
 import { AppError } from '../middleware/errorHandler';
 import { logger } from '../utils/logger';
@@ -34,6 +43,10 @@ router.get('/', async (req, res, next) => {
       notifications_enabled: user.notifications_enabled,
       monthly_income: user.monthly_income != null ? Number(user.monthly_income) : null,
       is_active: user.is_active,
+      accepted_terms: user.accepted_terms,
+      terms_version: user.terms_version,
+      accepted_at: user.accepted_at,
+      ai_consent: user.ai_consent,
     });
   } catch (error) {
     next(error);
@@ -50,7 +63,7 @@ router.put('/', async (req, res, next) => {
       return next(new AppError('User not found', 404));
     }
 
-    const { username, email, currency, notifications_enabled, monthly_income } = req.body ?? {};
+    const { username, email, currency, notifications_enabled, monthly_income, ai_consent } = req.body ?? {};
 
     if (username !== undefined) {
       const name = String(username).trim();
@@ -88,6 +101,10 @@ router.put('/', async (req, res, next) => {
       user.monthly_income = round2(value);
     }
 
+    if (ai_consent !== undefined) {
+      user.ai_consent = !!ai_consent;
+    }
+
     await userRepo.save(user);
 
     logger.info(`Settings updated (user ${user.id})`);
@@ -98,6 +115,10 @@ router.put('/', async (req, res, next) => {
       notifications_enabled: user.notifications_enabled,
       monthly_income: user.monthly_income != null ? Number(user.monthly_income) : null,
       is_active: user.is_active,
+      accepted_terms: user.accepted_terms,
+      terms_version: user.terms_version,
+      accepted_at: user.accepted_at,
+      ai_consent: user.ai_consent,
     });
   } catch (error) {
     next(error);
@@ -131,6 +152,78 @@ router.put('/password', async (req, res, next) => {
 
     logger.info(`Password changed (user ${user.id})`);
     res.json({ message: 'Contraseña actualizada' });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// POST /api/v1/settings/accept-terms — accept terms and conditions
+router.post('/accept-terms', async (req, res, next) => {
+  try {
+    const { terms_version } = req.body ?? {};
+    if (!terms_version || typeof terms_version !== 'string') {
+      throw new AppError('terms_version is required', 400);
+    }
+
+    const userRepo = AppDataSource.getRepository(User);
+    const user = await userRepo.findOne({ where: { id: req.user!.id } });
+
+    if (!user) {
+      return next(new AppError('User not found', 404));
+    }
+
+    user.accepted_terms = true;
+    user.terms_version = terms_version;
+    user.accepted_at = new Date();
+    await userRepo.save(user);
+
+    logger.info(`Terms accepted (user ${user.id}, version ${terms_version})`);
+    res.json({
+      accepted_terms: true,
+      terms_version: user.terms_version,
+      accepted_at: user.accepted_at,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// DELETE /api/v1/settings/account — delete user account and all related data
+router.delete('/account', async (req, res, next) => {
+  try {
+    const { password } = req.body ?? {};
+    if (!password || typeof password !== 'string') {
+      throw new AppError('La contraseña es requerida para eliminar la cuenta', 400);
+    }
+
+    const userRepo = AppDataSource.getRepository(User);
+    const user = await userRepo.findOne({ where: { id: req.user!.id } });
+
+    if (!user) {
+      return next(new AppError('User not found', 404));
+    }
+
+    if (!bcrypt.compareSync(password, user.password_hash)) {
+      throw new AppError('La contraseña es incorrecta', 401);
+    }
+
+    await AppDataSource.transaction(async (manager) => {
+      const userId = user.id;
+
+      await manager.getRepository(Transaction).delete({ userId });
+      await manager.getRepository(CreditInstallment).delete({ userId });
+      await manager.getRepository(Account).delete({ userId });
+      await manager.getRepository(Debt).delete({ userId });
+      await manager.getRepository(Receivable).delete({ userId });
+      await manager.getRepository(Goal).delete({ userId });
+      await manager.getRepository(Investment).delete({ userId });
+      await manager.getRepository(RecurringTransaction).delete({ userId });
+      await manager.getRepository(Budget).delete({ userId });
+      await manager.getRepository(User).delete({ id: userId });
+    });
+
+    logger.info(`Account deleted: ${user.email} (user ${user.id})`);
+    res.status(204).send();
   } catch (error) {
     next(error);
   }

@@ -78,14 +78,14 @@ function PercentEditor({ value, color, onSave }: {
       }}
       inputMode="decimal"
       className="w-14 px-2 py-1 rounded-lg text-xs font-mono font-semibold text-right"
-      style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: color || '#fff' }}
+      style={{ background: 'var(--input-bg)', border: '1px solid var(--input-border)', color: color || 'var(--text-1)' }}
     />
   )
 }
 
 function ProgressBar({ pct, color, over }: { pct: number; color: string; over: boolean }) {
   return (
-    <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.08)' }}>
+    <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'var(--border)' }}>
       <div className="h-full rounded-full" style={{ width: `${Math.min(pct, 100)}%`, background: over ? '#EF4444' : color }} />
     </div>
   )
@@ -96,8 +96,9 @@ function RuleRow({ row, saving, onSavePct }: {
   saving: boolean
   onSavePct: (row: BudgetRuleRow, pct: number) => void
 }) {
+  const isSave = row.budgetType === 'save'
   const pctUsed = row.target > 0 ? Math.round((row.spent / row.target) * 100) : 0
-  const over = row.target > 0 && row.spent > row.target
+  const over = !isSave && row.target > 0 && row.spent > row.target
   return (
     <div className="mb-4 last:mb-0">
       <div className="flex items-center justify-between gap-2 mb-2">
@@ -105,20 +106,20 @@ function RuleRow({ row, saving, onSavePct }: {
           <span className="text-lg">{row.icon}</span>
           <div>
             <p className="text-sm font-semibold">{row.name}</p>
-            <p className="text-sm inline-flex items-center gap-1" style={{ color: '#6B6B85' }}>
+            <p className="text-sm inline-flex items-center gap-1" style={{ color: 'var(--text-3)' }}>
               <PercentEditor value={row.percentage} color={row.color} onSave={pct => onSavePct(row, pct)} />% del ingreso
             </p>
           </div>
         </div>
         <div className="text-right">
-          <p className="text-sm font-mono font-bold" style={{ color: over ? '#EF4444' : '#fff' }}>{fmt(row.spent)}</p>
-          <p className="text-xs" style={{ color: '#6B6B85' }}>de {fmt(row.target)}{saving ? ' ·…' : ''}</p>
+          <p className="text-sm font-mono font-bold" style={{ color: over ? '#EF4444' : 'var(--text-1)' }}>{fmt(row.spent)}</p>
+          <p className="text-xs" style={{ color: 'var(--text-3)' }}>de {fmt(row.target)}{saving ? ' ·…' : ''}</p>
         </div>
       </div>
       <ProgressBar pct={pctUsed} color={row.color} over={over} />
       <div className="flex justify-between mt-1 text-xs">
-        <span style={{ color: over ? '#EF4444' : '#6B6B85' }}>
-          {over ? 'Sobregasto: ' : 'Restante: '}{fmtSigned(row.remaining)}
+        <span style={{ color: over ? '#EF4444' : 'var(--text-3)' }}>
+          {over ? 'Sobregasto: ' : isSave && row.spent > 0 ? 'Ahorrado: ' : 'Restante: '}{fmtSigned(row.remaining)}
         </span>
         <span style={{ color: over ? '#EF4444' : row.color }}>{pctUsed}%</span>
       </div>
@@ -144,7 +145,7 @@ function CategoryItemRow({ item, groupTotal, color }: {
           <span className="text-sm font-medium">{item.category}</span>
           <div className="flex items-center gap-2">
             <span className="text-sm font-mono font-semibold">{fmt(item.spent)}</span>
-            <span className="text-xs w-10 text-right font-mono" style={{ color: '#A0A0B8' }}>{item.share}%</span>
+            <span className="text-xs w-10 text-right font-mono" style={{ color: 'var(--text-2)' }}>{item.share}%</span>
           </div>
         </div>
         <ProgressBar pct={barPct} color={color} over={false} />
@@ -162,7 +163,7 @@ function CategoryGroup({ group }: { group: BudgetCategoryGroup }) {
           <div>
             <p className="text-sm font-semibold">{group.name}</p>
             {group.items.length > 1 && (
-              <p className="text-[11px]" style={{ color: '#6B6B85' }}>Categorías según su clasificación al registrarlas</p>
+              <p className="text-[11px]" style={{ color: 'var(--text-3)' }}>Categorías según su clasificación al registrarlas</p>
             )}
           </div>
         </div>
@@ -241,7 +242,7 @@ export default function BudgetsScreen() {
     return (
       <div className="flex flex-col gap-5 pb-6">
         <h2 className="text-xl font-bold">Presupuestos</h2>
-        <div className="glass rounded-2xl p-6 text-sm" style={{ border: '1px solid rgba(255,255,255,0.08)', color: '#6B6B85' }}>
+        <div className="glass rounded-2xl p-6 text-sm" style={{ border: '1px solid var(--glass-border)', color: 'var(--text-3)' }}>
           Cargando presupuestos…
         </div>
       </div>
@@ -252,7 +253,7 @@ export default function BudgetsScreen() {
     return (
       <div className="flex flex-col gap-5 pb-6">
         <h2 className="text-xl font-bold">Presupuestos</h2>
-        <div className="glass rounded-2xl p-6 text-sm" style={{ border: '1px solid rgba(255,255,255,0.08)', color: '#EF4444' }}>
+        <div className="glass rounded-2xl p-6 text-sm" style={{ border: '1px solid var(--glass-border)', color: '#EF4444' }}>
           {error || 'No se pudieron cargar los presupuestos'}
         </div>
       </div>
@@ -266,12 +267,12 @@ export default function BudgetsScreen() {
         {error ? <span className="text-xs" style={{ color: '#EF4444' }}>{error}</span> : null}
       </div>
 
-      <div className="glass rounded-2xl p-5" style={{ border: '1px solid rgba(255,255,255,0.08)' }}>
+      <div className="glass rounded-2xl p-5" style={{ border: '1px solid var(--glass-border)' }}>
         <div className="flex items-center justify-between mb-1">
           <h3 className="text-base font-semibold">Regla 50/30/20</h3>
-          <span className="text-xs" style={{ color: '#6B6B85' }}>{summary.monthLabel}</span>
+          <span className="text-xs" style={{ color: 'var(--text-3)' }}>{summary.monthLabel}</span>
         </div>
-        <p className="text-xs mb-4" style={{ color: '#6B6B85' }}>
+        <p className="text-xs mb-4" style={{ color: 'var(--text-3)' }}>
           Basado en ingresos mensuales de{' '}
           <input
             value={incomeDraft}
@@ -286,7 +287,7 @@ export default function BudgetsScreen() {
             }}
             inputMode="numeric"
             className="w-24 px-2 py-0.5 rounded-lg text-xs font-mono text-right"
-            style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff' }}
+            style={{ background: 'var(--input-bg)', border: '1px solid var(--input-border)', color: 'var(--text-1)' }}
           />
         </p>
         <div className="flex items-center gap-2 mb-4 p-3 rounded-xl" style={{ background: 'rgba(6,214,160,0.08)', border: '1px solid rgba(6,214,160,0.15)' }}>
@@ -301,16 +302,16 @@ export default function BudgetsScreen() {
         ))}
       </div>
 
-      <div className="glass rounded-2xl p-5" style={{ border: '1px solid rgba(255,255,255,0.08)' }}>
+      <div className="glass rounded-2xl p-5" style={{ border: '1px solid var(--glass-border)' }}>
         <h3 className="text-base font-semibold mb-1">Por Categoría</h3>
-        <p className="text-xs mb-4" style={{ color: '#6B6B85' }}>
-          Movimientos del mes ({summary.monthLabel}): <span className="font-mono" style={{ color: '#fff' }}>{fmt(summary.totalSpent)}</span>, clasificado por Necesidad, Deseo, Ahorro o No aplica.
+        <p className="text-xs mb-4" style={{ color: 'var(--text-3)' }}>
+          Movimientos del mes ({summary.monthLabel}): <span className="font-mono" style={{ color: 'var(--text-1)' }}>{fmt(summary.totalSpent)}</span>, clasificado por Necesidad, Deseo, Ahorro o No aplica.
         </p>
         {summary.categories.map(g => (
           <CategoryGroup key={g.budgetType ?? 'none'} group={g} />
         ))}
         {summary.totalSpent <= 0 && (
-          <p className="text-xs" style={{ color: '#6B6B85' }}>
+          <p className="text-xs" style={{ color: 'var(--text-3)' }}>
             No hay movimientos este mes. Al registrar movimientos clasifícalos como necesidad, deseo, ahorro o ninguno.
           </p>
         )}

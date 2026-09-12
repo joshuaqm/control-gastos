@@ -155,7 +155,7 @@ export default function AccountsScreen({
           <div className="w-8 h-8 rounded-full border-2 border-white/20 border-t-purple-600 animate-spin" />
         </div>
       ) : accounts.length === 0 ? (
-        <div className="py-16 text-center text-sm" style={{ color: "#6B6B85" }}>
+        <div className="py-16 text-center text-sm" style={{ color: "var(--text-3)" }}>
           No hay cuentas registradas. Crea una con el botón "Nueva Cuenta".
         </div>
       ) : (
@@ -164,7 +164,7 @@ export default function AccountsScreen({
             const meta = TYPE_META[a.type]
             const Icon = meta.icon
             const isCredit = a.type === "credit"
-            const used = isCredit ? cardUsed(txns, installments, a.id) : 0
+            const used = isCredit ? cardUsed(txns, installments, a.id, accountBalance(a)) : 0
             const creditLimit = a.credit_limit ?? 0
             const available = isCredit ? Math.max(0, creditLimit - used) : 0
             const usedPct =
@@ -175,7 +175,7 @@ export default function AccountsScreen({
               <div
                 key={a.id}
                 className="glass card-hover rounded-2xl p-5 relative overflow-hidden"
-                style={{ border: "1px solid rgba(255,255,255,0.08)" }}
+                style={{ border: "1px solid var(--glass-border)" }}
               >
                 <div
                   className="absolute -bottom-8 -right-8 w-32 h-32 rounded-full opacity-10"
@@ -191,7 +191,7 @@ export default function AccountsScreen({
                     </div>
                     <div>
                       <p className="text-sm font-semibold">{a.name}</p>
-                      <p className="text-xs" style={{ color: "#6B6B85" }}>
+                      <p className="text-xs" style={{ color: "var(--text-3)" }}>
                         {meta.label}
                       </p>
                     </div>
@@ -208,16 +208,16 @@ export default function AccountsScreen({
                   <div>
                     <p
                       className="text-3xl font-bold font-mono"
-                      style={{ color: "#fff" }}
+                      style={{ color: "var(--text-1)" }}
                     >
                       {fmt(available)}
                     </p>
-                    <p className="text-xs mt-1" style={{ color: "#6B6B85" }}>
+                    <p className="text-xs mt-1" style={{ color: "var(--text-3)" }}>
                       Saldo disponible
                     </p>
                     <div className="mt-3">
                       <div className="flex justify-between text-xs mb-1">
-                        <span style={{ color: "#6B6B85" }}>
+                        <span style={{ color: "var(--text-3)" }}>
                           Usado: {fmt(used)}
                         </span>
                         <span style={{ color: meta.color }}>
@@ -226,7 +226,7 @@ export default function AccountsScreen({
                       </div>
                       <div
                         className="h-2 rounded-full overflow-hidden"
-                        style={{ background: "rgba(255,255,255,0.08)" }}
+                        style={{ background: "var(--border)" }}
                       >
                         <div
                           className="h-full rounded-full"
@@ -241,15 +241,15 @@ export default function AccountsScreen({
                 ) : (
                   <p
                     className="text-3xl font-bold font-mono"
-                    style={{ color: "#fff" }}
+                    style={{ color: "var(--text-1)" }}
                   >
-                    {fmt(accountBalance(a, txns))}
+                    {fmt(accountBalance(a))}
                   </p>
                 )}
 
                 <div
                   className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs"
-                  style={{ color: "#6B6B85" }}
+                  style={{ color: "var(--text-3)" }}
                 >
                   {a.credit_limit != null && (
                     <span>Límite: {fmt(a.credit_limit)}</span>
@@ -289,8 +289,8 @@ export default function AccountsScreen({
                     onClick={() => openEdit(a)}
                     className="flex-1 py-2 rounded-xl text-xs font-medium flex items-center justify-center gap-2 transition-colors hover:bg-white/10"
                     style={{
-                      background: "rgba(255,255,255,0.06)",
-                      color: "#A0A0B8",
+                      background: "var(--input-bg)",
+                      color: "var(--text-2)",
                     }}
                   >
                     <Pencil size={14} /> Editar
@@ -336,7 +336,7 @@ export default function AccountsScreen({
         open={interestAdjust !== null}
         account={interestAdjust}
         currentBalance={
-          interestAdjust != null ? accountBalance(interestAdjust, txns) : 0
+          interestAdjust != null ? accountBalance(interestAdjust) : 0
         }
         onClose={() => setInterestAdjust(null)}
         onSubmit={handleInterestAdjust}

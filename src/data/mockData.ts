@@ -85,7 +85,7 @@ export const debts: Debt[] = [
 
 export const receivables: Receivable[] = [
   { id: 1, name: 'Carlos Mendez', amount: 500, status: 'Pendiente', date: '15 Sep' },
-  { id: 2, name: 'Ana García', amount: 1200, status: 'Parcial', date: '30 Ago' },
+  { id: 2, name: 'Snoop Dog García', amount: 1200, status: 'Parcial', date: '30 Ago' },
 ]
 
 export const investments: Investment[] = [

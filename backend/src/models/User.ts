@@ -26,6 +26,18 @@ export class User {
   @Column({ name: 'notifications_enabled', default: true })
   notifications_enabled!: boolean;
 
+  @Column({ name: 'accepted_terms', default: false })
+  accepted_terms!: boolean;
+
+  @Column({ name: 'terms_version', type: 'varchar', length: 20, nullable: true })
+  terms_version!: string | null;
+
+  @Column({ name: 'accepted_at', type: 'timestamp', nullable: true })
+  accepted_at!: Date | null;
+
+  @Column({ name: 'ai_consent', default: true })
+  ai_consent!: boolean;
+
   @CreateDateColumn()
   created_at!: Date;
 
