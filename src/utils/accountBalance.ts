@@ -3,14 +3,15 @@ import type { ApiTransaction } from "@/api/transactions"
 import type { ApiInstallment } from "@/api/installments"
 
 /**
- * Returns the stored balance of a non-credit account. The balance column
- * is kept in sync by the backend after every transaction mutation.
+ * Returns the current balance of a non-credit account. The initial_balance
+ * column stores the current balance, kept in sync by the backend after every
+ * transaction mutation and adjustable via the edit modal.
  */
 export function accountBalance(
-  account: Pick<ApiAccount, "id" | "balance">,
+  account: Pick<ApiAccount, "id" | "initial_balance">,
   _txns?: ApiTransaction[],
 ): number {
-  return Number(account.balance) || 0
+  return Number(account.initial_balance) || 0
 }
 
 /** Credit card usage (saldo utilizado) derived from transactions. */

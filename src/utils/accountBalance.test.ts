@@ -10,7 +10,7 @@ import type { ApiAccount } from "@/api/accounts"
 import type { ApiTransaction } from "@/api/transactions"
 import type { ApiInstallment } from "@/api/installments"
 
-const account = { id: 1, balance: 10000 } as ApiAccount
+const account = { id: 1, initial_balance: 10000 } as ApiAccount
 
 const txn = (partial: Partial<ApiTransaction>): ApiTransaction =>
   ({

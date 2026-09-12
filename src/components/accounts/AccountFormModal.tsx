@@ -25,7 +25,7 @@ export default function AccountFormModal({
 }) {
   const [name, setName] = useState(account?.name ?? '')
   const [type, setType] = useState<AccountType>(account?.type ?? 'debit')
-  const [balance, setBalance] = useState(account?.balance?.toString() ?? account?.initial_balance?.toString() ?? '0')
+  const [balance, setBalance] = useState(account?.initial_balance?.toString() ?? '0')
   const [creditLimit, setCreditLimit] = useState(account?.credit_limit?.toString() ?? '')
   const [interestRate, setInterestRate] = useState(account?.interest_rate?.toString() ?? '')
   const [cutoffDay, setCutoffDay] = useState(account?.cutoff_day?.toString() ?? '')

@@ -15,7 +15,10 @@ vi.mock("../utils/logger", () => ({
 
 vi.mock("./recalcBalance", () => ({
   recalcAccountBalance: vi.fn().mockResolvedValue(0),
-  recalcTwoAccountBalances: vi.fn().mockResolvedValue(undefined),
+  adjustAccountBalance: vi.fn().mockResolvedValue(undefined),
+  applyCreate: vi.fn().mockResolvedValue(undefined),
+  applyUpdate: vi.fn().mockResolvedValue(undefined),
+  applyDelete: vi.fn().mockResolvedValue(undefined),
 }));
 
 import { AppDataSource } from "../config/database";

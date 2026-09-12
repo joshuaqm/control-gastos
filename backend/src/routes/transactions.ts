@@ -3,7 +3,7 @@ import type { DeepPartial } from 'typeorm';
 import { AppDataSource } from '../config/database';
 import { Account } from '../models/Account';
 import { Transaction } from '../models/Transaction';
-import { recalcTwoAccountBalances } from '../services/recalcBalance';
+import { applyCreate, applyUpdate, applyDelete } from '../services/recalcBalance';
 import { logger } from '../utils/logger';
 import { authenticate } from '../middleware/auth';
 import { AppError } from '../middleware/errorHandler';
@@ -13,8 +13,9 @@ const router = Router();
 router.use(authenticate);
 
 /**
- * Returns the stored balance of an account. The balance column is kept in
- * sync by `recalcAccountBalance` after every transaction mutation.
+ * Returns the stored balance of an account. The initial_balance column is
+ * kept in sync incrementally after every transaction mutation via the
+ * services in recalcBalance.ts.
  */
 async function getStoredBalance(
   userId: number,
@@ -113,14 +114,8 @@ router.post('/', async (req, res, next) => {
     });
     await transactionRepo.save(transaction);
 
-    // Update affected account balances
-    if (transaction.account_id != null) {
-      await recalcTwoAccountBalances(
-        req.user!.id,
-        transaction.account_id,
-        transaction.destination_account_id,
-      );
-    }
+    // Incrementally adjust affected account balances
+    await applyCreate(req.user!.id, transaction);
 
     logger.info(`Transaction created: ${transaction.id} (user ${req.user!.id})`);
     res.status(201).json(transaction);
@@ -176,27 +171,18 @@ router.put('/:id', async (req, res, next) => {
       );
     }
 
-    // Track old accounts before the update
+    // Track old state before the update
     const oldAccountId = transaction.account_id;
     const oldDestId = transaction.destination_account_id;
+    const oldTxn = { ...transaction } as Transaction;
 
     Object.assign(transaction, req.body as DeepPartial<Transaction>, {
       userId: req.user!.id,
     });
     await transactionRepo.save(transaction);
 
-    // Update affected account balances (old + new accounts)
-    const accountsToRecalc = new Set<number | null>([
-      oldAccountId,
-      oldDestId,
-      transaction.account_id,
-      transaction.destination_account_id,
-    ]);
-    for (const accId of accountsToRecalc) {
-      if (accId != null) {
-        await recalcTwoAccountBalances(req.user!.id, accId);
-      }
-    }
+    // Incrementally adjust: reverse old, apply new
+    await applyUpdate(req.user!.id, oldTxn, transaction);
 
     logger.info(`Transaction updated: ${transaction.id} (user ${req.user!.id})`);
     res.json(transaction);
@@ -223,8 +209,8 @@ router.delete('/:id', async (req, res, next) => {
 
     await transactionRepo.remove(transaction);
 
-    // Update affected account balances
-    if (accId != null) await recalcTwoAccountBalances(req.user!.id, accId, destId);
+    // Incrementally reverse the transaction's effect on balances
+    await applyDelete(req.user!.id, transaction);
 
     logger.info(`Transaction deleted: ${id} (user ${req.user!.id})`);
     res.status(204).send();

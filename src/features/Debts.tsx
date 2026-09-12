@@ -120,7 +120,7 @@ export default function DebtsScreen({ showToast }: { showToast: ShowToast }) {
 
   const cardUsed = (id: number) => {
     const account = accounts.find((a) => a.id === id)
-    const initialBalance = account ? Number(account.balance) || 0 : 0
+    const initialBalance = account ? Number(account.initial_balance) || 0 : 0
     return cardUsedWithMsi(txns, installments, id, initialBalance)
   }
   const cardMsiUsed = (id: number) => msiOutstandingFor(installments, id)
