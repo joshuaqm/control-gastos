@@ -146,20 +146,20 @@ export default function RecurringScreen({ showToast }: { showToast: ShowToast })
         </button>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
-        <div className="glass rounded-2xl p-5" style={{ border: '1px solid rgba(139,92,246,0.2)' }}>
-          <p className="text-sm" style={{ color: '#A0A0B8' }}>Total en pagos</p>
-          <p className="text-3xl font-bold font-mono mt-1" style={{ color: '#A78BFA' }}>{fmt(totalMonthly)}</p>
-          <p className="text-xs mt-2" style={{ color: '#6B6B85' }}>{recurring.filter(r => r.is_active).length} recurrentes activos</p>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="glass rounded-2xl p-5 overflow-hidden" style={{ border: '1px solid rgba(139,92,246,0.2)' }}>
+          <p className="text-sm" style={{ color: 'var(--text-2)' }}>Total en pagos</p>
+          <p className="text-xl sm:text-2xl lg:text-3xl font-bold font-mono mt-1 truncate" style={{ color: '#A78BFA' }}>{fmt(totalMonthly)}</p>
+          <p className="text-xs mt-2" style={{ color: 'var(--text-3)' }}>{recurring.filter(r => r.is_active).length} recurrentes activos</p>
         </div>
-        <div className="glass rounded-2xl p-5" style={{ border: '1px solid rgba(245,158,11,0.2)' }}>
-          <p className="text-sm" style={{ color: '#A0A0B8' }}>Próximos cobros</p>
+        <div className="glass rounded-2xl p-5 overflow-hidden" style={{ border: '1px solid rgba(245,158,11,0.2)' }}>
+          <p className="text-sm" style={{ color: 'var(--text-2)' }}>Próximos cobros</p>
           <div className="flex flex-col gap-1.5 mt-2">
-            {upcoming.length === 0 && <p className="text-xs" style={{ color: '#6B6B85' }}>Sin cobros próximos</p>}
+            {upcoming.length === 0 && <p className="text-xs" style={{ color: 'var(--text-3)' }}>Sin cobros próximos</p>}
             {upcoming.map(r => (
-              <div key={r.id} className="flex items-center justify-between text-xs">
-                <span style={{ color: '#A0A0B8' }}>{r.name}</span>
-                <span className="font-mono" style={{ color: r.days <= 3 ? '#F59E0B' : '#fff' }}>
+              <div key={r.id} className="flex items-center justify-between text-xs gap-2">
+                <span className="truncate min-w-0" style={{ color: 'var(--text-2)' }}>{r.name}</span>
+                <span className="font-mono flex-shrink-0 whitespace-nowrap" style={{ color: r.days <= 3 ? '#F59E0B' : 'var(--text-1)' }}>
                   {fmt(r.amount)} · {r.days <= 0 ? 'hoy' : `en ${r.days} d`}
                 </span>
               </div>
@@ -173,51 +173,54 @@ export default function RecurringScreen({ showToast }: { showToast: ShowToast })
           <div className="w-8 h-8 rounded-full border-2 border-white/20 border-t-purple-600 animate-spin" />
         </div>
       ) : recurring.length === 0 ? (
-        <div className="py-16 text-center text-sm rounded-2xl" style={{ background: 'rgba(255,255,255,0.03)', color: '#6B6B85' }}>
+        <div className="py-16 text-center text-sm rounded-2xl" style={{ background: 'var(--card)', color: 'var(--text-3)' }}>
           No hay pagos recurrentes. Agrega suscripciones como Netflix, Spotify o la renta con el botón "Agregar".
         </div>
       ) : (
         <div className="flex flex-col gap-3">
           {recurring.map(r => {
             return (
-              <div key={r.id} className="glass card-hover rounded-2xl p-4" style={{ border: '1px solid rgba(255,255,255,0.08)', opacity: r.is_active ? 1 : 0.55 }}>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'rgba(139,92,246,0.15)' }}>
-                      <Repeat size={18} style={{ color: '#A78BFA' }} />
-                    </div>
-                    <div>
-                      <p className="text-sm font-semibold">{r.name}</p>
-                      <p className="text-xs" style={{ color: '#6B6B85' }}>
-                        {freqLabel(r)} · {r.category || 'Sin categoría'} · {accountName(r.account_id) || 'Sin cuenta'} · próximo {fmtDate(r.next_date)}
-                      </p>
-                    </div>
+              <div key={r.id} className="glass card-hover rounded-2xl p-4 overflow-hidden" style={{ border: '1px solid var(--glass-border)', opacity: r.is_active ? 1 : 0.55 }}>
+                {/* Row 1: Icon + Name + Amount */}
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(139,92,246,0.15)' }}>
+                    <Repeat size={18} style={{ color: '#A78BFA' }} />
                   </div>
-                  <div className="flex items-center gap-3">
-                    <div className="text-right">
-                      <p className="text-base font-bold font-mono" style={{ color: '#EF4444' }}>{fmt(Number(r.amount))}</p>
-                      <p className="text-xs" style={{ color: '#6B6B85' }}>{freqLabel(r)?.toLowerCase() ?? ''}</p>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      {r.is_active && (
-                        <button
-                          onClick={() => setPayTarget(r)}
-                          className="px-3 py-1.5 rounded-lg text-xs font-medium"
-                          style={{ background: 'rgba(139,92,246,0.15)', color: '#A78BFA' }}
-                        >
-                          Registrar cobro
-                        </button>
-                      )}
-                      <button onClick={() => handleToggle(r)} className="px-3 py-1.5 rounded-lg text-xs font-medium" style={{ background: 'rgba(255,255,255,0.06)', color: r.is_active ? '#F59E0B' : '#06D6A0' }}>
-                        {r.is_active ? 'Pausar' : 'Activar'}
-                      </button>
-                      <button onClick={() => openEdit(r)} className="p-1.5 rounded-lg hover:bg-white/10" style={{ color: '#A0A0B8' }}>
-                        <Pencil size={15} />
-                      </button>
-                      <button onClick={() => handleDelete(r)} className="p-1.5 rounded-lg hover:bg-white/10" style={{ color: '#F87171' }}>
-                        <Trash2 size={15} />
-                      </button>
-                    </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-semibold truncate">{r.name}</p>
+                  </div>
+                  <div className="text-right flex-shrink-0">
+                    <p className="text-base font-bold font-mono" style={{ color: '#EF4444' }}>{fmt(Number(r.amount))}</p>
+                    <p className="text-xs text-right" style={{ color: 'var(--text-3)' }}>{freqLabel(r)?.toLowerCase() ?? ''}</p>
+                  </div>
+                </div>
+
+                {/* Row 2: Details */}
+                <p className="text-xs truncate mb-3 pl-13" style={{ color: 'var(--text-3)' }}>
+                  {freqLabel(r)} · {r.category || 'Sin categoría'} · {accountName(r.account_id) || 'Sin cuenta'} · próximo {fmtDate(r.next_date)}
+                </p>
+
+                {/* Row 3: Action buttons */}
+                <div className="flex items-center gap-2 flex-wrap">
+                  {r.is_active && (
+                    <button
+                      onClick={() => setPayTarget(r)}
+                      className="px-3 py-1.5 rounded-lg text-xs font-medium"
+                      style={{ background: 'rgba(139,92,246,0.15)', color: '#A78BFA' }}
+                    >
+                      Registrar cobro
+                    </button>
+                  )}
+                  <button onClick={() => handleToggle(r)} className="px-3 py-1.5 rounded-lg text-xs font-medium" style={{ background: 'var(--input-bg)', color: r.is_active ? '#F59E0B' : '#06D6A0' }}>
+                    {r.is_active ? 'Pausar' : 'Activar'}
+                  </button>
+                  <div className="flex items-center gap-1 ml-auto">
+                    <button onClick={() => openEdit(r)} className="p-1.5 rounded-lg hover:bg-white/10" style={{ color: 'var(--text-2)' }}>
+                      <Pencil size={15} />
+                    </button>
+                    <button onClick={() => handleDelete(r)} className="p-1.5 rounded-lg hover:bg-white/10" style={{ color: '#F87171' }}>
+                      <Trash2 size={15} />
+                    </button>
                   </div>
                 </div>
               </div>

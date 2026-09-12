@@ -103,28 +103,28 @@ export default function RecurringFormModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)' }}>
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4" style={{ background: 'var(--modal-backdrop)', backdropFilter: 'blur(8px)' }}>
       <div className="glass animate-slide-up rounded-2xl p-6 w-full max-w-md" style={{ border: '1px solid rgba(124,58,237,0.2)' }}>
         <div className="flex items-center justify-between mb-5">
           <h3 className="text-lg font-semibold">{recurring ? 'Editar pago recurrente' : 'Nuevo pago recurrente'}</h3>
-          <button onClick={onClose} style={{ color: '#6B6B85' }}><X size={20} /></button>
+          <button onClick={onClose} style={{ color: 'var(--text-3)' }}><X size={20} /></button>
         </div>
 
         <div className="flex flex-col gap-3">
           <div>
-            <label className="block text-xs font-medium mb-1" style={{ color: '#A0A0B8' }}>Nombre</label>
+            <label className="block text-xs font-medium mb-1" style={{ color: 'var(--text-2)' }}>Nombre</label>
             <input
               value={name}
               onChange={e => setName(e.target.value)}
               placeholder="Ej. Netflix, Gimnasio, Spotify…"
               className="w-full px-4 py-3 rounded-xl text-sm"
-              style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff' }}
+              style={{ background: 'var(--input-bg)', border: '1px solid var(--input-border)', color: 'var(--text-1)' }}
             />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-medium mb-1" style={{ color: '#A0A0B8' }}>Monto</label>
+              <label className="block text-xs font-medium mb-1" style={{ color: 'var(--text-2)' }}>Monto</label>
               <input
                 value={amount}
                 onChange={e => setAmount(e.target.value)}
@@ -132,16 +132,16 @@ export default function RecurringFormModal({
                 step="0.01"
                 min="0"
                 className="w-full px-4 py-3 rounded-xl text-sm font-mono"
-                style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff' }}
+                style={{ background: 'var(--input-bg)', border: '1px solid var(--input-border)', color: 'var(--text-1)' }}
               />
             </div>
             <div>
-              <label className="block text-xs font-medium mb-1" style={{ color: '#A0A0B8' }}>Frecuencia</label>
+              <label className="block text-xs font-medium mb-1" style={{ color: 'var(--text-2)' }}>Frecuencia</label>
               <select
                 value={frequency}
                 onChange={e => setFrequency(e.target.value)}
                 className="w-full px-4 py-3 rounded-xl text-sm"
-                style={{ background: 'rgba(26,26,46,0.9)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff' }}
+                style={{ background: 'var(--input-bg-select)', border: '1px solid var(--input-border)', color: 'var(--text-1)' }}
               >
                 {FREQUENCIES.map(f => (
                   <option key={f.value} value={f.value}>{f.label}</option>
@@ -157,7 +157,7 @@ export default function RecurringFormModal({
                     step="1"
                     placeholder="Ej. 25 días"
                     className="w-full px-4 py-3 rounded-xl text-sm font-mono"
-                    style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff' }}
+                    style={{ background: 'var(--input-bg)', border: '1px solid var(--input-border)', color: 'var(--text-1)' }}
                   />
                 </div>
               )}
@@ -166,35 +166,35 @@ export default function RecurringFormModal({
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-medium mb-1" style={{ color: '#A0A0B8' }}>Próximo cobro</label>
+              <label className="block text-xs font-medium mb-1" style={{ color: 'var(--text-2)' }}>Próximo cobro</label>
               <input
                 value={nextDate}
                 onChange={e => setNextDate(e.target.value)}
                 type="date"
                 className="w-full px-4 py-3 rounded-xl text-sm"
-                style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff' }}
+                style={{ background: 'var(--input-bg)', border: '1px solid var(--input-border)', color: 'var(--text-1)' }}
               />
             </div>
             <div>
-              <label className="block text-xs font-medium mb-1" style={{ color: '#A0A0B8' }}>Categoría</label>
+              <label className="block text-xs font-medium mb-1" style={{ color: 'var(--text-2)' }}>Categoría</label>
               <input
                 value={category}
                 onChange={e => setCategory(e.target.value)}
                 placeholder="Ej. Suscripciones"
                 className="w-full px-4 py-3 rounded-xl text-sm"
-                style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff' }}
+                style={{ background: 'var(--input-bg)', border: '1px solid var(--input-border)', color: 'var(--text-1)' }}
               />
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-medium mb-1" style={{ color: '#A0A0B8' }}>Cuenta</label>
+              <label className="block text-xs font-medium mb-1" style={{ color: 'var(--text-2)' }}>Cuenta</label>
               <select
                 value={accountId}
                 onChange={e => setAccountId(e.target.value)}
                 className="w-full px-4 py-3 rounded-xl text-sm"
-                style={{ background: 'rgba(26,26,46,0.9)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff' }}
+                style={{ background: 'var(--input-bg-select)', border: '1px solid var(--input-border)', color: 'var(--text-1)' }}
               >
                 {accounts.map(a => (
                   <option key={a.id} value={a.id}>{a.name}</option>
@@ -202,12 +202,12 @@ export default function RecurringFormModal({
               </select>
             </div>
             <div>
-              <label className="block text-xs font-medium mb-1" style={{ color: '#A0A0B8' }}>Clasificación 50/30/20</label>
+              <label className="block text-xs font-medium mb-1" style={{ color: 'var(--text-2)' }}>Clasificación 50/30/20</label>
               <select
                 value={budgetType}
                 onChange={e => setBudgetType(e.target.value)}
                 className="w-full px-4 py-3 rounded-xl text-sm"
-                style={{ background: 'rgba(26,26,46,0.9)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff' }}
+                style={{ background: 'var(--input-bg-select)', border: '1px solid var(--input-border)', color: 'var(--text-1)' }}
               >
                 <option value="">Sin clasificar</option>
                 {BUDGET_TYPES.map(b => (
@@ -218,16 +218,16 @@ export default function RecurringFormModal({
           </div>
 
           <div>
-            <label className="block text-xs font-medium mb-1" style={{ color: '#A0A0B8' }}>Notas (opcional)</label>
+            <label className="block text-xs font-medium mb-1" style={{ color: 'var(--text-2)' }}>Notas (opcional)</label>
             <input
               value={notes}
               onChange={e => setNotes(e.target.value)}
               className="w-full px-4 py-3 rounded-xl text-sm"
-              style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff' }}
+              style={{ background: 'var(--input-bg)', border: '1px solid var(--input-border)', color: 'var(--text-1)' }}
             />
           </div>
 
-          <label className="flex items-center gap-3 text-sm cursor-pointer" style={{ color: '#A0A0B8' }}>
+          <label className="flex items-center gap-3 text-sm cursor-pointer" style={{ color: 'var(--text-2)' }}>
             <input
               type="checkbox"
               checked={isActive}
@@ -245,7 +245,7 @@ export default function RecurringFormModal({
         )}
 
         <div className="flex gap-3 mt-5">
-          <button onClick={onClose} className="flex-1 py-3 rounded-xl text-sm font-medium" style={{ background: 'rgba(255,255,255,0.06)', color: '#A0A0B8' }}>
+          <button onClick={onClose} className="flex-1 py-3 rounded-xl text-sm font-medium" style={{ background: 'var(--input-bg)', color: 'var(--text-2)' }}>
             Cancelar
           </button>
           <button

@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { Mock } from "vitest";
 import { adjustRealInterest, THEORETICAL_NOTE } from "./interestAccrual";
+import { recalcAccountBalance } from "./recalcBalance";
 
 vi.mock("../config/database", () => ({
   AppDataSource: {
@@ -10,6 +11,11 @@ vi.mock("../config/database", () => ({
 
 vi.mock("../utils/logger", () => ({
   logger: { info: vi.fn(), error: vi.fn(), warn: vi.fn(), debug: vi.fn() },
+}));
+
+vi.mock("./recalcBalance", () => ({
+  recalcAccountBalance: vi.fn().mockResolvedValue(0),
+  recalcTwoAccountBalances: vi.fn().mockResolvedValue(undefined),
 }));
 
 import { AppDataSource } from "../config/database";
@@ -77,7 +83,7 @@ describe("adjustRealInterest", () => {
     expect(result.balanceDelta).toBe(60);
   });
 
-  it("removes legacy theoretical transactions and un-inflates initial_balance", async () => {
+  it("removes legacy theoretical transactions and recalculates balance", async () => {
     const account = {
       id: 1,
       userId: 5,
@@ -105,7 +111,7 @@ describe("adjustRealInterest", () => {
     await adjustRealInterest(1, 5, 60);
 
     expect(transactionRepo.remove).toHaveBeenCalledWith(theoretical);
-    expect(account.initial_balance).toBe(1000);
+    expect(recalcAccountBalance).toHaveBeenCalledWith(1, 5);
     expect(transactionRepo.save).toHaveBeenCalledTimes(1);
   });
 

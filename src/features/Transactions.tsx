@@ -56,6 +56,8 @@ export default function TransactionsScreen({ showToast }: { showToast: ShowToast
 
   const [filter, setFilter] = useState<TxFilter>('all')
   const [catFilter, setCatFilter] = useState('')
+  const [accountFilter, setAccountFilter] = useState<number | ''>('')
+  const [budgetFilter, setBudgetFilter] = useState('')
   const [search, setSearch] = useState('')
   const [fromDate, setFromDate] = useState('')
   const [toDate, setToDate] = useState('')
@@ -90,6 +92,8 @@ export default function TransactionsScreen({ showToast }: { showToast: ShowToast
     let list = txs
     if (filter !== 'all') list = list.filter(t => t.type === filter)
     if (catFilter) list = list.filter(t => t.category === catFilter)
+    if (accountFilter !== '') list = list.filter(t => t.account_id === accountFilter || t.destination_account_id === accountFilter)
+    if (budgetFilter) list = list.filter(t => t.budget_type === budgetFilter || (!t.budget_type && budgetFilter === 'none'))
     if (fromDate) list = list.filter(t => (t.date ?? '') >= fromDate)
     if (toDate) list = list.filter(t => (t.date ?? '') <= toDate)
     const q = search.trim().toLowerCase()
@@ -98,9 +102,9 @@ export default function TransactionsScreen({ showToast }: { showToast: ShowToast
       (a, b) =>
         (b.date || '').localeCompare(a.date || '') || (b.id ?? 0) - (a.id ?? 0),
     )
-  }, [txs, filter, catFilter, search, fromDate, toDate])
+  }, [txs, filter, catFilter, accountFilter, budgetFilter, search, fromDate, toDate])
 
-  useEffect(() => { setPage(1) }, [filter, catFilter, search, fromDate, toDate])
+  useEffect(() => { setPage(1) }, [filter, catFilter, accountFilter, budgetFilter, search, fromDate, toDate])
 
   const pages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
   const curPage = Math.min(page, pages)
@@ -172,7 +176,7 @@ export default function TransactionsScreen({ showToast }: { showToast: ShowToast
         <button
           onClick={exportCSV}
           className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium"
-          style={{ background: 'rgba(255,255,255,0.06)', color: '#A0A0B8' }}
+          style={{ background: 'var(--input-bg)', color: 'var(--text-2)' }}
         >
           <Download size={14} /> CSV
         </button>
@@ -185,7 +189,7 @@ export default function TransactionsScreen({ showToast }: { showToast: ShowToast
               key={f}
               onClick={() => setFilter(f)}
               className="px-4 py-2 rounded-xl text-xs font-medium transition-all"
-              style={filter === f ? { background: 'linear-gradient(135deg,#7C3AED,#5B21B6)', color: '#fff' } : { background: 'rgba(255,255,255,0.06)', color: '#A0A0B8' }}
+              style={filter === f ? { background: 'linear-gradient(135deg,#7C3AED,#5B21B6)', color: 'var(--text-1)' } : { background: 'var(--input-bg)', color: 'var(--text-2)' }}
             >
               {filterLabels[f]}
             </button>
@@ -195,42 +199,63 @@ export default function TransactionsScreen({ showToast }: { showToast: ShowToast
           value={catFilter}
           onChange={e => setCatFilter(e.target.value)}
           className="px-3 py-2 rounded-xl text-xs"
-          style={{ background: 'rgba(26,26,46,0.9)', border: '1px solid rgba(255,255,255,0.1)', color: '#A0A0B8' }}
+          style={{ background: 'var(--input-bg-select)', border: '1px solid var(--input-border)', color: 'var(--text-2)' }}
         >
           <option value="">Todas las categorías</option>
           {categories.map(c => <option key={c} value={c}>{c}</option>)}
         </select>
-        <div className="flex items-center gap-1.5 px-3 py-2 rounded-xl" style={{ background: 'rgba(255,255,255,0.06)' }}>
-          <span className="text-xs" style={{ color: '#6B6B85' }}>Del</span>
+        <select
+          value={accountFilter}
+          onChange={e => setAccountFilter(e.target.value ? Number(e.target.value) : '')}
+          className="px-3 py-2 rounded-xl text-xs"
+          style={{ background: 'var(--input-bg-select)', border: '1px solid var(--input-border)', color: 'var(--text-2)' }}
+        >
+          <option value="">Todas las cuentas</option>
+          {accs.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
+        </select>
+        <select
+          value={budgetFilter}
+          onChange={e => setBudgetFilter(e.target.value)}
+          className="px-3 py-2 rounded-xl text-xs"
+          style={{ background: 'var(--input-bg-select)', border: '1px solid var(--input-border)', color: 'var(--text-2)' }}
+        >
+          <option value="">Toda clasificación</option>
+          <option value="need">Necesidad</option>
+          <option value="want">Deseo</option>
+          <option value="save">Ahorro</option>
+          <option value="none">Sin clasificación</option>
+        </select>
+        <div className="flex items-center gap-1.5 px-3 py-2 rounded-xl" style={{ background: 'var(--input-bg)' }}>
+          <span className="text-xs" style={{ color: 'var(--text-3)' }}>Del</span>
           <input
             value={fromDate}
             onChange={e => setFromDate(e.target.value)}
             type="date"
             className="bg-transparent text-xs outline-none"
-            style={{ color: '#fff' }}
+            style={{ color: 'var(--text-1)' }}
           />
-          <span className="text-xs" style={{ color: '#6B6B85' }}>al</span>
+          <span className="text-xs" style={{ color: 'var(--text-3)' }}>al</span>
           <input
             value={toDate}
             onChange={e => setToDate(e.target.value)}
             type="date"
             className="bg-transparent text-xs outline-none"
-            style={{ color: '#fff' }}
+            style={{ color: 'var(--text-1)' }}
           />
         </div>
-        <div className="flex items-center gap-2 px-3 py-2 rounded-xl flex-1 min-w-[160px]" style={{ background: 'rgba(255,255,255,0.06)' }}>
-          <Search size={14} style={{ color: '#6B6B85' }} />
+        <div className="flex items-center gap-2 px-3 py-2 rounded-xl flex-1 min-w-[160px]" style={{ background: 'var(--input-bg)' }}>
+          <Search size={14} style={{ color: 'var(--text-3)' }} />
           <input
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="Buscar por descripción…"
             className="bg-transparent w-full text-xs outline-none"
-            style={{ color: '#fff' }}
+            style={{ color: 'var(--text-1)' }}
           />
         </div>
-        {(filter !== 'all' || catFilter || fromDate || toDate || search) && (
+        {(filter !== 'all' || catFilter || accountFilter !== '' || budgetFilter || fromDate || toDate || search) && (
           <button
-            onClick={() => { setFilter('all'); setCatFilter(''); setFromDate(''); setToDate(''); setSearch('') }}
+            onClick={() => { setFilter('all'); setCatFilter(''); setAccountFilter(''); setBudgetFilter(''); setFromDate(''); setToDate(''); setSearch('') }}
             className="px-3 py-2 rounded-xl text-xs font-medium"
             style={{ background: 'rgba(239,68,68,0.08)', color: '#F87171', border: '1px solid rgba(239,68,68,0.2)' }}
           >
@@ -247,8 +272,8 @@ export default function TransactionsScreen({ showToast }: { showToast: ShowToast
 
       {error && <p className="text-xs" style={{ color: '#EF4444' }}>{error}</p>}
 
-      <div className="glass rounded-2xl overflow-hidden" style={{ border: '1px solid rgba(255,255,255,0.08)' }}>
-        <div className="hidden sm:grid grid-cols-6 px-5 py-3 text-xs font-medium" style={{ color: '#6B6B85', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+      <div className="glass rounded-2xl overflow-hidden" style={{ border: '1px solid var(--border)' }}>
+        <div className="hidden sm:grid grid-cols-6 px-5 py-3 text-xs font-medium" style={{ color: 'var(--text-3)', borderBottom: '1px solid var(--border)' }}>
           <span>Fecha</span><span>Descripción</span><span>Categoría</span><span>Cuenta</span><span className="text-right">Monto</span><span />
         </div>
 
@@ -257,7 +282,7 @@ export default function TransactionsScreen({ showToast }: { showToast: ShowToast
             <div className="w-8 h-8 rounded-full border-2 border-white/20 border-t-purple-600 animate-spin" />
           </div>
         ) : pageTxs.length === 0 ? (
-          <div className="py-16 text-center text-sm" style={{ color: '#6B6B85' }}>
+          <div className="py-16 text-center text-sm" style={{ color: 'var(--text-3)' }}>
             {txs.length === 0 ? 'No hay movimientos registrados todavía.' : 'Ningún movimiento coincide con los filtros.'}
           </div>
         ) : (
@@ -273,19 +298,19 @@ export default function TransactionsScreen({ showToast }: { showToast: ShowToast
               <div
                 key={t.id}
                 className="flex sm:grid sm:grid-cols-6 sm:items-center gap-3 px-4 sm:px-5 py-3.5 hover:bg-white/5 transition-colors"
-                style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}
+                style={{ borderBottom: '1px solid var(--border)' }}
               >
-                <span className="hidden sm:block text-xs" style={{ color: '#6B6B85' }}>{fmtDate(t.date)}</span>
+                <span className="hidden sm:block text-xs" style={{ color: 'var(--text-3)' }}>{fmtDate(t.date)}</span>
                 <div className="flex-1 min-w-0 sm:flex-none">
                   <p className="text-sm font-medium truncate">{t.description}</p>
                   <div className="flex items-center gap-2 mt-0.5">
-                    <span className="text-xs sm:hidden" style={{ color: '#6B6B85' }}>{fmtDate(t.date)}</span>
-                    <span className="text-xs sm:hidden" style={{ color: '#6B6B85' }}>{t.category ?? 'Sin categoría'}</span>
+                    <span className="text-xs sm:hidden" style={{ color: 'var(--text-3)' }}>{fmtDate(t.date)}</span>
+                    <span className="text-xs sm:hidden" style={{ color: 'var(--text-3)' }}>{t.category ?? 'Sin categoría'}</span>
                     <BudgetChip budgetType={t.budget_type} />
                   </div>
                 </div>
-                <span className="hidden sm:block text-xs" style={{ color: '#A0A0B8' }}>{t.category ?? '—'}</span>
-                <span className="hidden sm:block text-xs" style={{ color: '#A0A0B8' }}>{accountCell}</span>
+                <span className="hidden sm:block text-xs" style={{ color: 'var(--text-2)' }}>{t.category ?? '—'}</span>
+                <span className="hidden sm:block text-xs" style={{ color: 'var(--text-2)' }}>{accountCell}</span>
                 <span className="text-sm font-mono font-semibold flex-shrink-0 sm:text-right" style={{ color: amountColor }}>
                   {sign}{fmt(t.amount)}
                 </span>
@@ -294,7 +319,7 @@ export default function TransactionsScreen({ showToast }: { showToast: ShowToast
                     onClick={() => openEdit(t)}
                     className="p-1.5 rounded-lg transition-colors hover:bg-white/10"
                     title="Editar"
-                    style={{ color: '#A0A0B8' }}
+                    style={{ color: 'var(--text-2)' }}
                   >
                     <Pencil size={13} />
                   </button>
@@ -315,7 +340,7 @@ export default function TransactionsScreen({ showToast }: { showToast: ShowToast
 
       {!loading && filtered.length > 0 && (
         <div className="flex items-center justify-between">
-          <span className="text-xs" style={{ color: '#6B6B85' }}>
+          <span className="text-xs" style={{ color: 'var(--text-3)' }}>
             {filtered.length > PAGE_SIZE
               ? `${(curPage - 1) * PAGE_SIZE + 1}–${Math.min(curPage * PAGE_SIZE, filtered.length)} de ${filtered.length}`
               : `${filtered.length} movimientos`}
@@ -325,7 +350,7 @@ export default function TransactionsScreen({ showToast }: { showToast: ShowToast
               onClick={() => setPage(p => Math.max(1, p - 1))}
               disabled={curPage <= 1}
               className="px-3 py-1.5 rounded-lg text-xs font-medium disabled:opacity-40"
-              style={{ background: 'rgba(255,255,255,0.06)', color: '#A0A0B8' }}
+              style={{ background: 'var(--input-bg)', color: 'var(--text-2)' }}
             >
               ← Anterior
             </button>
@@ -334,7 +359,7 @@ export default function TransactionsScreen({ showToast }: { showToast: ShowToast
                 key={n}
                 onClick={() => setPage(n)}
                 className="w-8 h-8 rounded-lg text-xs font-medium transition-all"
-                style={n === curPage ? { background: 'linear-gradient(135deg,#7C3AED,#5B21B6)', color: '#fff' } : { background: 'rgba(255,255,255,0.06)', color: '#A0A0B8' }}
+                style={n === curPage ? { background: 'linear-gradient(135deg,#7C3AED,#5B21B6)', color: 'var(--text-1)' } : { background: 'var(--input-bg)', color: 'var(--text-2)' }}
               >
                 {n}
               </button>
@@ -343,7 +368,7 @@ export default function TransactionsScreen({ showToast }: { showToast: ShowToast
               onClick={() => setPage(p => Math.min(pages, p + 1))}
               disabled={curPage >= pages}
               className="px-3 py-1.5 rounded-lg text-xs font-medium disabled:opacity-40"
-              style={{ background: 'rgba(255,255,255,0.06)', color: '#A0A0B8' }}
+              style={{ background: 'var(--input-bg)', color: 'var(--text-2)' }}
             >
               Siguiente →
             </button>

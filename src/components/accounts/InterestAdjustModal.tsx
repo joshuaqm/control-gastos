@@ -57,11 +57,11 @@ export default function InterestAdjustModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)' }}>
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4" style={{ background: 'var(--modal-backdrop)', backdropFilter: 'blur(8px)' }}>
       <div className="glass animate-slide-up rounded-2xl p-6 w-full max-w-md" style={{ border: '1px solid rgba(124,58,237,0.2)' }}>
         <div className="flex items-center justify-between mb-5">
           <h3 className="text-lg font-semibold">Ajustar rendimiento real</h3>
-          <button onClick={onClose} style={{ color: '#6B6B85' }}><X size={20} /></button>
+          <button onClick={onClose} style={{ color: 'var(--text-3)' }}><X size={20} /></button>
         </div>
 
         <p className="text-xs mb-4 px-3 py-2 rounded-lg" style={{ background: 'rgba(124,58,237,0.1)', border: '1px solid rgba(124,58,237,0.25)', color: '#C4B5FD' }}>
@@ -70,12 +70,12 @@ export default function InterestAdjustModal({
         </p>
 
         <div className="flex flex-col gap-3">
-          <div className="px-3 py-2 rounded-lg text-sm flex items-center justify-between" style={{ background: 'rgba(255,255,255,0.05)' }}>
-            <span style={{ color: '#6B6B85' }}>Saldo actual</span>
-            <span className="font-mono font-semibold" style={{ color: '#fff' }}>{fmt(currentBalance)}</span>
+          <div className="px-3 py-2 rounded-lg text-sm flex items-center justify-between" style={{ background: 'var(--badge-bg)' }}>
+            <span style={{ color: 'var(--text-3)' }}>Saldo actual</span>
+            <span className="font-mono font-semibold" style={{ color: 'var(--text-1)' }}>{fmt(currentBalance)}</span>
           </div>
           <div>
-            <label className="block text-xs font-medium mb-1" style={{ color: '#A0A0B8' }}>
+            <label className="block text-xs font-medium mb-1" style={{ color: 'var(--text-2)' }}>
               Saldo actualizado
             </label>
             <input
@@ -87,23 +87,23 @@ export default function InterestAdjustModal({
               autoFocus
               placeholder="Ej. 12045.30"
               className="w-full px-4 py-3 rounded-xl text-sm font-mono"
-              style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff' }}
+              style={{ background: 'var(--input-bg)', border: '1px solid var(--input-border)', color: 'var(--text-1)' }}
             />
           </div>
           <div className="px-3 py-2 rounded-lg text-sm flex items-center justify-between" style={{ background: 'rgba(6,214,160,0.08)', border: '1px solid rgba(6,214,160,0.15)' }}>
-            <span style={{ color: '#6B6B85' }}>Rendimiento total del mes</span>
+            <span style={{ color: 'var(--text-3)' }}>Rendimiento total del mes</span>
             <span className="font-mono font-semibold" style={{ color: diff != null && diff > 0 ? '#34D399' : '#F87171' }}>
               {diff != null ? fmtSigned(diff) : '—'}
             </span>
           </div>
           <div>
-            <label className="block text-xs font-medium mb-1" style={{ color: '#A0A0B8' }}>Mes del rendimiento</label>
+            <label className="block text-xs font-medium mb-1" style={{ color: 'var(--text-2)' }}>Mes del rendimiento</label>
             <input
               value={month}
               onChange={e => setMonth(e.target.value)}
               type="month"
               className="w-full px-4 py-3 rounded-xl text-sm"
-              style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff' }}
+              style={{ background: 'var(--input-bg)', border: '1px solid var(--input-border)', color: 'var(--text-1)' }}
             />
           </div>
         </div>
@@ -115,7 +115,7 @@ export default function InterestAdjustModal({
         )}
 
         <div className="flex gap-3 mt-5">
-          <button onClick={onClose} className="flex-1 py-3 rounded-xl text-sm font-medium" style={{ background: 'rgba(255,255,255,0.06)', color: '#A0A0B8' }}>
+          <button onClick={onClose} className="flex-1 py-3 rounded-xl text-sm font-medium" style={{ background: 'var(--input-bg)', color: 'var(--text-2)' }}>
             Cancelar
           </button>
           <button

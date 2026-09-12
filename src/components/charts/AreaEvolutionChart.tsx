@@ -28,9 +28,9 @@ export default function AreaEvolutionChart({ data, color, name = 'Valor', second
             <stop offset="95%" stopColor={secondaryColor} stopOpacity={0} />
           </linearGradient>
         </defs>
-        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-        <XAxis dataKey="month" tick={{ fill: '#6B6B85', fontSize: 11 }} axisLine={false} tickLine={false} />
-        <YAxis tick={{ fill: '#6B6B85', fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={v => `$${(v / 1000).toFixed(0)}k`} />
+        <CartesianGrid strokeDasharray="3 3" stroke="var(--badge-bg)" />
+        <XAxis dataKey="month" tick={{ fill: 'var(--text-3)', fontSize: 11 }} axisLine={false} tickLine={false} />
+        <YAxis tick={{ fill: 'var(--text-3)', fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={v => `$${(v / 1000).toFixed(0)}k`} />
         <Tooltip content={<ChartTooltip />} />
         {hasSecondary && (
           <Area type="monotone" dataKey="costo" name="Costo" stroke={secondaryColor} strokeWidth={2} strokeDasharray="5 4" fill={`url(#${grad2Id})`} dot={false} />

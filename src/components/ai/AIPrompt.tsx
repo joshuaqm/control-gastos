@@ -33,10 +33,10 @@ export default function AIPrompt({ onOpenChat }: { onOpenChat: (msg?: string) =>
           placeholder="🗣️ ¿Qué quieres hacer hoy? Ej: 'Registra $200 en comida con BBVA'"
           rows={expanded ? 3 : 1}
           className="flex-1 bg-transparent text-sm resize-none"
-          style={{ color: '#fff', outline: 'none', lineHeight: '1.5' }}
+          style={{ color: 'var(--text-1)', outline: 'none', lineHeight: '1.5' }}
         />
         <div className="flex items-center gap-2 flex-shrink-0">
-          <button className="p-2 rounded-lg hover:bg-white/10 transition-colors" style={{ color: '#A0A0B8' }}>
+          <button className="p-2 rounded-lg hover:bg-white/10 transition-colors" style={{ color: 'var(--text-2)' }}>
             <Mic size={18} />
           </button>
           <button

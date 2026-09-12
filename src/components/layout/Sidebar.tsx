@@ -19,8 +19,8 @@ export default function Sidebar({
         width: collapsed ? 0 : 220,
         minWidth: collapsed ? 0 : 220,
         height: '100%',
-        background: '#14141E',
-        borderRight: '1px solid rgba(255,255,255,0.06)',
+        background: 'var(--sidebar-bg)',
+        borderRight: '1px solid var(--border)',
         overflow: 'hidden',
         transition: 'all 0.3s ease',
       }}
@@ -28,11 +28,11 @@ export default function Sidebar({
       {/* Contenido del sidebar - ahora con padding-top incluido */}
       <div className="flex flex-col h-full">
         {/* Logo - siempre visible arriba */}
-        <div className="p-5 flex items-center gap-3 flex-shrink-0" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+        <div className="p-5 flex items-center gap-3 flex-shrink-0" style={{ borderBottom: '1px solid var(--border)' }}>
           <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'linear-gradient(135deg,#7C3AED,#5B21B6)' }}>
             <TrendingUp size={16} color="white" />
           </div>
-          <span className="font-bold text-base whitespace-nowrap">XOXO Finanzas</span>
+          <span className="font-bold text-base whitespace-nowrap" style={{ color: 'var(--text-1)' }}>XOXO Finanzas</span>
         </div>
 
         {/* Navegación - scrollable si hay muchos items */}
@@ -49,7 +49,7 @@ export default function Sidebar({
                   active === item.id ? 'active' : ''
                 } ${item.disabled ? 'cursor-not-allowed' : 'cursor-pointer'}`}
                 style={{
-                  color: active === item.id ? '#A78BFA' : '#A0A0B8',
+                  color: active === item.id ? '#A78BFA' : 'var(--text-2)',
                 }}
               >
                 <Icon size={18} className="flex-shrink-0" />
@@ -60,11 +60,11 @@ export default function Sidebar({
         </nav>
 
         {/* Botón de cerrar sesión - siempre fijo abajo */}
-        <div className="p-3 flex-shrink-0" style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+        <div className="p-3 flex-shrink-0" style={{ borderTop: '1px solid var(--border)' }}>
           <button
             onClick={onLogout}
             className="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium"
-            style={{ color: '#6B6B85' }}
+            style={{ color: 'var(--text-3)' }}
           >
             <LogOut size={18} />
             <span className="whitespace-nowrap">Cerrar Sesión</span>

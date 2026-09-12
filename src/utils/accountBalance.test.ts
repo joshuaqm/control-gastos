@@ -10,7 +10,7 @@ import type { ApiAccount } from "@/api/accounts"
 import type { ApiTransaction } from "@/api/transactions"
 import type { ApiInstallment } from "@/api/installments"
 
-const account = { id: 1, initial_balance: 10000 } as ApiAccount
+const account = { id: 1, balance: 10000 } as ApiAccount
 
 const txn = (partial: Partial<ApiTransaction>): ApiTransaction =>
   ({
@@ -28,35 +28,13 @@ const txn = (partial: Partial<ApiTransaction>): ApiTransaction =>
   }) as ApiTransaction
 
 describe("accountBalance", () => {
-  it("starts from the initial balance with no transactions", () => {
-    expect(accountBalance(account, [])).toBe(10000)
+  it("returns the stored balance", () => {
+    expect(accountBalance(account)).toBe(10000)
   })
 
-  it("adds income and subtracts expenses", () => {
-    const txns = [
-      txn({ type: "income", amount: 500, account_id: 1 }),
-      txn({ type: "expense", amount: 300, account_id: 1 }),
-      txn({ type: "debt_payment", amount: 200, account_id: 1 }),
-    ]
-    // 10000 + 500 - 300 - 200 = 10000
-    expect(accountBalance(account, txns)).toBe(10000)
-  })
-
-  it("adds incoming transfers via destination_account_id", () => {
-    const txns = [
-      txn({ type: "transfer", amount: 150, destination_account_id: 1 }),
-    ]
-    expect(accountBalance(account, txns)).toBe(10150)
-  })
-
-  it("ignores transactions of other accounts", () => {
-    const txns = [txn({ type: "expense", amount: 9999, account_id: 2 })]
-    expect(accountBalance(account, txns)).toBe(10000)
-  })
-
-  it("rounds to two decimals", () => {
-    const txns = [txn({ type: "income", amount: 33.33, account_id: 1 })]
-    expect(accountBalance(account, txns)).toBe(10033.33)
+  it("returns 0 for undefined balance", () => {
+    const noBalance = { id: 2 } as ApiAccount
+    expect(accountBalance(noBalance)).toBe(0)
   })
 })
 
@@ -149,6 +127,17 @@ describe("cardUsed", () => {
     ]
     // creditUsed = 1000 + 400 = 1400; msiOutstanding = 500*10 = 5000; net includes +400
     // diff = 5000 - 400 = 4600 -> total = 6000
-    expect(cardUsed(txns, installs, 4)).toBe(1000 + 400 + 4600)
+    expect(cardUsed(txns, installs, 4, 0)).toBe(1000 + 400 + 4600)
+  })
+
+  it("applies initialBalance as manual adjustment", () => {
+    const txns = [
+      txn({ type: "expense", amount: 1000, account_id: 4 }),
+    ]
+    const installs: ApiInstallment[] = []
+    // base = 1000, initialBalance = 200 -> total = 1200
+    expect(cardUsed(txns, installs, 4, 200)).toBe(1200)
+    // initialBalance = -300 -> total = 700
+    expect(cardUsed(txns, installs, 4, -300)).toBe(700)
   })
 })

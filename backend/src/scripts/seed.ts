@@ -314,7 +314,7 @@ async function seedDatabase() {
 
     // Préstamos por cobrar
     const receivableData = [
-      { person: 'Ana Martínez', description: 'Préstamo para curso', original_amount: 1500, due_date: new Date('2026-09-15'), status: 'pending', notes: 'Pagará quincenal' },
+      { person: 'BBVA Martínez', description: 'Préstamo para curso', original_amount: 1500, due_date: new Date('2026-09-15'), status: 'pending', notes: 'Pagará quincenal' },
       { person: 'Carlos Ramírez', description: 'Mitad de vacaciones', original_amount: 800, due_date: new Date('2026-08-30'), status: 'pending' },
       { person: 'Mamá', description: 'Electrodoméstico', original_amount: 2500, due_date: new Date('2026-07-01'), status: 'paid', notes: 'Pagado' },
     ];
