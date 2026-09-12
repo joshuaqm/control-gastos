@@ -86,7 +86,6 @@ router.get('/', async (req, res, next) => {
     const transactions = await transactionRepo.find({
       where: { userId: req.user!.id },
       order: { date: 'DESC' },
-      take: 100
     });
     res.json(transactions);
   } catch (error) {

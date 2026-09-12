@@ -435,7 +435,7 @@ export default function DebtsScreen({ showToast }: { showToast: ShowToast }) {
         {creditAccounts.length === 0 ? (
           <div
             className="py-10 text-center text-sm rounded-2xl"
-            style={{ background: "rgba(255,255,255,0.03)", color: "#6B6B85" }}
+            style={{ background: "var(--card)", color: "var(--text-3)" }}
           >
             No hay tarjetas de crédito. Regístralas en la sección de Cuentas.
           </div>
@@ -471,7 +471,7 @@ export default function DebtsScreen({ showToast }: { showToast: ShowToast }) {
                         <p className="text-sm font-semibold">{a.name}</p>
                         <p
                           className="text-xs flex items-center gap-1"
-                          style={{ color: "#6B6B85" }}
+                          style={{ color: "var(--text-3)" }}
                         >
                           <CalendarDays size={12} />
                           Corte día {a.cutoff_day ?? "—"} · Pago día{" "}
@@ -481,11 +481,11 @@ export default function DebtsScreen({ showToast }: { showToast: ShowToast }) {
                     </div>
                   </div>
 
-                  <div className="flex items-end justify-between">
-                    <div>
+                  <div className="flex items-end justify-between gap-2">
+                    <div className="min-w-0">
                       <p
-                        className="text-2xl font-bold font-mono"
-                        style={{ color: "#fff" }}
+                        className="text-xl sm:text-2xl font-bold font-mono truncate"
+                        style={{ color: "var(--text-1)" }}
                       >
                         {fmt(available)}
                       </p>
