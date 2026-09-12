@@ -164,7 +164,7 @@ export default function AccountsScreen({
             const meta = TYPE_META[a.type]
             const Icon = meta.icon
             const isCredit = a.type === "credit"
-            const used = isCredit ? cardUsed(txns, installments, a.id) : 0
+            const used = isCredit ? cardUsed(txns, installments, a.id, accountBalance(a)) : 0
             const creditLimit = a.credit_limit ?? 0
             const available = isCredit ? Math.max(0, creditLimit - used) : 0
             const usedPct =

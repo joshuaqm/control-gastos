@@ -65,17 +65,22 @@ export function msiOutstanding(
 }
 
 /**
- * Saldo utilizado of a credit card, combining transaction usage with any MSI
- * outstanding. MSI is only added when the installment balance exceeds what the
- * MSI transactions already reflect (avoids double counting in the normal flow
- * where the backend charges the full purchase as a transaction).
+ * Saldo utilized of a credit card, combining transaction usage with any MSI
+ * outstanding and a manual adjustment stored in initial_balance.
+ *
+ * - MSI is only added when the installment balance exceeds what the MSI
+ *   transactions already reflect (avoids double counting).
+ * - initial_balance acts as a manual adjustment: positive values increase the
+ *   used balance (more debt), negative values decrease it.
  */
 export function cardUsed(
   txns: ApiTransaction[],
   installments: ApiInstallment[],
   accountId: number,
+  initialBalance: number,
 ): number {
   const fromTxns = Math.max(0, creditUsed(txns, accountId))
   const msiDiff = msiOutstanding(installments, accountId) - msiTxnsNet(txns, accountId)
-  return Math.round((fromTxns + Math.max(0, msiDiff)) * 100) / 100
+  const base = fromTxns + Math.max(0, msiDiff)
+  return Math.round((base + initialBalance) * 100) / 100
 }

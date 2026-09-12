@@ -114,7 +114,7 @@ describe("computeTotals", () => {
       receivables: [
         {
           id: 1,
-          person: "Ana",
+          person: "Gato",
           description: "Préstamo",
           original_amount: 250,
           collected_amount: 50,

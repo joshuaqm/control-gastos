@@ -92,7 +92,7 @@ export default function AIChat({ initialMsg = '', visible = true }: {
   visible?: boolean
 }) {
   const [messages, setMessages] = useState<ChatMsg[]>([
-    { id: 0, from: 'ai', text: '¡Hola Ana! Soy tu asistente financiero. Puedo ayudarte a registrar gastos, revisar tu presupuesto, consultar tus deudas y mucho más. ¿En qué te ayudo hoy?' },
+    { id: 0, from: 'ai', text: '¡Hola usuario! Soy tu asistente financiero. Puedo ayudarte a registrar gastos, revisar tu presupuesto, consultar tus deudas y mucho más. ¿En qué te ayudo hoy?' },
   ])
   const [input, setInput] = useState('')
   const [typing, setTyping] = useState(false)

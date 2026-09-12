@@ -59,3 +59,10 @@ export async function changePassword(currentPassword: string, newPassword: strin
     body: { currentPassword, newPassword },
   })
 }
+
+export async function deleteAccount(password: string): Promise<void> {
+  return request<void>('/settings/account', {
+    method: 'DELETE',
+    body: { password },
+  })
+}

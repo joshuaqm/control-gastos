@@ -211,7 +211,7 @@ export function totalCardDebtFor(
 ): number {
   const totalCardDebt = input.accounts
     .filter((a) => a.type === "credit")
-    .reduce((sum, a) => sum + cardUsed(input.txns, input.installments, a.id), 0)
+    .reduce((sum, a) => sum + cardUsed(input.txns, input.installments, a.id, accountBalance(a)), 0)
   return Math.max(0, totalCardDebt)
 }
 

@@ -113,7 +113,9 @@ export default function AccountFormModal({
           </div>
 
           <div>
-            <label className="block text-xs font-medium mb-1" style={{ color: '#A0A0B8' }}>Saldo</label>
+            <label className="block text-xs font-medium mb-1" style={{ color: '#A0A0B8' }}>
+              {isCredit ? 'Ajuste manual de saldo' : 'Saldo'}
+            </label>
             <input
               value={balance}
               onChange={e => setBalance(e.target.value)}
@@ -122,6 +124,11 @@ export default function AccountFormModal({
               className="w-full px-4 py-3 rounded-xl text-sm font-mono"
               style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff' }}
             />
+            {isCredit && (
+              <p className="text-[11px] mt-1" style={{ color: '#6B6B85' }}>
+                Ajuste al cálculo automático. Positivo = más deuda, negativo = menos deuda.
+              </p>
+            )}
           </div>
 
           {isCredit && (

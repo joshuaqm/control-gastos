@@ -183,6 +183,7 @@ export default function App() {
             darkMode={darkMode}
             onToggleDark={() => setDarkMode(v => !v)}
             showToast={showToast}
+            onLogout={handleLogout}
             onProfileChange={(username, email) => {
               setUser(prev => prev ? { ...prev, username, email } : prev)
               try {

@@ -118,7 +118,11 @@ export default function DebtsScreen({ showToast }: { showToast: ShowToast }) {
   )
   const otherDebts = debts.filter((d) => d.type !== "credit_card")
 
-  const cardUsed = (id: number) => cardUsedWithMsi(txns, installments, id)
+  const cardUsed = (id: number) => {
+    const account = accounts.find((a) => a.id === id)
+    const initialBalance = account ? Number(account.balance) || 0 : 0
+    return cardUsedWithMsi(txns, installments, id, initialBalance)
+  }
   const cardMsiUsed = (id: number) => msiOutstandingFor(installments, id)
 
   const accountName = (id: number | null) =>

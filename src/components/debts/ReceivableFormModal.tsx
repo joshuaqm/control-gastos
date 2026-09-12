@@ -109,7 +109,7 @@ export default function ReceivableFormModal({
             <input
               value={person}
               onChange={(e) => setPerson(e.target.value)}
-              placeholder="Ej. Ana Martínez"
+              placeholder="Ej. Jelty Martínez"
               className="w-full px-4 py-3 rounded-xl text-sm"
               style={{
                 background: "rgba(255,255,255,0.06)",

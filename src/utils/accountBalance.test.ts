@@ -127,6 +127,17 @@ describe("cardUsed", () => {
     ]
     // creditUsed = 1000 + 400 = 1400; msiOutstanding = 500*10 = 5000; net includes +400
     // diff = 5000 - 400 = 4600 -> total = 6000
-    expect(cardUsed(txns, installs, 4)).toBe(1000 + 400 + 4600)
+    expect(cardUsed(txns, installs, 4, 0)).toBe(1000 + 400 + 4600)
+  })
+
+  it("applies initialBalance as manual adjustment", () => {
+    const txns = [
+      txn({ type: "expense", amount: 1000, account_id: 4 }),
+    ]
+    const installs: ApiInstallment[] = []
+    // base = 1000, initialBalance = 200 -> total = 1200
+    expect(cardUsed(txns, installs, 4, 200)).toBe(1200)
+    // initialBalance = -300 -> total = 700
+    expect(cardUsed(txns, installs, 4, -300)).toBe(700)
   })
 })

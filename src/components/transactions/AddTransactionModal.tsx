@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react'
 import { X } from 'lucide-react'
 import { createTransaction, fetchTransactions, updateTransaction, type ApiTransaction } from '@/api/transactions'
 import { fetchAccounts, type ApiAccount } from '@/api/accounts'
-import { accountBalance } from '@/utils/accountBalance'
+import { fetchInstallments, type ApiInstallment } from '@/api/installments'
+import { accountBalance, cardUsed } from '@/utils/accountBalance'
 import { fmt } from '@/utils/format'
 
 const CATEGORIES = [
@@ -47,6 +48,7 @@ export default function AddTransactionModal({ open, onClose, onAdd, transaction 
   const [budgetType, setBudgetType] = useState('')
   const [accounts, setAccounts] = useState<ApiAccount[]>([])
   const [txns, setTxns] = useState<ApiTransaction[]>([])
+  const [installments, setInstallments] = useState<ApiInstallment[]>([])
   const [accountId, setAccountId] = useState<number | null>(null)
   const [destAccountId, setDestAccountId] = useState<number | null>(null)
   const [saving, setSaving] = useState(false)
@@ -82,12 +84,23 @@ export default function AddTransactionModal({ open, onClose, onAdd, transaction 
     fetchTransactions()
       .then(setTxns)
       .catch(() => undefined)
+    fetchInstallments()
+      .then(setInstallments)
+      .catch(() => undefined)
   }, [open, transaction])
 
   const isStandard = ['expense', 'income', 'transfer'].includes(type)
   const isTransfer = type === 'transfer'
   const effectiveType: string = isStandard ? type : (transaction?.type ?? 'expense')
   const catOptions = CATEGORIES.includes(cat) ? CATEGORIES : [cat, ...CATEGORIES]
+
+  const displayBalance = (a: ApiAccount) => {
+    if (a.type === 'credit') {
+      const limit = a.credit_limit ?? 0
+      return Math.max(0, limit - cardUsed(txns, installments, a.id, accountBalance(a)))
+    }
+    return accountBalance(a)
+  }
 
   const handleSave = async () => {
     if (!amount || Number(amount) <= 0) return
@@ -257,7 +270,7 @@ export default function AddTransactionModal({ open, onClose, onAdd, transaction 
             >
               {accounts.length === 0 && <option value="">Sin cuentas</option>}
               {accounts.map(a => (
-                <option key={a.id} value={a.id}>{a.name} · {fmt(accountBalance(a))}</option>
+                <option key={a.id} value={a.id}>{a.name} · {fmt(displayBalance(a))}</option>
               ))}
             </select>
           </div>
@@ -275,7 +288,7 @@ export default function AddTransactionModal({ open, onClose, onAdd, transaction 
               >
                 {accounts.length === 0 && <option value="">Sin cuentas</option>}
                 {accounts.map(a => (
-                  <option key={a.id} value={a.id}>{a.name} · {fmt(accountBalance(a))}</option>
+                  <option key={a.id} value={a.id}>{a.name} · {fmt(displayBalance(a))}</option>
                 ))}
               </select>
             </div>

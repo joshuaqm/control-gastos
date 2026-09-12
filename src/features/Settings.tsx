@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import { Bell, Bot, Download, FileText, Save, Shield, Sun, User, Wallet } from 'lucide-react'
-import { changePassword, fetchSettings, updateSettings } from '@/api/settings'
+import { Bell, Bot, Download, FileText, LogOut, Save, Shield, Sun, Trash2, User, Wallet } from 'lucide-react'
+import { changePassword, deleteAccount, fetchSettings, updateSettings } from '@/api/settings'
 import { fetchTransactions } from '@/api/transactions'
 import LegalModal from '@/components/ui/LegalModal'
 import { TERMS_VERSION, TERMS_AND_CONDITIONS, PRIVACY_POLICY } from '@/data/legalTexts'
@@ -15,11 +15,13 @@ export default function SettingsScreen({
   darkMode,
   onToggleDark,
   onProfileChange,
+  onLogout,
   showToast,
 }: {
   darkMode: boolean
   onToggleDark: () => void
   onProfileChange?: (username: string, email: string) => void
+  onLogout?: () => void
   showToast: ShowToast
 }) {
   const [loading, setLoading] = useState(true)
@@ -36,6 +38,11 @@ export default function SettingsScreen({
   const [pwSaving, setPwSaving] = useState(false)
 
   const [exporting, setExporting] = useState(false)
+
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false)
+  const [deleteEmail, setDeleteEmail] = useState('')
+  const [deletePassword, setDeletePassword] = useState('')
+  const [deleting, setDeleting] = useState(false)
 
   const [aiConsent, setAiConsent] = useState(true)
   const [acceptedTerms, setAcceptedTerms] = useState(false)
@@ -182,6 +189,28 @@ export default function SettingsScreen({
       showToast(err instanceof Error ? err.message : 'Error al exportar', 'error')
     } finally {
       setExporting(false)
+    }
+  }
+
+  const handleDeleteAccount = async () => {
+    if (deleteEmail.trim().toLowerCase() !== email.toLowerCase()) {
+      showToast('El correo no coincide', 'error')
+      return
+    }
+    if (!deletePassword) {
+      showToast('Ingresa tu contraseña', 'error')
+      return
+    }
+    setDeleting(true)
+    try {
+      await deleteAccount(deletePassword)
+      showToast('Cuenta eliminada', 'success')
+      setDeleteModalOpen(false)
+      onLogout?.()
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : 'Error al eliminar la cuenta', 'error')
+    } finally {
+      setDeleting(false)
     }
   }
 
@@ -433,6 +462,99 @@ export default function SettingsScreen({
         <p className="text-sm">XOXO Finanzas v1.1</p>
         <p className="text-xs mt-1" style={{ color: '#6B6B85' }}>Todos los derechos reservados © 2026</p>
       </div>
+
+      {/* Zona de peligro */}
+      <div className="glass rounded-2xl p-5" style={{ border: '1px solid rgba(239,68,68,0.25)' }}>
+        <div className="flex items-center gap-3 mb-3">
+          <Trash2 size={16} style={{ color: '#EF4444' }} />
+          <h3 className="text-sm font-semibold" style={{ color: '#EF4444' }}>Zona de peligro</h3>
+        </div>
+        <p className="text-xs mb-4" style={{ color: '#6B6B85' }}>
+          Eliminar tu cuenta borrará permanentemente toda tu información: cuentas, transacciones, presupuestos, metas, deudas e inversiones. Esta acción no se puede deshacer.
+        </p>
+        <button
+          onClick={() => {
+            setDeleteEmail('')
+            setDeletePassword('')
+            setDeleteModalOpen(true)
+          }}
+          className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold"
+          style={{ background: 'rgba(239,68,68,0.12)', color: '#EF4444', border: '1px solid rgba(239,68,68,0.3)' }}
+        >
+          <Trash2 size={14} />
+          Eliminar cuenta
+        </button>
+      </div>
+
+      {/* Modal de confirmación de eliminación */}
+      {deleteModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)' }}>
+          <div className="glass animate-slide-up rounded-2xl p-6 w-full max-w-md" style={{ border: '1px solid rgba(239,68,68,0.25)' }}>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'rgba(239,68,68,0.15)' }}>
+                <LogOut size={20} style={{ color: '#EF4444' }} />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold">Eliminar cuenta</h3>
+                <p className="text-xs" style={{ color: '#6B6B85' }}>Esta acción es permanente e irreversible</p>
+              </div>
+            </div>
+
+            <div className="rounded-xl p-3 mb-4" style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)' }}>
+              <p className="text-xs" style={{ color: '#F87171' }}>
+                Se eliminarán todos tus datos: cuentas, transacciones, presupuestos, metas de ahorro, deudas, inversiones y configuración.
+              </p>
+            </div>
+
+            <div className="flex flex-col gap-3">
+              <div>
+                <label className="block text-xs font-medium mb-1" style={{ color: '#A0A0B8' }}>
+                  Escribe tu correo para confirmar ({email})
+                </label>
+                <input
+                  value={deleteEmail}
+                  onChange={e => setDeleteEmail(e.target.value)}
+                  placeholder={email}
+                  type="email"
+                  className="w-full px-4 py-3 rounded-xl text-sm"
+                  style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff' }}
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium mb-1" style={{ color: '#A0A0B8' }}>
+                  Contraseña actual
+                </label>
+                <input
+                  value={deletePassword}
+                  onChange={e => setDeletePassword(e.target.value)}
+                  type="password"
+                  placeholder="Tu contraseña"
+                  className="w-full px-4 py-3 rounded-xl text-sm"
+                  style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff' }}
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-3 mt-5">
+              <button
+                onClick={() => setDeleteModalOpen(false)}
+                className="flex-1 py-3 rounded-xl text-sm font-medium"
+                style={{ background: 'rgba(255,255,255,0.06)', color: '#A0A0B8' }}
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleDeleteAccount}
+                disabled={deleting || deleteEmail.trim().toLowerCase() !== email.toLowerCase() || !deletePassword}
+                className="flex-1 py-3 rounded-xl text-sm font-semibold disabled:opacity-40 disabled:cursor-not-allowed"
+                style={{ background: 'rgba(239,68,68,0.2)', color: '#EF4444', border: '1px solid rgba(239,68,68,0.3)' }}
+              >
+                {deleting ? 'Eliminando…' : 'Eliminar permanentemente'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
