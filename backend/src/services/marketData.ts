@@ -3,6 +3,17 @@ import { logger } from '../utils/logger';
 const TIMEOUT_MS = 10000;
 const USER_AGENT = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36';
 
+/**
+ * Minimal structural type for a `fetch` response. Declaring it locally keeps
+ * this module independent from any ambient `Response` type (Node/undici vs.
+ * DOM vs. Express), which otherwise collide in some build environments.
+ */
+interface FetchResponse {
+  ok: boolean;
+  status: number;
+  json(): Promise<unknown>;
+}
+
 // CoinGecko IDs for common crypto tickers (fallback: lowercase ticker)
 const COINGECKO_IDS: Record<string, string> = {
   btc: 'bitcoin',
@@ -30,10 +41,10 @@ async function fetchJson(url: string, timeout = TIMEOUT_MS): Promise<unknown> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeout);
   try {
-    const res = await fetch(url, {
+    const res = (await fetch(url, {
       signal: controller.signal,
       headers: { 'User-Agent': USER_AGENT },
-    });
+    })) as FetchResponse;
     if (!res.ok) {
       throw new Error(`HTTP ${res.status}`);
     }

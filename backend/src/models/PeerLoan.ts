@@ -18,7 +18,7 @@ export class PeerLoan {
   @Column({ type: 'varchar', length: 10, default: 'MXN' })
   currency!: string;
 
-  @Column({ length: 200, nullable: true })
+  @Column({ type: 'varchar', length: 200, nullable: true })
   description!: string | null;
 
   @Column({ type: 'date' })

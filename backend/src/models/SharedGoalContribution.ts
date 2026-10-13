@@ -18,7 +18,7 @@ export class SharedGoalContribution {
   @Column({ type: 'date' })
   date!: Date;
 
-  @Column({ length: 200, nullable: true })
+  @Column({ type: 'varchar', length: 200, nullable: true })
   note!: string | null;
 
   @Column({ type: 'timestamp', nullable: true })

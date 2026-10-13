@@ -18,10 +18,10 @@ export class PeerLoanPayment {
   @Column({ type: 'date' })
   date!: Date;
 
-  @Column({ length: 50, nullable: true })
+  @Column({ type: 'varchar', length: 50, nullable: true })
   method!: string | null;
 
-  @Column({ length: 200, nullable: true })
+  @Column({ type: 'varchar', length: 200, nullable: true })
   note!: string | null;
 
   @Column({ type: 'timestamp', nullable: true })

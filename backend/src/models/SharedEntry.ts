@@ -26,10 +26,10 @@ export class SharedEntry {
   @Column({ type: 'date' })
   date!: Date;
 
-  @Column({ length: 200, nullable: true })
+  @Column({ type: 'varchar', length: 200, nullable: true })
   description!: string | null;
 
-  @Column({ length: 100, nullable: true })
+  @Column({ type: 'varchar', length: 100, nullable: true })
   category!: string | null;
 
   @Column({ type: 'timestamp', nullable: true })

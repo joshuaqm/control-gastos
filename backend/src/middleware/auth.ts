@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction } from 'express';
+import { type RequestHandler } from 'express';
 import jwt from 'jsonwebtoken';
 import { AppError } from './errorHandler';
 
@@ -18,7 +18,7 @@ declare global {
   }
 }
 
-export const authenticate = (req: Request, res: Response, next: NextFunction) => {
+export const authenticate: RequestHandler = (req, res, next) => {
   try {
     const header = req.headers.authorization;
 
