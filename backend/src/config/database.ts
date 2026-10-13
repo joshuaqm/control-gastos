@@ -10,6 +10,15 @@ import { Goal } from '../models/Goal';
 import { Investment } from '../models/Investment';
 import { RecurringTransaction } from '../models/RecurringTransaction';
 import { PasswordResetToken } from '../models/PasswordResetToken';
+import { Friendship } from '../models/Friendship';
+import { SharedAccount } from '../models/SharedAccount';
+import { SharedAccountMember } from '../models/SharedAccountMember';
+import { SharedEntry } from '../models/SharedEntry';
+import { PeerLoan } from '../models/PeerLoan';
+import { PeerLoanPayment } from '../models/PeerLoanPayment';
+import { SharedGoal } from '../models/SharedGoal';
+import { SharedGoalContribution } from '../models/SharedGoalContribution';
+import { ActivityLog } from '../models/ActivityLog';
 
 const entities = [
   Account,
@@ -23,6 +32,15 @@ const entities = [
   Investment,
   RecurringTransaction,
   PasswordResetToken,
+  Friendship,
+  SharedAccount,
+  SharedAccountMember,
+  SharedEntry,
+  PeerLoan,
+  PeerLoanPayment,
+  SharedGoal,
+  SharedGoalContribution,
+  ActivityLog,
 ];
 
 const databaseUrl = process.env.DATABASE_URL;

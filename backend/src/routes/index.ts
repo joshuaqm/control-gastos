@@ -11,6 +11,10 @@ import { investmentsRouter } from './investments';
 import { recurringRouter } from './recurring';
 import { goalsRouter } from './goals';
 import { settingsRouter } from './settings';
+import { friendsRouter } from './friends';
+import { sharedAccountsRouter } from './sharedAccounts';
+import { peerLoansRouter } from './peerLoans';
+import { sharedGoalsRouter } from './sharedGoals';
 
 const router = Router();
 
@@ -29,5 +33,9 @@ router.use('/investments', investmentsRouter);
 router.use('/recurring', recurringRouter);
 router.use('/goals', goalsRouter);
 router.use('/settings', settingsRouter);
+router.use('/friends', friendsRouter);
+router.use('/shared-accounts', sharedAccountsRouter);
+router.use('/peer-loans', peerLoansRouter);
+router.use('/shared-goals', sharedGoalsRouter);
 
 export default router;

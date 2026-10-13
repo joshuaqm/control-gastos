@@ -10,7 +10,7 @@ import Toast from '@/components/ui/Toast'
 import { type ScreenId } from '@/config/navigation'
 import { type ApiUser } from '@/api/auth'
 import { type AuthResponse } from '@/api/auth'
-import { acceptTerms } from '@/api/settings'
+import { acceptTerms, fetchSettings } from '@/api/settings'
 import { TERMS_VERSION, TERMS_AND_CONDITIONS } from '@/data/legalTexts'
 import AccountsScreen from '@/features/Accounts'
 import BudgetsScreen from '@/features/Budgets'
@@ -21,6 +21,9 @@ import InvestmentsScreen from '@/features/Investments'
 import SettingsScreen from '@/features/Settings'
 import TransactionsScreen from '@/features/Transactions'
 import GoalsScreen from '@/features/Goals'
+import SharedScreen from '@/features/Shared'
+import UpdateNotesModal from '@/components/updates/UpdateNotesModal'
+import { CHANGELOG_VERSION } from '@/data/changelog'
 import LegalModal from '@/components/ui/LegalModal'
 import { useToasts } from '@/hooks/useToasts'
 import { useNotifications } from '@/hooks/useNotifications'
@@ -37,6 +40,7 @@ const SCREEN_PATH: Record<ScreenId, string> = {
   debts: '/debts',
   recurring: '/recurring',
   investments: '/investments',
+  shared: '/shared',
   settings: '/settings',
   assistant: '/assistant',
 }
@@ -93,6 +97,8 @@ export default function App() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [acceptingTerms, setAcceptingTerms] = useState(false)
   const [showTermsModal, setShowTermsModal] = useState(false)
+  const [showUpdateNotes, setShowUpdateNotes] = useState(false)
+  const [settingsFocus, setSettingsFocus] = useState<string | undefined>(undefined)
   const { toasts, showToast, dismiss } = useToasts()
   const notifs = useNotifications()
 
@@ -107,6 +113,7 @@ export default function App() {
   }
 
   const navigate = (next: ScreenId) => {
+    if (next !== 'settings') setSettingsFocus(undefined)
     setScreen(next)
     const path = SCREEN_PATH[next]
     if (window.location.pathname !== path) {
@@ -149,6 +156,57 @@ export default function App() {
       localStorage.setItem('financeai.hideAmounts', String(hideAmounts))
     } catch { /* ignore */ }
   }, [hideAmounts])
+
+  useEffect(() => {
+    if (!user || !user.accepted_terms) return
+    try {
+      const seen = localStorage.getItem('financeai.updateNotesSeen')
+      if (seen !== CHANGELOG_VERSION) setShowUpdateNotes(true)
+    } catch { /* ignore */ }
+  }, [user])
+
+  // Sesiones antiguas no guardan `accepted_terms`; reconciliar contra el backend
+  // para no volver a mostrar el gate de términos si ya fueron aceptados.
+  useEffect(() => {
+    if (!user || user.accepted_terms !== undefined) return
+    let cancelled = false
+    fetchSettings()
+      .then(s => {
+        if (cancelled) return
+        setUser(prev => {
+          if (!prev) return prev
+          const updated = {
+            ...prev,
+            accepted_terms: s.accepted_terms,
+            terms_version: s.terms_version,
+            accepted_at: s.accepted_at,
+          }
+          try {
+            const raw = localStorage.getItem(SESSION_KEY)
+            if (raw) {
+              const parsed = JSON.parse(raw)
+              localStorage.setItem(SESSION_KEY, JSON.stringify({ ...parsed, user: updated }))
+            }
+          } catch { /* ignore */ }
+          return updated
+        })
+      })
+      .catch(() => { /* ignore */ })
+    return () => { cancelled = true }
+  }, [])
+
+  const dismissUpdateNotes = () => {
+    try {
+      localStorage.setItem('financeai.updateNotesSeen', CHANGELOG_VERSION)
+    } catch { /* ignore */ }
+    setShowUpdateNotes(false)
+  }
+
+  const viewChangelogDetails = () => {
+    dismissUpdateNotes()
+    setSettingsFocus('changelog')
+    navigate('settings')
+  }
 
   const handleLogout = () => {
     localStorage.removeItem(SESSION_KEY)
@@ -221,6 +279,8 @@ export default function App() {
         return <RecurringScreen showToast={showToast} />
       case 'investments':
         return <InvestmentsScreen showToast={showToast} />
+      case 'shared':
+        return <SharedScreen showToast={showToast} currentUser={user} />
       case 'settings':
         return (
           <SettingsScreen
@@ -228,6 +288,8 @@ export default function App() {
             onToggleDark={() => setDarkMode(v => !v)}
             showToast={showToast}
             onLogout={handleLogout}
+            focusSection={settingsFocus}
+            onFocusConsumed={() => setSettingsFocus(undefined)}
             onProfileChange={(username, email) => {
               setUser(prev => prev ? { ...prev, username, email } : prev)
               try {
@@ -405,6 +467,13 @@ export default function App() {
           ))}
         </div>
       )}
+
+      {/* Notas de actualización al iniciar sesión */}
+      <UpdateNotesModal
+        open={showUpdateNotes}
+        onClose={dismissUpdateNotes}
+        onViewMore={viewChangelogDetails}
+      />
 
       {/* Toasts */}
       <Toast toasts={toasts} dismiss={dismiss} />

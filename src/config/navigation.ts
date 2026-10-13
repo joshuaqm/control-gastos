@@ -1,4 +1,4 @@
-import { BarChart2, Bot, CreditCard, DollarSign, Home, PiggyBank, Repeat, Settings, Target, TrendingUp, type LucideIcon } from 'lucide-react'
+import { BarChart2, Bot, CreditCard, DollarSign, Home, PiggyBank, Repeat, Settings, Target, TrendingUp, Users, type LucideIcon } from 'lucide-react'
 
 export type ScreenId =
   | 'dashboard'
@@ -9,6 +9,7 @@ export type ScreenId =
   | 'debts'
   | 'recurring'
   | 'investments'
+  | 'shared'
   | 'settings'
   | 'assistant'
 
@@ -28,6 +29,7 @@ export const navItems: NavItem[] = [
   { id: 'debts', label: 'Deudas', icon: DollarSign },
   { id: 'recurring', label: 'Recurrentes', icon: Repeat },
   { id: 'investments', label: 'Inversiones', icon: TrendingUp },
+  { id: 'shared', label: 'Compartido', icon: Users },
   { id: 'assistant', label: 'Asistente IA', icon: Bot, disabled: true }, // Deshabilitado por ahora
   { id: 'settings', label: 'Configuración', icon: Settings },
 ]

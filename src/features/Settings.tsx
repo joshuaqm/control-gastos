@@ -1,9 +1,11 @@
-import { useEffect, useState } from 'react'
-import { Bell, Bot, Download, FileText, LogOut, Save, Shield, Sun, Trash2, User, Wallet } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
+import { Bell, Bot, Download, FileText, LogOut, Save, Shield, Sparkles, Sun, Trash2, User, Wallet } from 'lucide-react'
 import { changePassword, deleteAccount, fetchSettings, updateSettings } from '@/api/settings'
 import { fetchTransactions } from '@/api/transactions'
 import LegalModal from '@/components/ui/LegalModal'
+import ChangelogList from '@/components/updates/ChangelogList'
 import { TERMS_VERSION, TERMS_AND_CONDITIONS, PRIVACY_POLICY } from '@/data/legalTexts'
+import { CHANGELOG_VERSION } from '@/data/changelog'
 import type { ShowToast } from '@/types'
 
 const CURRENCIES = [
@@ -17,14 +19,19 @@ export default function SettingsScreen({
   onProfileChange,
   onLogout,
   showToast,
+  focusSection,
+  onFocusConsumed,
 }: {
   darkMode: boolean
   onToggleDark: () => void
   onProfileChange?: (username: string, email: string) => void
   onLogout?: () => void
   showToast: ShowToast
+  focusSection?: string
+  onFocusConsumed?: () => void
 }) {
   const [loading, setLoading] = useState(true)
+  const changelogRef = useRef<HTMLDivElement>(null)
   const [username, setUsername] = useState('')
   const [email, setEmail] = useState('')
   const [monthlyIncome, setMonthlyIncome] = useState('')
@@ -71,6 +78,15 @@ export default function SettingsScreen({
   }
 
   useEffect(() => { load() }, [])
+
+  useEffect(() => {
+    if (loading || focusSection !== 'changelog') return
+    const t = window.setTimeout(() => {
+      changelogRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      onFocusConsumed?.()
+    }, 120)
+    return () => window.clearTimeout(t)
+  }, [loading, focusSection])
 
   if (loading) {
     return (
@@ -459,8 +475,22 @@ export default function SettingsScreen({
 
       <div className="glass rounded-2xl p-5" style={{ border: '1px solid var(--border)' }}>
         <p className="text-xs font-semibold mb-1" style={{ color: 'var(--text-2)' }}>VERSIÓN</p>
-        <p className="text-sm">XOXO Finanzas v1.1</p>
+        <p className="text-sm">XOXO Finanzas v2.0</p>
         <p className="text-xs mt-1" style={{ color: 'var(--text-3)' }}>Todos los derechos reservados © 2026</p>
+      </div>
+
+      {/* Novedades / Actualizaciones */}
+      <div ref={changelogRef} className="glass rounded-2xl p-5 scroll-mt-24" style={{ border: '1px solid var(--border)' }}>
+        <div className="flex items-center gap-3 mb-4">
+          <Sparkles size={16} style={{ color: '#A78BFA' }} />
+          <div>
+            <h3 className="text-sm font-semibold">Novedades y actualizaciones</h3>
+            <p className="text-xs" style={{ color: 'var(--text-3)' }}>
+              Historial de mejoras y correcciones · versión actual {CHANGELOG_VERSION}
+            </p>
+          </div>
+        </div>
+        <ChangelogList />
       </div>
 
       {/* Zona de peligro */}

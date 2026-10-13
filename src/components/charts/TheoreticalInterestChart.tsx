@@ -17,6 +17,10 @@ export default function TheoreticalInterestChart({
   points,
   series,
 }: InterestByAccount) {
+  const nameByKey = new Map(series.map((s) => [s.key, s.name]))
+  const shortName = (name: string, max = 18) =>
+    name.length > max ? `${name.slice(0, max - 1)}…` : name
+
   if (points.every((p) => Number(p.total) <= 0)) {
     return (
       <div className="py-10 flex items-center justify-center">
@@ -52,15 +56,19 @@ export default function TheoreticalInterestChart({
                   <p className="text-[var(--text-2)] mb-1">{label}</p>
                   {payload
                     .filter((p) => Number(p.value) !== 0)
-                    .map((p) => (
-                      <p
-                        key={p.name}
-                        className="font-mono"
-                        style={{ color: p.color }}
-                      >
-                        {p.name}: {fmt(Number(p.value))}
-                      </p>
-                    ))}
+                    .map((p) => {
+                      const key = String(p.name)
+                      const fullName = nameByKey.get(key) ?? key
+                      return (
+                        <p
+                          key={key}
+                          className="font-mono"
+                          style={{ color: p.color }}
+                        >
+                          {shortName(fullName)}: {fmt(Number(p.value))}
+                        </p>
+                      )
+                    })}
                   <p
                     className="font-mono font-medium mt-1 pt-1"
                     style={{
@@ -83,6 +91,7 @@ export default function TheoreticalInterestChart({
         {series.map((s) => (
           <span
             key={s.key}
+            title={s.name}
             className="flex items-center gap-1.5"
             style={{ color: "var(--text-2)" }}
           >
@@ -90,7 +99,7 @@ export default function TheoreticalInterestChart({
               className="w-2 h-2 rounded-full"
               style={{ background: s.color }}
             />
-            {s.name}
+            {shortName(s.name)}
           </span>
         ))}
       </div>

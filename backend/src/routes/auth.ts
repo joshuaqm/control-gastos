@@ -50,12 +50,18 @@ interface SafeUser {
   id: number;
   username: string;
   email: string;
+  accepted_terms: boolean;
+  terms_version: string | null;
+  accepted_at: Date | null;
 }
 
 const toSafeUser = (user: User): SafeUser => ({
   id: user.id,
   username: user.username,
   email: user.email,
+  accepted_terms: user.accepted_terms,
+  terms_version: user.terms_version,
+  accepted_at: user.accepted_at,
 });
 
 // POST /api/v1/auth/login
