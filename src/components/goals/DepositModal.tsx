@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { X } from 'lucide-react'
+import { fmt } from '@/utils/format'
 import type { ApiGoal } from '@/api/goals'
 import type { ApiAccount } from '@/api/accounts'
 
@@ -64,7 +65,7 @@ export default function DepositModal({
         </div>
 
         <p className="text-xs mb-4 px-3 py-2 rounded-lg" style={{ background: 'rgba(124,58,237,0.1)', border: '1px solid rgba(124,58,237,0.25)', color: '#C4B5FD' }}>
-          {goal?.name ?? ''} · te faltan {new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(remaining)} para completarla. El dinero saldrá de la cuenta de origen y se registrará un movimiento de ahorro.
+          {goal?.name ?? ''} · te faltan {fmt(remaining)} para completarla. El dinero saldrá de la cuenta de origen y se registrará un movimiento de ahorro.
         </p>
 
         <div className="flex flex-col gap-3">
@@ -92,7 +93,7 @@ export default function DepositModal({
             >
               <option value="">Selecciona una cuenta</option>
               {sourceAccounts.map(a => (
-                <option key={a.id} value={a.id}>{a.name} · {new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(a.initial_balance)}</option>
+                <option key={a.id} value={a.id}>{a.name} · {fmt(a.initial_balance)}</option>
               ))}
             </select>
           </div>

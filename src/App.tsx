@@ -24,6 +24,7 @@ import GoalsScreen from '@/features/Goals'
 import LegalModal from '@/components/ui/LegalModal'
 import { useToasts } from '@/hooks/useToasts'
 import { useNotifications } from '@/hooks/useNotifications'
+import { setAmountsHidden } from '@/utils/format'
 
 const SESSION_KEY = 'financeai.session'
 
@@ -75,6 +76,17 @@ export default function App() {
       if (stored !== null) return stored === 'true'
     } catch { /* ignore */ }
     return true
+  })
+  const [hideAmounts, setHideAmounts] = useState(() => {
+    try {
+      const stored = localStorage.getItem('financeai.hideAmounts')
+      if (stored !== null) {
+        const hidden = stored === 'true'
+        setAmountsHidden(hidden)
+        return hidden
+      }
+    } catch { /* ignore */ }
+    return false
   })
   const [chatMsg, setChatMsg] = useState('')
   const [reveal, setReveal] = useState<'idle' | 'expanding' | 'revealing'>('idle')
@@ -132,11 +144,23 @@ export default function App() {
     } catch { /* ignore */ }
   }, [darkMode])
 
+  useEffect(() => {
+    try {
+      localStorage.setItem('financeai.hideAmounts', String(hideAmounts))
+    } catch { /* ignore */ }
+  }, [hideAmounts])
+
   const handleLogout = () => {
     localStorage.removeItem(SESSION_KEY)
     setUser(null)
     setScreen('dashboard')
     window.history.replaceState(null, '', SCREEN_PATH.dashboard)
+  }
+
+  const toggleHideAmounts = () => {
+    const next = !hideAmounts
+    setAmountsHidden(next)
+    setHideAmounts(next)
   }
 
   const handleAcceptTerms = async () => {
@@ -300,6 +324,8 @@ export default function App() {
           onOpenMenu={() => setMobileMenuOpen(true)} 
           darkMode={darkMode} 
           onToggleDark={() => setDarkMode(v => !v)} 
+          hideAmounts={hideAmounts}
+          onToggleHideAmounts={toggleHideAmounts}
           userName={user?.username}
           sidebarOffset={sidebarWidth}
           notifs={notifs}

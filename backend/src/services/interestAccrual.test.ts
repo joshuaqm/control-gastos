@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { Mock } from "vitest";
 import { adjustRealInterest, THEORETICAL_NOTE } from "./interestAccrual";
-import { recalcAccountBalance } from "./recalcBalance";
+import { adjustAccountBalance } from "./recalcBalance";
 
 vi.mock("../config/database", () => ({
   AppDataSource: {
@@ -51,6 +51,10 @@ beforeEach(() => {
 });
 
 describe("adjustRealInterest", () => {
+  beforeEach(() => {
+    vi.mocked(adjustAccountBalance).mockClear();
+  });
+
   it("creates one real income interest transaction", async () => {
     const account = {
       id: 1,
@@ -84,9 +88,11 @@ describe("adjustRealInterest", () => {
     expect(transactionRepo.remove).not.toHaveBeenCalled();
     expect(accountRepo.save).toHaveBeenCalledTimes(1);
     expect(result.balanceDelta).toBe(60);
+    // The current balance is adjusted incrementally by the yield, not replaced.
+    expect(adjustAccountBalance).toHaveBeenCalledWith(1, 5, 60);
   });
 
-  it("removes legacy theoretical transactions and recalculates balance", async () => {
+  it("adjusts balance incrementally and reverses removed theoreticals", async () => {
     const account = {
       id: 1,
       userId: 5,
@@ -114,8 +120,33 @@ describe("adjustRealInterest", () => {
     await adjustRealInterest(1, 5, 60);
 
     expect(transactionRepo.remove).toHaveBeenCalledWith(theoretical);
-    expect(recalcAccountBalance).toHaveBeenCalledWith(1, 5);
+    // 60 yield minus the 20 of removed theoretical income.
+    expect(adjustAccountBalance).toHaveBeenCalledWith(1, 5, 40);
     expect(transactionRepo.save).toHaveBeenCalledTimes(1);
+  });
+
+  it("accepts a negative yield (loss) and reduces the balance", async () => {
+    const account = {
+      id: 1,
+      userId: 5,
+      type: "investment",
+      initial_balance: 1000,
+      last_interest_at: null,
+    } as Account;
+    const accountRepo = fakeRepo();
+    accountRepo.findOne.mockResolvedValue(account);
+    const transactionRepo = fakeRepo();
+    transactionRepo.find.mockResolvedValue([]);
+    transactionRepo.create.mockImplementation((obj) => obj as Transaction);
+    transactionRepo.save.mockResolvedValue({} as Transaction);
+    getRepository.mockImplementation((entity) =>
+      entity === Account ? (accountRepo as never) : (transactionRepo as never),
+    );
+
+    const result = await adjustRealInterest(1, 5, -150);
+
+    expect(adjustAccountBalance).toHaveBeenCalledWith(1, 5, -150);
+    expect(result.balanceDelta).toBe(-150);
   });
 
   it("throws when the account is a credit card", async () => {
@@ -130,7 +161,7 @@ describe("adjustRealInterest", () => {
     );
   });
 
-  it("rejects non-numeric or <= 0 amounts", async () => {
+  it("rejects non-numeric or zero amounts", async () => {
     const accountRepo = fakeRepo();
     accountRepo.findOne.mockResolvedValue({ id: 1, type: "debit" } as Account);
     getRepository.mockReturnValue(accountRepo as never);

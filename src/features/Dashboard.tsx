@@ -48,7 +48,7 @@ import {
   computeTotals,
   creditReminders,
   debtReminders,
-  interestChartDataRange,
+  interestChartByAccount,
   interestReminders,
   monthPrefix,
   recurringReminders,
@@ -241,34 +241,58 @@ export default function Dashboard({
 
   const budgetRows = useMemo(() => {
     if (budgetRule.length === 0) return []
-    if (rangeMonths <= 1) return budgetRule
     const fromPrefix = monthPrefix(startRef)
     const toPrefix = monthPrefix(anchor)
     const spentByType = new Map<string, number>()
+    let uncategorized = 0
     for (const t of txns) {
       if (!t.date) continue
       const prefix = t.date.slice(0, 7)
       if (prefix < fromPrefix || prefix > toPrefix) continue
-      if (!t.budget_type) continue
       const isSaveAllocation =
         (t.type === "income" || t.type === "transfer") &&
         t.budget_type === "save"
-      if (t.type !== "expense" && t.type !== "debt_payment" && !isSaveAllocation) continue
+      if (t.type !== "expense" && t.type !== "debt_payment" && !isSaveAllocation)
+        continue
+      if (!t.budget_type) {
+        if (t.type === "expense" || t.type === "debt_payment")
+          uncategorized += Number(t.amount)
+        continue
+      }
       spentByType.set(
         t.budget_type,
         (spentByType.get(t.budget_type) || 0) + Number(t.amount),
       )
     }
-    return budgetRule.map((r) => {
-      const spent = Math.round((spentByType.get(r.budgetType) || 0) * 100) / 100
-      const target = Math.round(r.target * rangeMonths * 100) / 100
-      return {
-        ...r,
-        spent,
-        target,
-        remaining: Math.round((target - spent) * 100) / 100,
-      }
-    })
+    const rows =
+      rangeMonths <= 1
+        ? budgetRule.map((r) => ({ ...r }))
+        : budgetRule.map((r) => {
+            const spent =
+              Math.round((spentByType.get(r.budgetType) || 0) * 100) / 100
+            const target = Math.round(r.target * rangeMonths * 100) / 100
+            return {
+              ...r,
+              spent,
+              target,
+              remaining: Math.round((target - spent) * 100) / 100,
+            }
+          })
+    if (uncategorized > 0) {
+      rows.push({
+        id: null,
+        exists: false,
+        budgetType: "none",
+        name: "Sin categoría",
+        icon: "➖",
+        color: "#A3A3C2",
+        percentage: 0,
+        target: 0,
+        spent: Math.round(uncategorized * 100) / 100,
+        remaining: 0,
+      })
+    }
+    return rows
   }, [budgetRule, txns, rangeMonths, startRef, anchor])
 
   const catData = useMemo(
@@ -279,11 +303,14 @@ export default function Dashboard({
     () => cashFlowRange(txns, anchor, rangeMonths),
     [txns, anchor, rangeMonths],
   )
-  const theoData = useMemo(
-    () => interestChartDataRange(txns, anchor, rangeMonths),
-    [txns, anchor, rangeMonths],
+  const theoInterest = useMemo(
+    () => interestChartByAccount(txns, accounts, anchor, rangeMonths),
+    [txns, accounts, anchor, rangeMonths],
   )
-  const theoMonthTotal = theoData.reduce((s, d) => s + d.valor, 0)
+  const theoMonthTotal = theoInterest.points.reduce(
+    (s, d) => s + d.total,
+    0,
+  )
   const assetTxns = useMemo(() => {
     const toPrefix = monthPrefix(anchor)
     return txns.filter((t) => !t.date || t.date.slice(0, 7) <= toPrefix)
@@ -302,14 +329,14 @@ export default function Dashboard({
   const reminders = useMemo(
     () =>
       [
-        ...creditReminders(accounts, txns),
+        ...creditReminders(accounts, txns, installments),
         ...recurringReminders(recurring, txns),
         ...debtReminders(debts),
         ...interestReminders(accounts, txns),
       ]
         .sort((a, b) => a.days - b.days)
         .slice(0, 6),
-    [accounts, txns, recurring, debts],
+    [accounts, txns, installments, recurring, debts],
   )
 
   const investGain = useMemo(() => {
@@ -696,7 +723,10 @@ export default function Dashboard({
               </span>
             </div>
           </div>
-          <TheoreticalInterestChart data={theoData} />
+          <TheoreticalInterestChart
+            points={theoInterest.points}
+            series={theoInterest.series}
+          />
           <p className="text-[11px] mt-2" style={{ color: "var(--text-3)" }}>
             Rendimiento real registrado manualmente por cuenta.
           </p>

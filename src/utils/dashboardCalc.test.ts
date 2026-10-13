@@ -20,6 +20,7 @@ import {
   interestReminders,
   interestChartData,
   interestChartDataRange,
+  interestChartByAccount,
   assetDistribution,
   daysUntil,
   addMonths,
@@ -327,6 +328,68 @@ describe("interestChartDataRange", () => {
   })
 })
 
+describe("interestChartByAccount", () => {
+  const real = (date: string, amount: number, account_id: number) =>
+    txn({
+      type: "income",
+      category: "Intereses",
+      notes: REAL_NOTE,
+      amount,
+      date,
+      account_id,
+    })
+
+  it("splits monthly yields per account and totals them", () => {
+    const accounts = [
+      account({ id: 1, name: "Nómina" }),
+      account({ id: 2, name: "Ahorro" }),
+    ]
+    const result = interestChartByAccount(
+      [
+        real("2026-07-10", 30, 1),
+        real("2026-07-20", 10, 2),
+        real("2026-08-10", 20, 1),
+      ],
+      accounts,
+      { year: 2026, month: 7 },
+      2,
+    )
+    expect(result.series.map((s) => s.name)).toEqual(["Nómina", "Ahorro"])
+    expect(result.points).toEqual([
+      { month: "Jul 26", total: 40, acc_1: 30, acc_2: 10 },
+      { month: "Ago 26", total: 20, acc_1: 20, acc_2: 0 },
+    ])
+  })
+
+  it("groups by day within a single month", () => {
+    const accounts = [account({ id: 1, name: "Nómina" })]
+    const result = interestChartByAccount(
+      [
+        real("2026-08-01", 10, 1),
+        real("2026-08-01", 15, 1),
+        real("2026-08-15", 5, 1),
+      ],
+      accounts,
+      { year: 2026, month: 7 },
+      1,
+    )
+    expect(result.points).toEqual([
+      { month: "2026-08-01", total: 25, acc_1: 25 },
+      { month: "2026-08-15", total: 5, acc_1: 5 },
+    ])
+  })
+
+  it("falls back to a generic name for unknown accounts", () => {
+    const result = interestChartByAccount(
+      [real("2026-08-05", 12, 99)],
+      [],
+      { year: 2026, month: 7 },
+      1,
+    )
+    expect(result.series[0].name).toBe("Cuenta 99")
+  })
+})
+
 describe("totalCardDebtFor", () => {
   it("sums card usage across credit accounts and floors at zero", () => {
     const accounts = [
@@ -465,6 +528,36 @@ describe("reminders", () => {
       account({ id: 4, type: "credit", is_active: true, payment_due_day: 16 }),
     ]
     expect(creditReminders(accounts, [])).toHaveLength(0)
+  })
+
+  it("creditReminders flags a card whose only pending balance comes from MSI", () => {
+    const accounts = [
+      account({
+        id: 4,
+        type: "credit",
+        is_active: true,
+        cutoff_day: 18,
+        payment_due_day: 18,
+        name: "MSI",
+      }),
+    ]
+    const installments = [
+      {
+        id: 1,
+        account_id: 4,
+        status: "active",
+        monthly_amount: 100,
+        months_total: 12,
+        months_paid: 0,
+      } as ApiInstallment,
+    ]
+    // No transactions, so transaction-derived usage is zero: the MSI balance
+    // is the only pending amount (BUG-05).
+    expect(creditReminders(accounts, [])).toHaveLength(0)
+    const reminders = creditReminders(accounts, [], installments)
+    expect(reminders).toHaveLength(1)
+    expect(reminders[0].kind).toBe("credit")
+    expect(reminders[0].amount).toBe(1200)
   })
 
   it("creditReminders does not flag a fresh balance as overdue when the cut day already passed", () => {

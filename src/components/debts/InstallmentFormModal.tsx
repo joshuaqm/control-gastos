@@ -1,5 +1,6 @@
 import { useState } from "react"
 import { X } from "lucide-react"
+import { fmt } from "@/utils/format"
 import type { ApiInstallment } from "@/api/installments"
 
 export interface InstallmentFormData {
@@ -214,19 +215,13 @@ export default function InstallmentFormModal({
             }}
           >
             Total:{" "}
-            {totalAmount.toLocaleString("es-MX", {
-              style: "currency",
-              currency: "MXN",
-            })}{" "}
+            {fmt(totalAmount)}{" "}
             · Saldo ocupado:{" "}
             {monthlyAmount && monthsTotal
-              ? (
+              ? fmt(
                   Number(monthlyAmount) *
-                  (Number(monthsTotal) - Number(monthsPaid))
-                ).toLocaleString("es-MX", {
-                  style: "currency",
-                  currency: "MXN",
-                })
+                    (Number(monthsTotal) - Number(monthsPaid)),
+                )
               : "—"}
           </p>
 

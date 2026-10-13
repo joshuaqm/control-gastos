@@ -3,6 +3,7 @@ import type { DeepPartial } from 'typeorm';
 import { AppDataSource } from '../config/database';
 import { RecurringTransaction } from '../models/RecurringTransaction';
 import { Transaction } from '../models/Transaction';
+import { applyCreate } from '../services/recalcBalance';
 import { logger } from '../utils/logger';
 import { authenticate } from '../middleware/auth';
 import { AppError } from '../middleware/errorHandler';
@@ -13,6 +14,12 @@ router.use(authenticate);
 
 function toDate(value: Date | string): Date {
   return value instanceof Date ? new Date(value) : new Date(`${String(value).slice(0, 10)}T00:00:00`);
+}
+
+/** Local YYYY-MM-DD key, so date-only strings don't shift a day across timezones. */
+function dayKey(value: Date | string): string {
+  const d = toDate(value);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
 function advanceDate(value: Date | string, frequency: string, intervalDays?: number | null): Date {
@@ -132,9 +139,21 @@ router.post('/:id/register', async (req, res, next) => {
 
     const { account_id, date, description } = req.body ?? {};
     const amount = Number(recurring.amount);
-    const effectiveDate = (date ? new Date(date) : recurring.next_date);
+    const effectiveDate = date ? toDate(date) : toDate(recurring.next_date);
 
     const transactionRepo = AppDataSource.getRepository(Transaction);
+
+    // Idempotency: never book the same recurring charge twice for the same day
+    // (prevents double discounting the account balance on retries).
+    const existing = await transactionRepo.find({
+      where: { recurring_id: recurring.id, userId: req.user!.id },
+    });
+    if (existing.some(t => dayKey(t.date) === dayKey(effectiveDate))) {
+      return next(
+        new AppError('El cobro de esta fecha ya fue registrado', 409),
+      );
+    }
+
     const transaction = transactionRepo.create({
       date: effectiveDate,
       description: description || recurring.name,
@@ -147,6 +166,9 @@ router.post('/:id/register', async (req, res, next) => {
       userId: req.user!.id,
     });
     await transactionRepo.save(transaction);
+
+    // Debit the selected account by the payment amount.
+    await applyCreate(req.user!.id, transaction);
 
     recurring.next_date = advanceDate(recurring.next_date, recurring.frequency, recurring.interval_days);
     await recurringRepo.save(recurring);

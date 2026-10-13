@@ -1,7 +1,7 @@
 import { AppDataSource } from '../config/database';
 import { Account } from '../models/Account';
 import { Transaction } from '../models/Transaction';
-import { recalcAccountBalance } from './recalcBalance';
+import { adjustAccountBalance } from './recalcBalance';
 import { logger } from '../utils/logger';
 
 export const THEORETICAL_NOTE = 'Rendimiento teórico semanal';
@@ -17,9 +17,14 @@ function round2(n: number): number {
 
 /**
  * Registers the real monthly interest of an account as a single income
- * transaction ("Rendimiento real de intereses"). The balance is derived from
- * `initial_balance` plus the account's transactions, so the income transaction
- * accounts for the yield exactly once (no theoretical accrual involved).
+ * transaction ("Rendimiento real de intereses") whose amount is the yield for
+ * the period (it may be negative when the account loses value).
+ *
+ * The stored `initial_balance` is the account's current balance and is adjusted
+ * incrementally by the yield, so the final balance equals the "saldo
+ * actualizado" the user entered. Full recomputation is intentionally avoided
+ * because it would overwrite the balance with the sum of transactions (i.e. the
+ * yield itself), which is the bug this flow used to have.
  */
 export async function adjustRealInterest(
   accountId: number,
@@ -37,21 +42,22 @@ export async function adjustRealInterest(
   if (account.type === 'credit') {
     throw new Error('No aplica a una tarjeta de crédito');
   }
-  if (!Number.isFinite(amount) || amount <= 0) {
+  if (!Number.isFinite(amount) || amount === 0) {
     throw new Error('Ingresa un monto válido');
   }
 
   const monthRef = month ?? new Date();
   const monthEnd = endOfMonth(monthRef);
 
-  // Clean up any legacy theoretical income transactions. Removing them and
-  // recalculating the balance is sufficient — no manual initial_balance
-  // adjustment needed since recalcAccountBalance derives from transactions.
+  // Clean up any legacy theoretical income transactions. Their amounts were
+  // reflected in the stored balance, so reverse them before applying the yield.
   const allIncome = await transactionRepo.find({
     where: { account_id: accountId, userId, type: 'income' },
   });
   const theoreticalToRemove = allIncome.filter(t => t.notes === THEORETICAL_NOTE);
+  let theoreticalSum = 0;
   if (theoreticalToRemove.length > 0) {
+    theoreticalSum = theoreticalToRemove.reduce((s, t) => s + Number(t.amount), 0);
     await transactionRepo.remove(theoreticalToRemove);
   }
 
@@ -71,8 +77,8 @@ export async function adjustRealInterest(
   });
   await transactionRepo.save(transaction);
 
-  // Recalculate balance to include the new interest income
-  await recalcAccountBalance(accountId, userId);
+  // Adjust the current balance by the yield (and reverse removed theoreticals)
+  await adjustAccountBalance(accountId, userId, amount - theoreticalSum);
   const updated = await accountRepo.findOne({ where: { id: accountId, userId } });
 
   logger.info(`Real interest adjusted for account ${accountId}: +${amount} (removed ${theoreticalToRemove.length} theoretical)`);

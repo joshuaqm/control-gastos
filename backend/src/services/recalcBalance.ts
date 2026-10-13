@@ -9,6 +9,11 @@ function round2(n: number): number {
 /**
  * Incrementally adjusts an account's stored balance by `delta` and persists it.
  * This preserves any manual adjustment the user made via the edit modal.
+ *
+ * Credit-card accounts are intentionally skipped: their `initial_balance` is a
+ * manual adjustment on top of the transaction-derived usage, never the running
+ * balance. Mutating it on every transaction would cancel the transaction's
+ * effect (purchases/payments ended up landing in "Ajuste manual de saldo").
  */
 export async function adjustAccountBalance(
   accountId: number,
@@ -18,6 +23,7 @@ export async function adjustAccountBalance(
   const accountRepo = AppDataSource.getRepository(Account);
   const account = await accountRepo.findOne({ where: { id: accountId, userId } });
   if (!account) return;
+  if (account.type === 'credit') return;
   account.initial_balance = round2((Number(account.initial_balance) || 0) + delta);
   await accountRepo.save(account);
 }

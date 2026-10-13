@@ -110,6 +110,22 @@ export default function TransactionsScreen({ showToast }: { showToast: ShowToast
   const curPage = Math.min(page, pages)
   const pageTxs = filtered.slice((curPage - 1) * PAGE_SIZE, curPage * PAGE_SIZE)
 
+  const pageItems = useMemo(() => {
+    const items: (number | 'gap')[] = []
+    if (pages <= 7) {
+      for (let i = 1; i <= pages; i++) items.push(i)
+      return items
+    }
+    items.push(1)
+    const start = Math.max(2, curPage - 1)
+    const end = Math.min(pages - 1, curPage + 1)
+    if (start > 2) items.push('gap')
+    for (let i = start; i <= end; i++) items.push(i)
+    if (end < pages - 1) items.push('gap')
+    items.push(pages)
+    return items
+  }, [pages, curPage])
+
   const accountName = (id: number | null) =>
     id == null ? '' : (accs.find(a => a.id === id)?.name ?? '')
 
@@ -339,38 +355,53 @@ export default function TransactionsScreen({ showToast }: { showToast: ShowToast
       </div>
 
       {!loading && filtered.length > 0 && (
-        <div className="flex items-center justify-between">
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <span className="text-xs" style={{ color: 'var(--text-3)' }}>
             {filtered.length > PAGE_SIZE
               ? `${(curPage - 1) * PAGE_SIZE + 1}–${Math.min(curPage * PAGE_SIZE, filtered.length)} de ${filtered.length}`
               : `${filtered.length} movimientos`}
           </span>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap items-center gap-1 sm:gap-2">
             <button
               onClick={() => setPage(p => Math.max(1, p - 1))}
               disabled={curPage <= 1}
-              className="px-3 py-1.5 rounded-lg text-xs font-medium disabled:opacity-40"
+              aria-label="Página anterior"
+              className="px-2 sm:px-3 py-1.5 rounded-lg text-xs font-medium disabled:opacity-40"
               style={{ background: 'var(--input-bg)', color: 'var(--text-2)' }}
             >
-              ← Anterior
+              <span className="hidden sm:inline">← Anterior</span>
+              <span className="sm:hidden">←</span>
             </button>
-            {Array.from({ length: pages }, (_, i) => i + 1).map(n => (
-              <button
-                key={n}
-                onClick={() => setPage(n)}
-                className="w-8 h-8 rounded-lg text-xs font-medium transition-all"
-                style={n === curPage ? { background: 'linear-gradient(135deg,#7C3AED,#5B21B6)', color: 'var(--text-1)' } : { background: 'var(--input-bg)', color: 'var(--text-2)' }}
-              >
-                {n}
-              </button>
-            ))}
+            {pageItems.map((item, i) =>
+              item === 'gap' ? (
+                <span
+                  key={`gap-${i}`}
+                  className="w-6 sm:w-8 h-8 flex items-center justify-center text-xs"
+                  style={{ color: 'var(--text-3)' }}
+                >
+                  …
+                </span>
+              ) : (
+                <button
+                  key={item}
+                  onClick={() => setPage(item)}
+                  aria-current={item === curPage ? 'page' : undefined}
+                  className="w-7 sm:w-8 h-8 rounded-lg text-xs font-medium transition-all"
+                  style={item === curPage ? { background: 'linear-gradient(135deg,#7C3AED,#5B21B6)', color: 'var(--text-1)' } : { background: 'var(--input-bg)', color: 'var(--text-2)' }}
+                >
+                  {item}
+                </button>
+              ),
+            )}
             <button
               onClick={() => setPage(p => Math.min(pages, p + 1))}
               disabled={curPage >= pages}
-              className="px-3 py-1.5 rounded-lg text-xs font-medium disabled:opacity-40"
+              aria-label="Página siguiente"
+              className="px-2 sm:px-3 py-1.5 rounded-lg text-xs font-medium disabled:opacity-40"
               style={{ background: 'var(--input-bg)', color: 'var(--text-2)' }}
             >
-              Siguiente →
+              <span className="hidden sm:inline">Siguiente →</span>
+              <span className="sm:hidden">→</span>
             </button>
           </div>
         </div>

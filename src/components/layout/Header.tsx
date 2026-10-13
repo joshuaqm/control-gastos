@@ -1,4 +1,4 @@
-import { Bell, Menu, Moon, Search, Sun } from 'lucide-react'
+import { Bell, Eye, EyeOff, Menu, Moon, Search, Sun } from 'lucide-react'
 import { type ScreenId } from '@/config/navigation'
 import NotificationsPanel from '@/components/layout/NotificationsPanel'
 import type { NotificationsController } from '@/hooks/useNotifications'
@@ -8,6 +8,8 @@ export default function Header({
   onOpenMenu,
   darkMode,
   onToggleDark,
+  hideAmounts,
+  onToggleHideAmounts,
   userName,
   sidebarOffset = 0,
   notifs,
@@ -17,6 +19,8 @@ export default function Header({
   onOpenMenu: () => void
   darkMode: boolean
   onToggleDark: () => void
+  hideAmounts: boolean
+  onToggleHideAmounts: () => void
   userName?: string
   sidebarOffset?: number
   notifs: NotificationsController
@@ -60,6 +64,19 @@ export default function Header({
       <div className="flex-1 md:hidden" />
 
       <div className="flex items-center gap-2">
+        <button
+          onClick={onToggleHideAmounts}
+          className="p-2 rounded-lg hover:bg-white/10 transition-colors"
+          aria-label={hideAmounts ? 'Mostrar importes' : 'Ocultar importes'}
+          aria-pressed={hideAmounts}
+          title={hideAmounts ? 'Mostrar importes' : 'Ocultar importes'}
+        >
+          {hideAmounts ? (
+            <EyeOff size={18} style={{ color: '#7C3AED' }} />
+          ) : (
+            <Eye size={18} style={{ color: 'var(--text-2)' }} />
+          )}
+        </button>
         <button onClick={onToggleDark} className="p-2 rounded-lg hover:bg-white/10 transition-colors">
           {darkMode ? <Sun size={18} style={{ color: '#F59E0B' }} /> : <Moon size={18} style={{ color: 'var(--text-2)' }} />}
         </button>

@@ -420,6 +420,114 @@ export function interestChartDataRange(
   return result
 }
 
+export const INTEREST_COLORS = [
+  "#06D6A0",
+  "#7C3AED",
+  "#3B82F6",
+  "#F59E0B",
+  "#EC4899",
+  "#14B8A6",
+  "#8B5CF6",
+  "#F97316",
+]
+
+export interface InterestSeries {
+  id: number
+  key: string
+  name: string
+  color: string
+}
+
+export interface InterestAccountPoint {
+  month: string
+  total: number
+  [key: string]: number | string
+}
+
+export interface InterestByAccount {
+  points: InterestAccountPoint[]
+  series: InterestSeries[]
+}
+
+const monthLabelFromPrefix = (prefix: string): string => {
+  const [y, m] = prefix.split("-").map(Number)
+  return `${MONTHS_SHORT[m - 1]} ${String(y).slice(2)}`
+}
+
+/**
+ * Builds the real-yield chart split by account. Each point carries a `total`
+ * plus one key per account (`acc_<id>`), so the chart can stack every account's
+ * yield while still exposing the aggregated total for the period.
+ */
+export function interestChartByAccount(
+  txns: ApiTransaction[],
+  accounts: ApiAccount[],
+  anchor: MonthRef,
+  months: number,
+): InterestByAccount {
+  const toPrefix = monthPrefix(anchor)
+  const fromRef = addMonths(anchor, -(months - 1))
+  const fromPrefix = monthPrefix(fromRef)
+
+  const byBucket = new Map<string, Map<number, number>>()
+  const accIds = new Set<number>()
+  for (const t of txns) {
+    if (!isRealInterest(t) || !t.date) continue
+    let bucket: string
+    if (months <= 1) {
+      if (t.date.slice(0, 7) !== toPrefix) continue
+      bucket = t.date.slice(0, 10)
+    } else {
+      const prefix = t.date.slice(0, 7)
+      if (prefix < fromPrefix || prefix > toPrefix) continue
+      bucket = prefix
+    }
+    const id = t.account_id ?? 0
+    accIds.add(id)
+    let bucketMap = byBucket.get(bucket)
+    if (!bucketMap) {
+      bucketMap = new Map<number, number>()
+      byBucket.set(bucket, bucketMap)
+    }
+    bucketMap.set(id, (bucketMap.get(id) || 0) + Number(t.amount))
+  }
+
+  const series: InterestSeries[] = [...accIds].map((id, i) => {
+    const acc = accounts.find((a) => a.id === id)
+    return {
+      id,
+      key: `acc_${id}`,
+      name: acc?.name ?? `Cuenta ${id}`,
+      color: INTEREST_COLORS[i % INTEREST_COLORS.length],
+    }
+  })
+
+  const labels =
+    months <= 1
+      ? [...byBucket.keys()].sort()
+      : Array.from({ length: months }, (_, i) =>
+          monthPrefix(addMonths(fromRef, i)),
+        )
+
+  const points: InterestAccountPoint[] = labels.map((bucket) => {
+    const bucketMap = byBucket.get(bucket) || new Map<number, number>()
+    const point: InterestAccountPoint = {
+      month: months <= 1 ? bucket : monthLabelFromPrefix(bucket),
+      total: 0,
+    }
+    let total = 0
+    for (const s of series) {
+      const value = Math.round((bucketMap.get(s.id) || 0) * 100) / 100
+      point[s.key] = value
+      total += value
+    }
+    point.total = Math.round(total * 100) / 100
+    return point
+  })
+
+  return { points, series }
+}
+
 export function assetDistribution(
   input: Pick<DashboardInput, "accounts" | "txns" | "investments" | "receivables">,
 ): DonutDatum[] {
@@ -513,6 +621,7 @@ function oldestOutstandingDate(
 export function creditReminders(
   accounts: ApiAccount[],
   txns: ApiTransaction[],
+  installments: ApiInstallment[] = [],
   today = new Date(),
 ): Reminder[] {
   const reminders: Reminder[] = []
@@ -520,7 +629,10 @@ export function creditReminders(
   for (const a of accounts) {
     if (a.type !== "credit" || !a.is_active || a.payment_due_day == null)
       continue
-    if (creditUsed(txns, a.id) <= 0) continue
+    // Pending balance includes MSI outstanding and the manual adjustment, not
+    // only transaction-derived usage (BUG-05: MSI-only cards went unnoticed).
+    const pending = cardUsed(txns, installments, a.id, accountBalance(a))
+    if (pending <= 0) continue
 
     const cutoffDay = a.cutoff_day ?? a.payment_due_day
     const dueDay = a.payment_due_day
@@ -553,7 +665,7 @@ export function creditReminders(
       kind: "credit",
       title: `Pago tarjeta ${a.name}`,
       subtitle: `Corte día ${a.cutoff_day ?? "—"} · pago día ${a.payment_due_day}`,
-      amount: creditUsed(txns, a.id),
+      amount: pending,
       days,
     })
   }

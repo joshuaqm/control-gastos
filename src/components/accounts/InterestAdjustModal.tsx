@@ -39,9 +39,9 @@ export default function InterestAdjustModal({
       setError('Ingresa un saldo válido')
       return
     }
-    if (diff == null || diff <= 0) {
+    if (diff == null || diff === 0) {
       setError(
-        'El saldo actualizado debe ser mayor al saldo actual para registrar un rendimiento',
+        'El saldo actualizado debe ser distinto al saldo actual para registrar un rendimiento',
       )
       return
     }
@@ -91,7 +91,9 @@ export default function InterestAdjustModal({
             />
           </div>
           <div className="px-3 py-2 rounded-lg text-sm flex items-center justify-between" style={{ background: 'rgba(6,214,160,0.08)', border: '1px solid rgba(6,214,160,0.15)' }}>
-            <span style={{ color: 'var(--text-3)' }}>Rendimiento total del mes</span>
+            <span style={{ color: 'var(--text-3)' }}>
+              {diff != null && diff < 0 ? 'Pérdida del mes' : 'Rendimiento total del mes'}
+            </span>
             <span className="font-mono font-semibold" style={{ color: diff != null && diff > 0 ? '#34D399' : '#F87171' }}>
               {diff != null ? fmtSigned(diff) : '—'}
             </span>
